@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+<div class="container my-5">
+  
+  <!-- Top Navigation / Portal Status Bar -->
+  <div class="d-flex justify-content-between align-items-center p-3 mb-4 rounded font-monospace" style="background-color: #0d1117; border: 1px solid #00e5ff; box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);">
+    <div>
+      <a href="{% url 'workspace_index' %}" class="btn btn-sm btn-outline-info" style="color: #00e5ff; border-color: #00e5ff;">// COLLABORATIVE_WORKSPACE_ARENA</a>
+      <span class="text-muted mx-2">|</span>
+      <span class="text-light small">● ARENA_PORTAL_ONLINE [V4.2]</span>
+    </div>
+    <div>
+      <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-warning" style="border-color: #ffb700; color: #ffb700;">[ PLAYER_DOSSIER ]</a>
+    </div>
+  </div>
+
+  <!-- Section Header and Big Title -->
+  <div class="text-center mb-5">
+    <div class="mb-3">
+      <span class="badge bg-black rounded-pill px-3 py-2 font-monospace small shadow-sm" style="color: #00e5ff; border: 1px solid #00e5ff; box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);">
+        // SECURE_OPERATIONS_COMMAND
+      </span>
+    </div>
+    <h1 class="text-white fw-bold font-monospace tracking-wide display-5" style="text-shadow: 0 0 12px rgba(0, 229, 255, 0.4);">
+      THE COLLABORATIVE WORKSPACE ARENA
+    </h1>
+    <p class="text-muted small font-monospace mt-2">
+      [MISSION BRIEFING]: Initialize a secure real-time room with specific objectives, description details, and parameters to accelerate your development workflows.
+    </p>
+  </div>
+
+  <!-- Room Creation Form Card -->
+  <div class="mx-auto" style="max-width: 650px;">
+    <div class="card text-white shadow-lg p-4 p-md-5" style="background-color: #0d1117 !important; border: 1px solid #00e5ff; box-shadow: 0 0 15px rgba(0, 229, 255, 0.2) !important;">
+      <div class="d-flex align-items-center gap-2 mb-3 font-monospace small">
+        <span class="badge bg-black px-2 py-1" style="color: #00e5ff; border: 1px solid #00e5ff;">🟢 NEW_ROOM_CONFIG</span>
+        <span class="text-muted">// WORKSPACE_DEPLOYMENT</span>
+      </div>
+      
+      <h2 class="h4 fw-bold font-monospace mb-4" style="color: #00e5ff;">Initialize & Configure Code Room</h2>
+      
+      <form method="POST" class="font-monospace">
+        {% csrf_token %}
+        
+        <!-- Dynamically render all form fields (Name, Description, Tech Stack, etc.) -->
+        {% for field in form %}
+          <div class="mb-4">
+            <label for="{{ field.id_for_label }}" class="form-label text-light small">// {{ field.label|upper }}</label>
+            {{ field }}
+            {% if field.help_text %}
+              <div class="form-text text-muted small mt-1">{{ field.help_text }}</div>
+            {% endif %}
+            {% if field.errors %}
+              <div class="text-danger small mt-1">{{ field.errors }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+        <!-- Deployment Helper Note -->
+        <div class="mb-4 p-3 bg-black border border-secondary rounded small text-muted">
+          <code>&gt; TIP: Add a detailed room description or objective so teammates instantly understand the focus of the sprint session or bug fix.</code>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <a href="{% url 'workspace_index' %}" class="btn btn-sm btn-outline-secondary font-monospace">← Cancel</a>
+          <button type="submit" class="btn fw-bold px-4 font-monospace shadow" style="background-color: #00e5ff; color: #000; border: none;">
+            [ DEPLOY ROOM ] →
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<!-- CSS Overrides to match Django form fields with the Cyberpunk Dark Theme -->
+<style>
+  input[type="text"], input[type="url"], input[type="email"], textarea, select {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.9rem;
+    font-family: var(--bs-font-monospace);
+    color: #fff !important;
+    background-color: #000 !important;
+    border: 1px solid #00e5ff !important;
+    border-radius: 0.375rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  input[type="text"]:focus, input[type="url"]:focus, input[type="email"]:focus, textarea:focus, select:focus {
+    color: #fff !important;
+    background-color: #000 !important;
+    border-color: #ffb700 !important;
+    outline: 0;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+  }
+  textarea {
+    resize: vertical;
+    min-height: 110px;
+  }
+</style>
+{% endblock page_content %}
