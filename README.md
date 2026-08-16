@@ -89,7 +89,7 @@ Start the Django development server:
 ```bash
 (venv) $ python manage.py runserver
 ```
-Navigate to http://localhost:8000/ or http://localhost:8000/projects to see your workspace arena in action!
+Navigate to http://localhost:8000/, or http://localhost:8000/admin/ to see your workspace arena in action!
 
 ---
 
