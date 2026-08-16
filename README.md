@@ -26,7 +26,7 @@
 
 <div align="center">
 
-![Arena Portal Workspace Dashboard](./uploads/images/preview.png)
+![Arena Portal Workspace Dashboard](./uploads/images/preview.jpg)
 
 *Real-time collaborative code editor with Yjs sync, git conflict gutters, and container execution console.*
 
