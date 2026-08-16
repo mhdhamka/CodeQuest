@@ -36,7 +36,7 @@
 
 ## Key Features
 
-* ** RPG Developer Progression: Choose and level up avatar classes (Frontend Wizards, Backend Architects, Security Ninjas) while earning XP, loot, and custom badges.
+* **RPG Developer Progression:** Choose and level up avatar classes (Frontend Wizards, Backend Architects, Security Ninjas) while earning XP, loot, and custom badges.
 * **CTF Security Raid "Boss Battles":** Team up in live collaborative rooms to audit, debug, and patch intentionally vulnerable codebases before time runs out.
 * **Real-Time CRDT Code Rooms:** Multi-peer concurrent code authoring, shared buffers, and cursor tracking powered by Yjs and Django Channels WebSockets.
 * **Ephemeral Container Execution:** Spin up and run code snippets inside isolated Python 3.11 Docker runtime environments directly from the browser dashboard.
