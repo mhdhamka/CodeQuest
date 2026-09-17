@@ -33,6 +33,14 @@ env/
 local_settings.py
 db.sqlite3-journal
 
+# Go / Compiled Binaries
+bin/
+*.exe
+*.dll
+*.dylib
+*.test
+*.out
+
 # Node.js / Dependencies
 node_modules/
 jspm_packages/

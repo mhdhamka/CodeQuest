@@ -23,16 +23,6 @@
         <i class="codicon codicon-git-branch text-muted"></i>
         <span class="text-light fw-semibold">main</span>
       </div>
-
-      <!-- Language Badges: .go & .vue -->
-      <a href="/projects/?filter=go" class="badge badge-go text-decoration-none d-none d-lg-inline-flex align-items-center gap-1 py-1 px-2" title="Go language support active">
-        <span style="font-weight: 700;">GO</span>
-        <span class="small font-monospace">.go</span>
-      </a>
-      <a href="/projects/?filter=vue" class="badge badge-vue text-decoration-none d-none d-lg-inline-flex align-items-center gap-1 py-1 px-2" title="Vue 3 SFC support active">
-        <span style="font-weight: 700;">VUE</span>
-        <span class="small font-monospace">.vue</span>
-      </a>
     </div>
 
     <!-- Center/Search: Quick Command Palette Trigger (Cmd+K / Ctrl+K) -->
@@ -147,8 +137,6 @@
     <a href="/workspace/" class="gh-nav-tab <%= typeof activeNav !== 'undefined' && activeNav === 'workspace' ? 'active' : '' %>" id="navWorkspacesLink">
       <i class="codicon codicon-terminal-tmux"></i>
       <span>VS Code Rooms</span>
-      <span class="badge badge-go" style="font-size: 0.65rem; padding: 1px 5px;">.go</span>
-      <span class="badge badge-vue" style="font-size: 0.65rem; padding: 1px 5px;">.vue</span>
     </a>
     <a href="/projects/profile/" class="gh-nav-tab <%= typeof activeNav !== 'undefined' && activeNav === 'dossier' ? 'active' : '' %>" id="navDossierLink">
       <i class="codicon codicon-graph"></i>
