@@ -1,420 +1,882 @@
-/* CodeQuest Arena - Cyberpunk Dark UI Theme */
+/* ==========================================================================
+   CodeQuest - GitHub + VS Code Hybrid Modern Theme
+   Blends GitHub Dark (#0d1117, #161b22, #30363d) with VS Code Dark+ (#1e1e1e, #252526, #007acc)
+   Featuring first-class support for Go (.go) and Vue (.vue)
+   ========================================================================== */
 
 :root {
-    --cyber-bg: #06090e;
-    --cyber-bg-surface: #0a0e16;
-    --cyber-bg-card: #0d121c;
-    --cyber-bg-card-hover: #121824;
-    --cyber-cyan: #00f0ff;
-    --cyber-cyan-glow: rgba(0, 240, 255, 0.45);
-    --cyber-cyan-dim: rgba(0, 240, 255, 0.12);
-    --cyber-yellow: #ffe600;
-    --cyber-yellow-glow: rgba(255, 230, 0, 0.45);
-    --cyber-yellow-dim: rgba(255, 230, 0, 0.12);
-    --cyber-green: #00ff66;
-    --cyber-green-glow: rgba(0, 255, 102, 0.45);
-    --cyber-green-dim: rgba(0, 255, 102, 0.12);
-    --cyber-pink: #ff0055;
-    --cyber-pink-glow: rgba(255, 0, 85, 0.45);
-    --cyber-pink-dim: rgba(255, 0, 85, 0.12);
-    --cyber-purple: #b026ff;
-    --cyber-text-main: #d3deed;
-    --cyber-text-bright: #ffffff;
-    --cyber-text-muted: #8191a6;
-    --cyber-border-dim: #1c2638;
-    --cyber-border-bright: #2d3c54;
-    --cyber-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* GitHub Dark Palette */
+  --gh-canvas-default: #0d1117;
+  --gh-canvas-subtle: #161b22;
+  --gh-border-default: #30363d;
+  --gh-border-muted: #21262d;
+  --gh-border-subtle: #21262d;
+  --gh-fg-default: #e6edf3;
+  --gh-fg-muted: #8b949e;
+  --gh-fg-subtle: #6e7681;
+  --gh-accent-fg: #58a6ff;
+  --gh-accent-emphasis: #1f6feb;
+  --gh-success-fg: #3fb950;
+  --gh-success-emphasis: #238636;
+  --gh-warning-fg: #d29922;
+  --gh-warning-emphasis: #9e6a03;
+  --gh-danger-fg: #f85149;
+  --gh-danger-emphasis: #da3633;
+  --gh-purple-fg: #bc8cff;
+
+  /* VS Code Dark+ Palette */
+  --vscode-bg: #1e1e1e;
+  --vscode-activitybar-bg: #333333;
+  --vscode-activitybar-active: #ffffff;
+  --vscode-activitybar-inactive: rgba(255, 255, 255, 0.4);
+  --vscode-sidebar-bg: #252526;
+  --vscode-tab-active-bg: #1e1e1e;
+  --vscode-tab-inactive-bg: #2d2d2d;
+  --vscode-tab-border: #007acc;
+  --vscode-statusbar-bg: #007acc;
+  --vscode-statusbar-fg: #ffffff;
+  --vscode-panel-bg: #1e1e1e;
+  --vscode-line-numbers: #858585;
+  --vscode-selection: #264f78;
+
+  /* Language Signature Accents */
+  --lang-go: #00ADD8;
+  --lang-go-bg: rgba(0, 173, 216, 0.12);
+  --lang-vue: #42b883;
+  --lang-vue-bg: rgba(66, 184, 131, 0.12);
+  --lang-ts: #3178c6;
+  --lang-py: #3572A5;
+  --lang-js: #f1e05a;
+  --lang-sql: #e38c00;
+
+  /* Fonts */
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* Global Cyberpunk Base */
+/* Base Body Styles */
 body {
-    background-color: var(--cyber-bg);
-    background-image: 
-        radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 55%),
-        radial-gradient(circle at 85% 85%, rgba(255, 0, 85, 0.05) 0%, transparent 45%),
-        linear-gradient(rgba(0, 240, 255, 0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 240, 255, 0.025) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
-    background-attachment: fixed;
-    color: var(--cyber-text-main);
-    font-family: var(--cyber-font-mono) !important;
-    min-height: 100vh;
-    letter-spacing: -0.015em;
-    -webkit-font-smoothing: antialiased;
+  background-color: var(--gh-canvas-default);
+  background-image: 
+    radial-gradient(circle at 10% 0%, rgba(88, 166, 255, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 90% 10%, rgba(66, 184, 131, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 50% 90%, rgba(0, 173, 216, 0.03) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: var(--gh-fg-default);
+  font-family: var(--font-ui);
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Universal Monospace Typography */
-* {
-    font-family: inherit;
-}
-
+/* Code & Monospace Classes */
 code, kbd, samp, pre, .font-monospace {
-    font-family: var(--cyber-font-mono) !important;
+  font-family: var(--font-mono) !important;
 }
 
-/* Headings with Neon Text Glow */
-h1, h2, h3, h4, h5, h6,
-.h1, .h2, .h3, .h4, .h5, .h6 {
-    font-family: var(--cyber-font-mono) !important;
-    color: var(--cyber-text-bright);
-    letter-spacing: -0.02em;
-    font-weight: 700;
-}
-
-.display-4 {
-    color: #ffffff !important;
-    text-shadow: 0 0 18px var(--cyber-cyan-glow), 0 0 35px rgba(0, 240, 255, 0.25) !important;
-}
-
-.display-5, .display-6 {
-    color: #ffffff !important;
-    text-shadow: 0 0 14px var(--cyber-cyan-glow) !important;
+/* Typography Hierarchy */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+  color: var(--gh-fg-default);
+  font-weight: 600;
+  letter-spacing: -0.015em;
 }
 
 .lead {
-    color: var(--cyber-text-muted) !important;
+  color: var(--gh-fg-muted);
 }
 
-/* Neon Text Colors */
-.text-primary, .text-info {
-    color: var(--cyber-cyan) !important;
-    text-shadow: 0 0 8px rgba(0, 240, 255, 0.35);
+/* Custom Links */
+a {
+  color: var(--gh-accent-fg);
+  text-decoration: none;
+  transition: color 0.15s ease-in-out;
+}
+a:hover {
+  color: #79b8ff;
+  text-decoration: underline;
 }
 
-.text-warning {
-    color: var(--cyber-yellow) !important;
-    text-shadow: 0 0 8px rgba(255, 230, 0, 0.35);
+/* Text Utility Colors */
+.text-info { color: var(--gh-accent-fg) !important; }
+.text-success { color: var(--gh-success-fg) !important; }
+.text-warning { color: var(--gh-warning-fg) !important; }
+.text-danger { color: var(--gh-danger-fg) !important; }
+.text-muted { color: var(--gh-fg-muted) !important; }
+.text-light { color: var(--gh-fg-default) !important; }
+
+/* Language-specific Badges & Colors */
+.text-go, .lang-go { color: var(--lang-go) !important; }
+.text-vue, .lang-vue { color: var(--lang-vue) !important; }
+
+.badge-go {
+  background-color: var(--lang-go-bg) !important;
+  color: var(--lang-go) !important;
+  border: 1px solid rgba(0, 173, 216, 0.4) !important;
+}
+.badge-vue {
+  background-color: var(--lang-vue-bg) !important;
+  color: var(--lang-vue) !important;
+  border: 1px solid rgba(66, 184, 131, 0.4) !important;
+}
+.badge-ts {
+  background-color: rgba(49, 120, 198, 0.12) !important;
+  color: #58a6ff !important;
+  border: 1px solid rgba(49, 120, 198, 0.4) !important;
+}
+.badge-py {
+  background-color: rgba(53, 114, 165, 0.12) !important;
+  color: #e3b341 !important;
+  border: 1px solid rgba(53, 114, 165, 0.4) !important;
 }
 
-.text-success {
-    color: var(--cyber-green) !important;
-    text-shadow: 0 0 8px rgba(0, 255, 102, 0.35);
+/* Cards & Surfaces (GitHub Style) */
+.card, .gh-box {
+  background-color: var(--gh-canvas-subtle) !important;
+  border: 1px solid var(--gh-border-default) !important;
+  border-radius: 6px;
+  color: var(--gh-fg-default);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card:hover, .gh-box:hover {
+  border-color: #484f58 !important;
+}
+.card-header {
+  background-color: rgba(22, 27, 34, 0.7) !important;
+  border-bottom: 1px solid var(--gh-border-default) !important;
+  color: var(--gh-fg-default);
+}
+.card-footer {
+  background-color: rgba(22, 27, 34, 0.7) !important;
+  border-top: 1px solid var(--gh-border-default) !important;
 }
 
-.text-danger {
-    color: var(--cyber-pink) !important;
-    text-shadow: 0 0 8px rgba(255, 0, 85, 0.35);
+/* GitHub Buttons */
+.btn-gh-primary, .btn-success {
+  background-color: var(--gh-success-emphasis) !important;
+  border: 1px solid rgba(240, 246, 252, 0.1) !important;
+  color: #ffffff !important;
+  font-weight: 500;
+  border-radius: 6px;
+  box-shadow: 0 1px 0 rgba(27, 31, 36, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  transition: background-color 0.15s ease;
+}
+.btn-gh-primary:hover, .btn-success:hover {
+  background-color: #2ea043 !important;
+  color: #ffffff !important;
 }
 
-.text-muted {
-    color: var(--cyber-text-muted) !important;
+.btn-gh-secondary, .btn-outline-secondary, .btn-dark {
+  background-color: #21262d !important;
+  border: 1px solid var(--gh-border-default) !important;
+  color: var(--gh-fg-default) !important;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn-gh-secondary:hover, .btn-outline-secondary:hover, .btn-dark:hover {
+  background-color: #30363d !important;
+  border-color: #8b949e !important;
+  color: #ffffff !important;
 }
 
-.text-light {
-    color: var(--cyber-text-bright) !important;
+.btn-info, .btn-outline-info {
+  background-color: rgba(56, 139, 253, 0.15) !important;
+  border: 1px solid rgba(56, 139, 253, 0.4) !important;
+  color: var(--gh-accent-fg) !important;
+  border-radius: 6px;
+}
+.btn-info:hover, .btn-outline-info:hover {
+  background-color: var(--gh-accent-emphasis) !important;
+  border-color: var(--gh-accent-emphasis) !important;
+  color: #ffffff !important;
 }
 
-/* Cyberpunk Neon Borders */
-.border-info, .border-primary {
-    border-color: var(--cyber-cyan) !important;
+.btn-warning, .btn-outline-warning {
+  background-color: rgba(210, 153, 34, 0.15) !important;
+  border: 1px solid rgba(210, 153, 34, 0.4) !important;
+  color: var(--gh-warning-fg) !important;
+  border-radius: 6px;
+}
+.btn-warning:hover, .btn-outline-warning:hover {
+  background-color: var(--gh-warning-emphasis) !important;
+  border-color: var(--gh-warning-emphasis) !important;
+  color: #ffffff !important;
 }
 
-.border-warning {
-    border-color: var(--cyber-yellow) !important;
+.btn-danger, .btn-outline-danger {
+  background-color: rgba(248, 81, 73, 0.15) !important;
+  border: 1px solid rgba(248, 81, 73, 0.4) !important;
+  color: var(--gh-danger-fg) !important;
+  border-radius: 6px;
+}
+.btn-danger:hover, .btn-outline-danger:hover {
+  background-color: var(--gh-danger-emphasis) !important;
+  border-color: var(--gh-danger-emphasis) !important;
+  color: #ffffff !important;
 }
 
-.border-success {
-    border-color: var(--cyber-green) !important;
-}
-
-.border-danger {
-    border-color: var(--cyber-pink) !important;
-}
-
-.border-secondary {
-    border-color: var(--cyber-border-dim) !important;
-}
-
-/* Cyber HUD Navbars */
-.navbar-dark {
-    background: linear-gradient(180deg, #0f1520 0%, #080c13 100%) !important;
-    border-color: var(--cyber-cyan) !important;
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.15), inset 0 1px 0 rgba(0, 240, 255, 0.2) !important;
-}
-
-/* Cyberpunk Cards */
-.card {
-    background-color: var(--cyber-bg-card) !important;
-    border: 1px solid var(--cyber-border-dim);
-    border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
-}
-
-.card:hover, .hover-lift:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), 0 0 20px var(--cyber-cyan-dim) !important;
-    border-color: var(--cyber-cyan) !important;
-}
-
-.card-body p,
-.card-body .text-muted,
-.card-body ul li {
-    color: var(--cyber-text-main) !important;
-}
-
-/* Interactive Neon Buttons */
-.btn {
-    font-family: var(--cyber-font-mono) !important;
-    border-radius: 4px;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    position: relative;
-    overflow: hidden;
-}
-
-.btn-outline-info, .btn-outline-primary {
-    color: var(--cyber-cyan) !important;
-    border-color: var(--cyber-cyan) !important;
-    background-color: transparent;
-    box-shadow: 0 0 8px rgba(0, 240, 255, 0.15);
-}
-
-.btn-outline-info:hover, .btn-outline-primary:hover,
-.btn-outline-info.active, .btn-outline-primary.active {
-    background-color: var(--cyber-cyan) !important;
-    color: #000000 !important;
-    border-color: var(--cyber-cyan) !important;
-    box-shadow: 0 0 18px var(--cyber-cyan-glow) !important;
-}
-
-.btn-outline-warning {
-    color: var(--cyber-yellow) !important;
-    border-color: var(--cyber-yellow) !important;
-    background-color: transparent;
-    box-shadow: 0 0 8px rgba(255, 230, 0, 0.15);
-}
-
-.btn-outline-warning:hover, .btn-outline-warning.active {
-    background-color: var(--cyber-yellow) !important;
-    color: #000000 !important;
-    border-color: var(--cyber-yellow) !important;
-    box-shadow: 0 0 18px var(--cyber-yellow-glow) !important;
-}
-
-.btn-outline-danger {
-    color: var(--cyber-pink) !important;
-    border-color: var(--cyber-pink) !important;
-    background-color: transparent;
-    box-shadow: 0 0 8px rgba(255, 0, 85, 0.15);
-}
-
-.btn-outline-danger:hover, .btn-outline-danger.active {
-    background-color: var(--cyber-pink) !important;
-    color: #ffffff !important;
-    border-color: var(--cyber-pink) !important;
-    box-shadow: 0 0 18px var(--cyber-pink-glow) !important;
-}
-
-.btn-outline-success {
-    color: var(--cyber-green) !important;
-    border-color: var(--cyber-green) !important;
-    background-color: transparent;
-    box-shadow: 0 0 8px rgba(0, 255, 102, 0.15);
-}
-
-.btn-outline-success:hover, .btn-outline-success.active {
-    background-color: var(--cyber-green) !important;
-    color: #000000 !important;
-    border-color: var(--cyber-green) !important;
-    box-shadow: 0 0 18px var(--cyber-green-glow) !important;
-}
-
-.btn-outline-secondary {
-    color: var(--cyber-text-muted) !important;
-    border-color: var(--cyber-border-bright) !important;
-}
-
-.btn-outline-secondary:hover {
-    background-color: var(--cyber-border-bright) !important;
-    color: #ffffff !important;
-    border-color: var(--cyber-cyan) !important;
-}
-
-.btn-success {
-    background-color: var(--cyber-green) !important;
-    color: #000000 !important;
-    border: none;
-    box-shadow: 0 0 14px var(--cyber-green-glow);
-}
-
-.btn-success:hover {
-    background-color: #33ff85 !important;
-    box-shadow: 0 0 22px var(--cyber-green-glow) !important;
-}
-
-.btn-warning {
-    background-color: var(--cyber-yellow) !important;
-    color: #000000 !important;
-    border: none;
-    box-shadow: 0 0 14px var(--cyber-yellow-glow);
-}
-
-.btn-warning:hover {
-    background-color: #ffed33 !important;
-    box-shadow: 0 0 22px var(--cyber-yellow-glow) !important;
-}
-
-.btn-danger {
-    background-color: var(--cyber-pink) !important;
-    color: #ffffff !important;
-    border: none;
-    box-shadow: 0 0 14px var(--cyber-pink-glow);
-}
-
-.btn-danger:hover {
-    background-color: #ff3377 !important;
-    box-shadow: 0 0 22px var(--cyber-pink-glow) !important;
-}
-
-/* Badges with Cyber Accents */
+/* Badges */
 .badge {
-    font-family: var(--cyber-font-mono) !important;
-    letter-spacing: 0.04em;
-    font-weight: 600;
-    border-radius: 3px;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  border-radius: 12px;
+  padding: 3px 8px;
+  letter-spacing: 0;
 }
-
 .badge.bg-black {
-    background-color: #04070b !important;
+  background-color: #0d1117 !important;
+  border: 1px solid var(--gh-border-default);
 }
 
-/* Form Inputs & Controls */
+/* Form Controls & Inputs */
 .form-control, .form-select, input[type="text"], textarea {
-    background-color: #05080e !important;
-    border: 1px solid var(--cyber-border-dim) !important;
-    color: var(--cyber-text-bright) !important;
-    font-family: var(--cyber-font-mono) !important;
-    border-radius: 4px;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  background-color: #0d1117 !important;
+  border: 1px solid var(--gh-border-default) !important;
+  color: var(--gh-fg-default) !important;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  border-radius: 6px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-
 .form-control:focus, .form-select:focus, input[type="text"]:focus, textarea:focus {
-    background-color: #070c14 !important;
-    border-color: var(--cyber-cyan) !important;
-    color: #ffffff !important;
-    box-shadow: 0 0 14px var(--cyber-cyan-glow), inset 0 2px 4px rgba(0, 0, 0, 0.4) !important;
-    outline: none;
+  background-color: #0d1117 !important;
+  border-color: var(--gh-accent-fg) !important;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.25) !important;
+  color: #ffffff !important;
+  outline: none;
 }
-
 .input-group-text {
-    background-color: #04070c !important;
-    border-color: var(--cyber-border-dim) !important;
-    color: var(--cyber-cyan) !important;
-    font-family: var(--cyber-font-mono) !important;
+  background-color: #161b22 !important;
+  border-color: var(--gh-border-default) !important;
+  color: var(--gh-fg-muted) !important;
 }
 
 /* Alerts */
 .alert {
-    border-radius: 4px;
-    font-family: var(--cyber-font-mono) !important;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  border: 1px solid transparent;
 }
-
-.alert-success {
-    background-color: rgba(0, 255, 102, 0.08) !important;
-    border-color: var(--cyber-green) !important;
-    color: var(--cyber-green) !important;
-    box-shadow: 0 0 15px rgba(0, 255, 102, 0.12);
-}
-
-.alert-danger {
-    background-color: rgba(255, 0, 85, 0.08) !important;
-    border-color: var(--cyber-pink) !important;
-    color: #ff6b8b !important;
-    box-shadow: 0 0 15px rgba(255, 0, 85, 0.12);
-}
-
 .alert-dark {
-    background-color: #05080e !important;
-    border-color: var(--cyber-border-dim) !important;
-    color: var(--cyber-text-muted) !important;
+  background-color: #161b22 !important;
+  border-color: var(--gh-border-default) !important;
+  color: var(--gh-fg-default) !important;
+}
+.alert-success {
+  background-color: rgba(46, 160, 67, 0.15) !important;
+  border-color: rgba(46, 160, 67, 0.4) !important;
+  color: var(--gh-success-fg) !important;
+}
+.alert-danger {
+  background-color: rgba(248, 81, 73, 0.15) !important;
+  border-color: rgba(248, 81, 73, 0.4) !important;
+  color: var(--gh-danger-fg) !important;
+}
+
+/* Dropdown Menus (GitHub & VS Code style) */
+.dropdown-menu-dark {
+  background-color: #161b22 !important;
+  border: 1px solid var(--gh-border-default) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 6px;
+}
+.dropdown-item {
+  color: var(--gh-fg-default);
+  font-size: 0.85rem;
+  padding: 6px 12px;
+}
+.dropdown-item:hover, .dropdown-item:focus {
+  background-color: #1f6feb !important;
+  color: #ffffff !important;
+}
+.dropdown-divider {
+  border-color: var(--gh-border-default) !important;
 }
 
 /* Modals */
 .modal-content {
-    background-color: var(--cyber-bg-card) !important;
-    border: 1px solid var(--cyber-pink) !important;
-    box-shadow: 0 0 30px rgba(255, 0, 85, 0.25) !important;
-    border-radius: 6px;
+  background-color: #161b22 !important;
+  border: 1px solid var(--gh-border-default) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6) !important;
+  border-radius: 8px;
 }
-
-.modal-header, .modal-footer {
-    border-color: var(--cyber-border-dim) !important;
+.modal-header {
+  border-bottom: 1px solid var(--gh-border-default) !important;
+}
+.modal-footer {
+  border-top: 1px solid var(--gh-border-default) !important;
 }
 
 /* Pagination */
 .page-link {
-    font-family: var(--cyber-font-mono) !important;
-    background-color: var(--cyber-bg-surface) !important;
-    border-color: var(--cyber-border-dim) !important;
-    color: var(--cyber-cyan) !important;
-    transition: all 0.2s ease;
+  background-color: #161b22 !important;
+  border-color: var(--gh-border-default) !important;
+  color: var(--gh-fg-default) !important;
+  border-radius: 6px;
+  margin: 0 2px;
 }
-
 .page-link:hover {
-    background-color: var(--cyber-cyan) !important;
-    color: #000000 !important;
-    box-shadow: 0 0 12px var(--cyber-cyan-glow);
+  background-color: #21262d !important;
+  border-color: #8b949e !important;
+  color: var(--gh-accent-fg) !important;
+}
+.page-item.active .page-link {
+  background-color: var(--gh-accent-emphasis) !important;
+  border-color: var(--gh-accent-emphasis) !important;
+  color: #ffffff !important;
 }
 
-.page-item.disabled .page-link {
-    background-color: #05080e !important;
-    border-color: var(--cyber-border-dim) !important;
-    color: var(--cyber-text-muted) !important;
+/* ==========================================================================
+   GitHub UI Components
+   ========================================================================== */
+
+/* GitHub Repository Header */
+.gh-repo-header {
+  background-color: #0d1117;
+  border-bottom: 1px solid var(--gh-border-default);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+.gh-repo-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.gh-repo-title a {
+  color: var(--gh-accent-fg);
+}
+.gh-repo-pill {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 12px;
+  border: 1px solid var(--gh-border-default);
+  color: var(--gh-fg-muted);
+  font-weight: 500;
 }
 
-/* Code Snippets & Terminal Consoles */
-pre, code {
-    font-family: var(--cyber-font-mono) !important;
+/* GitHub Subnav Navigation Tabs */
+.gh-nav-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--gh-border-default);
+  margin-bottom: 20px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+.gh-nav-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gh-fg-default);
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+}
+.gh-nav-tab:hover {
+  color: var(--gh-accent-fg);
+  text-decoration: none;
+}
+.gh-nav-tab.active {
+  color: #ffffff;
+  border-bottom-color: #f78166;
+  font-weight: 600;
+}
+.gh-counter-badge {
+  background-color: rgba(110, 118, 129, 0.4);
+  color: var(--gh-fg-default);
+  font-size: 0.75rem;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 600;
 }
 
-pre {
-    background-color: #04070b !important;
-    border-radius: 4px;
+/* GitHub Heatmap / Contribution Matrix */
+.gh-contrib-calendar {
+  background-color: #161b22;
+  border: 1px solid var(--gh-border-default);
+  border-radius: 6px;
+  padding: 16px;
+}
+.gh-contrib-grid {
+  display: grid;
+  grid-template-rows: repeat(7, 12px);
+  grid-auto-flow: column;
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.gh-contrib-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background-color: #161b22;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.1s ease;
+}
+.gh-contrib-cell:hover {
+  transform: scale(1.3);
+  outline: 1px solid var(--gh-fg-default);
+}
+.gh-lvl-0 { background-color: #161b22; }
+.gh-lvl-1 { background-color: #0e4429; }
+.gh-lvl-2 { background-color: #006d32; }
+.gh-lvl-3 { background-color: #26a641; }
+.gh-lvl-4 { background-color: #39d353; }
+
+/* ==========================================================================
+   VS Code Workbench Components
+   ========================================================================== */
+
+/* Main Workbench Shell */
+.vscode-workbench {
+  background-color: var(--vscode-bg);
+  border: 1px solid var(--gh-border-default);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
 }
 
-/* Custom Cyberpunk Scrollbar */
+/* VS Code Titlebar */
+.vscode-titlebar {
+  background-color: #181818;
+  border-bottom: 1px solid var(--gh-border-default);
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  font-size: 0.8rem;
+  color: var(--gh-fg-muted);
+  user-select: none;
+}
+.vscode-titlebar-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--gh-fg-default);
+}
+.vscode-window-controls {
+  display: flex;
+  gap: 6px;
+}
+.vscode-window-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.vscode-dot-red { background-color: #ff5f56; }
+.vscode-dot-yellow { background-color: #ffbd2e; }
+.vscode-dot-green { background-color: #27c93f; }
+
+/* Workbench Body Layout */
+.vscode-body {
+  display: flex;
+  height: 640px;
+  min-height: 500px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* VS Code Activity Bar (Leftmost narrow vertical bar) */
+.vscode-activitybar {
+  width: 48px;
+  background-color: var(--vscode-activitybar-bg);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px 0;
+  flex-shrink: 0;
+  z-index: 10;
+}
+.vscode-activity-top, .vscode-activity-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.vscode-activity-icon {
+  width: 48px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--vscode-activitybar-inactive);
+  position: relative;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  font-size: 1.25rem;
+}
+.vscode-activity-icon:hover {
+  color: #ffffff;
+}
+.vscode-activity-icon.active {
+  color: #ffffff;
+}
+.vscode-activity-icon.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background-color: #ffffff;
+}
+.vscode-activity-badge {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background-color: var(--vscode-statusbar-bg);
+  color: #ffffff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 4px;
+}
+
+/* VS Code Primary Side Bar (File Explorer) */
+.vscode-sidebar {
+  width: 240px;
+  background-color: var(--vscode-sidebar-bg);
+  border-right: 1px solid var(--gh-border-default);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  user-select: none;
+  overflow-y: auto;
+}
+.vscode-sidebar-header {
+  padding: 10px 14px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--gh-fg-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.vscode-tree-section {
+  padding: 6px 0;
+}
+.vscode-section-title {
+  padding: 4px 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #858585;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.vscode-tree-item {
+  padding: 5px 12px 5px 22px;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #cccccc;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+  border-left: 2px solid transparent;
+}
+.vscode-tree-item:hover {
+  background-color: #2a2d2e;
+}
+.vscode-tree-item.active {
+  background-color: #37373d;
+  color: #ffffff;
+  border-left-color: var(--vscode-tab-border);
+}
+.vscode-file-icon {
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* VS Code Editor Main Panel */
+.vscode-editor-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--vscode-bg);
+  position: relative;
+}
+
+/* VS Code Editor Tabs */
+.vscode-tabs-bar {
+  display: flex;
+  background-color: var(--vscode-tab-inactive-bg);
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 38px;
+  border-bottom: 1px solid #1e1e1e;
+  user-select: none;
+}
+.vscode-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  height: 100%;
+  font-size: 0.8rem;
+  color: #969696;
+  background-color: var(--vscode-tab-inactive-bg);
+  border-right: 1px solid #1e1e1e;
+  border-top: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.1s ease, color 0.1s ease;
+}
+.vscode-tab:hover {
+  background-color: #333333;
+  color: #ffffff;
+}
+.vscode-tab.active {
+  background-color: var(--vscode-tab-active-bg);
+  color: #ffffff;
+  border-top-color: var(--vscode-tab-border);
+  font-weight: 500;
+}
+.vscode-tab-close {
+  opacity: 0;
+  font-size: 0.85rem;
+  border-radius: 3px;
+  padding: 1px 3px;
+  line-height: 1;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+.vscode-tab:hover .vscode-tab-close, .vscode-tab.active .vscode-tab-close {
+  opacity: 0.7;
+}
+.vscode-tab-close:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* VS Code Breadcrumbs */
+.vscode-breadcrumbs {
+  background-color: #1e1e1e;
+  height: 24px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #888888;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  user-select: none;
+}
+.vscode-breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.vscode-breadcrumb-item:hover {
+  color: #ffffff;
+}
+.vscode-breadcrumb-sep {
+  opacity: 0.5;
+  font-size: 0.7rem;
+}
+
+/* Monaco Editor Container */
+.vscode-editor-surface {
+  flex: 1;
+  min-height: 280px;
+  position: relative;
+  background-color: var(--vscode-bg);
+}
+
+/* VS Code Bottom Panel (Terminal / Output / Vue Preview / Test Runner) */
+.vscode-bottom-panel {
+  background-color: var(--vscode-panel-bg);
+  border-top: 1px solid var(--gh-border-default);
+  display: flex;
+  flex-direction: column;
+  height: 240px;
+  min-height: 150px;
+  flex-shrink: 0;
+}
+.vscode-panel-header {
+  height: 34px;
+  background-color: #181818;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  user-select: none;
+}
+.vscode-panel-tabs {
+  display: flex;
+  gap: 16px;
+}
+.vscode-panel-tab {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888888;
+  cursor: pointer;
+  padding: 7px 0;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease;
+}
+.vscode-panel-tab:hover {
+  color: #cccccc;
+}
+.vscode-panel-tab.active {
+  color: #ffffff;
+  border-bottom-color: #ffffff;
+}
+.vscode-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vscode-panel-btn {
+  background: transparent;
+  border: none;
+  color: #888888;
+  font-size: 0.85rem;
+  padding: 3px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.vscode-panel-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+.vscode-panel-content {
+  flex: 1;
+  overflow: auto;
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  background-color: #181818;
+  color: #d4d4d4;
+}
+
+/* VS Code Status Bar */
+.vscode-statusbar {
+  height: 24px;
+  background-color: var(--vscode-statusbar-bg);
+  color: var(--vscode-statusbar-fg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  font-size: 0.72rem;
+  font-family: var(--font-ui);
+  user-select: none;
+  flex-shrink: 0;
+}
+.vscode-statusbar-left, .vscode-statusbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.vscode-status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+  transition: background-color 0.1s ease;
+}
+.vscode-status-item:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Command Palette (Cmd+Shift+P / Cmd+K) */
+.vscode-quick-open {
+  position: fixed;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 600px;
+  background-color: #252526;
+  border: 1px solid #454545;
+  border-radius: 6px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+  z-index: 3000;
+  overflow: hidden;
+  display: none;
+}
+.vscode-quick-input {
+  width: 100%;
+  background-color: #3c3c3c;
+  border: none;
+  color: #ffffff;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  font-family: var(--font-ui);
+  outline: none;
+}
+.vscode-quick-list {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.vscode-quick-item {
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  color: #cccccc;
+  font-size: 0.85rem;
+}
+.vscode-quick-item:hover, .vscode-quick-item.active {
+  background-color: #04395e;
+  color: #ffffff;
+}
+
+/* Responsive Workbench adjustments */
+@media (max-width: 768px) {
+  .vscode-sidebar {
+    display: none;
+  }
+  .vscode-activitybar {
+    width: 40px;
+  }
+  .vscode-body {
+    height: 520px;
+  }
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  width: 10px;
+  height: 10px;
 }
-
 ::-webkit-scrollbar-track {
-    background: #04070a;
-    border-left: 1px solid var(--cyber-border-dim);
+  background: rgba(0, 0, 0, 0.15);
 }
-
 ::-webkit-scrollbar-thumb {
-    background: #19273b;
-    border: 1px solid var(--cyber-cyan-dim);
-    border-radius: 4px;
+  background: rgba(121, 192, 255, 0.18);
+  border-radius: 5px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--cyber-cyan);
-    box-shadow: 0 0 10px var(--cyber-cyan-glow);
-}
-
-/* Tactical Glitch / Cyberpunk Accents */
-.badge-neon-cyan {
-    background-color: #04070c;
-    border: 1px solid var(--cyber-cyan);
-    color: var(--cyber-cyan);
-    box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
-}
-
-.badge-neon-yellow {
-    background-color: #04070c;
-    border: 1px solid var(--cyber-yellow);
-    color: var(--cyber-yellow);
-    box-shadow: 0 0 8px rgba(255, 230, 0, 0.2);
-}
-
-.badge-neon-pink {
-    background-color: #04070c;
-    border: 1px solid var(--cyber-pink);
-    color: var(--cyber-pink);
-    box-shadow: 0 0 8px rgba(255, 0, 85, 0.2);
+  background: rgba(121, 192, 255, 0.35);
 }

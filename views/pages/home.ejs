@@ -1,183 +1,312 @@
-<%- include('../partials/header', { title: 'CodeQuest Arena // Terminal' }) %>
+<%- include('../partials/header', { title: 'CodeQuest // GitHub & VS Code Collaborative Arena' }) %>
 <%- include('../partials/navbar', { activeNav: 'terminal' }) %>
 
 <div class="container my-4">
-  <!-- Hero Section -->
-  <div class="row mb-5 text-center">
-    <div class="col">
-      <div class="d-inline-block border border-info bg-black px-3 py-1 rounded-pill mb-3 shadow-sm">
-        <span class="text-info font-monospace small tracking-widest">// SECURE_GAMIFIED_ARENA</span>
+  
+  <!-- Repository Hero Banner -->
+  <div class="p-4 rounded border mb-4" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+    <div class="row align-items-center g-3">
+      <div class="col-lg-8">
+        <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+          <span class="gh-repo-pill">Public Template</span>
+          <span class="badge badge-go d-inline-flex align-items-center gap-1">
+            <i class="codicon codicon-file-code"></i> Go 1.22
+          </span>
+          <span class="badge badge-vue d-inline-flex align-items-center gap-1">
+            <i class="codicon codicon-symbol-class"></i> Vue 3 SFC
+          </span>
+          <span class="badge bg-black border border-secondary text-muted small">v4.2.0-lts</span>
+        </div>
+        <h1 class="h2 fw-bold text-light mb-2">
+          CodeQuest Arena
+        </h1>
+        <p class="text-muted mb-3" style="font-size: 0.95rem; line-height: 1.6; max-width: 650px;">
+          The next-generation collaborative developer platform combining <strong>GitHub repository intelligence</strong>, a full <strong>VS Code Codespaces editor</strong>, and gamified <strong>CTF security raids</strong> in Go, Vue 3, TypeScript, and Python.
+        </p>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <a href="/workspace/1?lang=go" class="btn btn-sm btn-gh-primary px-3 py-1 font-monospace d-flex align-items-center gap-2">
+            <i class="codicon codicon-play"></i>
+            <span>Launch Go Arena (.go)</span>
+          </a>
+          <a href="/workspace/1?lang=vue" class="btn btn-sm btn-gh-secondary px-3 py-1 font-monospace d-flex align-items-center gap-2 text-light">
+            <i class="codicon codicon-symbol-class text-vue"></i>
+            <span>Launch Vue Arena (.vue)</span>
+          </a>
+          <a href="/projects/" class="btn btn-sm btn-gh-secondary px-3 py-1 font-monospace text-light">
+            <i class="codicon codicon-issues"></i>
+            <span>CTF Raids (8)</span>
+          </a>
+        </div>
       </div>
-      <h1 class="display-4 fw-bold text-light font-monospace" style="text-shadow: 0 0 25px rgba(13, 202, 240, 0.4);">
-        CodeQuest Arena <span class="text-warning"></span>
-      </h1>
-      <p class="lead text-muted font-monospace mt-3 mx-auto" style="font-size: 0.95rem; max-width: 700px; line-height: 1.7;">
-        Where software development, collaborative workspaces, and security raids meet RPG progression.
+      
+      <!-- Right Quick Stats & Language Composition Bar -->
+      <div class="col-lg-4">
+        <div class="p-3 rounded border bg-black font-monospace" style="border-color: var(--gh-border-default) !important;">
+          <div class="d-flex justify-content-between align-items-center mb-2 small text-muted">
+            <span class="fw-bold text-light">Languages &amp; Runtimes</span>
+            <span>8 Targets</span>
+          </div>
+          <!-- GitHub Language Color Bar -->
+          <div class="progress mb-3" style="height: 8px; background-color: #21262d; border-radius: 4px; overflow: hidden;">
+            <div class="progress-bar" style="width: 38%; background-color: #00add8;" title="Go 38%"></div>
+            <div class="progress-bar" style="width: 28%; background-color: #42b883;" title="Vue 28%"></div>
+            <div class="progress-bar" style="width: 18%; background-color: #3178c6;" title="TypeScript 18%"></div>
+            <div class="progress-bar" style="width: 16%; background-color: #3572a5;" title="Python 16%"></div>
+          </div>
+          <!-- Language Legend -->
+          <div class="row g-2 small">
+            <div class="col-6 d-flex align-items-center gap-2">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#00add8;"></span>
+              <span class="text-light">Go</span>
+              <span class="text-muted ms-auto">38%</span>
+            </div>
+            <div class="col-6 d-flex align-items-center gap-2">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#42b883;"></span>
+              <span class="text-light">Vue</span>
+              <span class="text-muted ms-auto">28%</span>
+            </div>
+            <div class="col-6 d-flex align-items-center gap-2">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#3178c6;"></span>
+              <span class="text-light">TypeScript</span>
+              <span class="text-muted ms-auto">18%</span>
+            </div>
+            <div class="col-6 d-flex align-items-center gap-2">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#3572a5;"></span>
+              <span class="text-light">Python</span>
+              <span class="text-muted ms-auto">16%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real-time Go 1.22 Concurrency Engine Telemetry (Vue 3 SFC Mounted) -->
+  <div id="vue-go-engine-mount"></div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      if (window.CodeQuestVue) {
+        window.CodeQuestVue.mount('vue-go-engine-mount', '/components/GoEngineStatus.vue');
+      }
+    });
+  </script>
+
+  <!-- Interactive VS Code Codespace Showcase Teaser -->
+  <div class="mb-4">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+      <div class="d-flex align-items-center gap-2">
+        <i class="codicon codicon-vscode text-info fs-5"></i>
+        <span class="fw-bold text-light">VS Code Codespaces Environment</span>
+        <span class="badge bg-black border border-secondary text-muted small">Live Monaco Engine</span>
+      </div>
+      <a href="/workspace/" class="text-decoration-none small text-info d-flex align-items-center gap-1">
+        <span>View all Codespaces</span>
+        <i class="codicon codicon-arrow-right"></i>
+      </a>
+    </div>
+
+    <!-- Mini Workbench Window Preview -->
+    <div class="rounded border overflow-hidden" style="background: var(--vscode-editor-bg); border-color: var(--gh-border-default) !important;">
+      <!-- Window Title -->
+      <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom font-monospace small" style="background: var(--vscode-titlebar-bg); border-color: var(--vscode-border) !important;">
+        <div class="d-flex align-items-center gap-2">
+          <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#ff5f56;"></span>
+          <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#ffbd2e;"></span>
+          <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#27c93f;"></span>
+          <span class="text-light fw-semibold ms-2">codequest-arena &gt; src &gt; main.go &amp; App.vue</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge badge-go">.go active</span>
+          <span class="badge badge-vue">.vue active</span>
+          <a href="/workspace/1" class="btn btn-sm btn-gh-primary py-0 px-2 font-monospace" style="font-size: 0.72rem;">Open Live Room</a>
+        </div>
+      </div>
+
+      <!-- Side-by-Side Code Showcase: Go and Vue -->
+      <div class="row g-0">
+        <!-- Go Microservice Preview -->
+        <div class="col-md-6 border-end" style="border-color: var(--vscode-border) !important;">
+          <div class="p-2 border-bottom d-flex align-items-center justify-content-between font-monospace small" style="background: #161b22; border-color: var(--vscode-border) !important;">
+            <span class="d-flex align-items-center gap-2 text-light">
+              <i class="codicon codicon-file-code text-go"></i>
+              <strong>main.go</strong>
+              <span class="badge badge-go" style="font-size: 0.6rem;">Go 1.22</span>
+            </span>
+            <a href="/projects/challenge/7" class="badge bg-black border border-warning text-warning text-decoration-none">
+              Solve Raid #7 (Race Condition)
+            </a>
+          </div>
+          <pre class="p-3 mb-0 font-monospace text-light small overflow-auto" style="height: 220px; background: #0d1117; font-size: 0.75rem; line-height: 1.5;"><code><span style="color: #ff7b72;">package</span> main
+
+<span style="color: #ff7b72;">import</span> (
+    <span style="color: #a5d6ff;">"fmt"</span>
+    <span style="color: #a5d6ff;">"sync"</span>
+)
+
+<span style="color: #ff7b72;">type</span> <span style="color: #79c0ff;">SafeCounter</span> <span style="color: #ff7b72;">struct</span> {
+    mu sync.Mutex
+    v  <span style="color: #79c0ff;">int</span>
+}
+
+<span style="color: #ff7b72;">func</span> (c *<span style="color: #79c0ff;">SafeCounter</span>) <span style="color: #d2a8ff;">Inc</span>() {
+    c.mu.<span style="color: #d2a8ff;">Lock</span>()
+    <span style="color: #ff7b72;">defer</span> c.mu.<span style="color: #d2a8ff;">Unlock</span>()
+    c.v++
+}
+
+<span style="color: #ff7b72;">func</span> <span style="color: #d2a8ff;">main</span>() {
+    c := &amp;SafeCounter{}
+    <span style="color: #8b949e;">// Concurrently increment 100 times</span>
+    <span style="color: #ff7b72;">var</span> wg sync.WaitGroup
+    <span style="color: #ff7b72;">for</span> i := <span style="color: #79c0ff;">0</span>; i &lt; <span style="color: #79c0ff;">100</span>; i++ {
+        wg.<span style="color: #d2a8ff;">Add</span>(<span style="color: #79c0ff;">1</span>)
+        <span style="color: #ff7b72;">go</span> <span style="color: #ff7b72;">func</span>() { <span style="color: #ff7b72;">defer</span> wg.<span style="color: #d2a8ff;">Done</span>(); c.<span style="color: #d2a8ff;">Inc</span>() }()
+    }
+    wg.<span style="color: #d2a8ff;">Wait</span>()
+    fmt.<span style="color: #d2a8ff;">Println</span>(<span style="color: #a5d6ff;">"[OK] Go Goroutine safe balance:"</span>, c.v)
+}</code></pre>
+        </div>
+
+        <!-- Vue 3 SFC Preview -->
+        <div class="col-md-6">
+          <div class="p-2 border-bottom d-flex align-items-center justify-content-between font-monospace small" style="background: #161b22; border-color: var(--vscode-border) !important;">
+            <span class="d-flex align-items-center gap-2 text-light">
+              <i class="codicon codicon-symbol-class text-vue"></i>
+              <strong>App.vue</strong>
+              <span class="badge badge-vue" style="font-size: 0.6rem;">Vue 3 SFC</span>
+            </span>
+            <a href="/projects/challenge/8" class="badge bg-black border border-info text-info text-decoration-none">
+              Solve Raid #8 (Vue XSS)
+            </a>
+          </div>
+          <pre class="p-3 mb-0 font-monospace text-light small overflow-auto" style="height: 220px; background: #0d1117; font-size: 0.75rem; line-height: 1.5;"><code><span style="color: #ff7b72;">&lt;template&gt;</span>
+  <span style="color: #7ee787;">&lt;div</span> <span style="color: #79c0ff;">class=</span><span style="color: #a5d6ff;">"codequest-card"</span><span style="color: #7ee787;">&gt;</span>
+    <span style="color: #7ee787;">&lt;h4&gt;</span>{{ title }}<span style="color: #7ee787;">&lt;/h4&gt;</span>
+    <span style="color: #8b949e;">&lt;!-- Secure text binding avoids v-html XSS --&gt;</span>
+    <span style="color: #7ee787;">&lt;p</span> <span style="color: #79c0ff;">class=</span><span style="color: #a5d6ff;">"telemetry"</span><span style="color: #7ee787;">&gt;</span>{{ sanitizedPayload }}<span style="color: #7ee787;">&lt;/p&gt;</span>
+    <span style="color: #7ee787;">&lt;button</span> <span style="color: #79c0ff;">@click=</span><span style="color: #a5d6ff;">"syncPulse"</span><span style="color: #7ee787;">&gt;</span>Sync Peers: {{ syncCount }}<span style="color: #7ee787;">&lt;/button&gt;</span>
+  <span style="color: #7ee787;">&lt;/div&gt;</span>
+<span style="color: #ff7b72;">&lt;/template&gt;</span>
+
+<span style="color: #ff7b72;">&lt;script</span> <span style="color: #79c0ff;">setup lang=</span><span style="color: #a5d6ff;">"ts"</span><span style="color: #ff7b72;">&gt;</span>
+<span style="color: #ff7b72;">import</span> { ref } <span style="color: #ff7b72;">from</span> <span style="color: #a5d6ff;">'vue'</span>
+<span style="color: #ff7b72;">const</span> title = <span style="color: #d2a8ff;">ref</span>(<span style="color: #a5d6ff;">'CodeQuest Vue 3 Arena'</span>)
+<span style="color: #ff7b72;">const</span> syncCount = <span style="color: #d2a8ff;">ref</span>(<span style="color: #79c0ff;">42</span>)
+<span style="color: #ff7b72;">function</span> <span style="color: #d2a8ff;">syncPulse</span>() { syncCount.value++ }
+<span style="color: #ff7b72;">&lt;/script&gt;</span></code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured CTF Security Raids Grid -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <i class="codicon codicon-shield text-warning fs-5"></i>
+        <span class="fw-bold text-light">Featured CTF Security Raids</span>
+        <span class="badge bg-black border border-secondary text-muted">8 Total Raids</span>
+      </div>
+      <a href="/projects/" class="text-decoration-none small text-info">View All Challenges →</a>
+    </div>
+
+    <!-- Raid 1: Go Concurrency -->
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 rounded border p-3 font-monospace d-flex flex-column justify-content-between" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge badge-go">.go</span>
+            <span class="badge bg-black border border-warning text-warning">MED // +200 XP</span>
+          </div>
+          <h5 class="text-light fw-bold mb-1" style="font-size: 0.9rem;">#7: Golang Goroutine Race Condition</h5>
+          <p class="text-muted small mb-3" style="line-height: 1.4; font-size: 0.76rem;">
+            Audit an asynchronous Go microservice. Prevent concurrent data races using sync.Mutex or channels.
+          </p>
+        </div>
+        <a href="/projects/challenge/7" class="btn btn-sm btn-gh-secondary w-100 text-center font-monospace">
+          Solve in Go
+        </a>
+      </div>
+    </div>
+
+    <!-- Raid 2: Vue 3 XSS -->
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 rounded border p-3 font-monospace d-flex flex-column justify-content-between" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge badge-vue">.vue</span>
+            <span class="badge bg-black border border-info text-info">EASY // +150 XP</span>
+          </div>
+          <h5 class="text-light fw-bold mb-1" style="font-size: 0.9rem;">#8: Vue 3 DOM XSS Sanitization</h5>
+          <p class="text-muted small mb-3" style="line-height: 1.4; font-size: 0.76rem;">
+            Patch an unescaped v-html directive in a Vue 3 SFC component vulnerable to malicious script injection.
+          </p>
+        </div>
+        <a href="/projects/challenge/8" class="btn btn-sm btn-gh-secondary w-100 text-center font-monospace">
+          Solve in Vue
+        </a>
+      </div>
+    </div>
+
+    <!-- Raid 3: SQL Injection -->
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 rounded border p-3 font-monospace d-flex flex-column justify-content-between" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-black border border-secondary text-light">SQL</span>
+            <span class="badge bg-black border border-info text-info">EASY // +150 XP</span>
+          </div>
+          <h5 class="text-light fw-bold mb-1" style="font-size: 0.9rem;">#1: SQL Injection Vault</h5>
+          <p class="text-muted small mb-3" style="line-height: 1.4; font-size: 0.76rem;">
+            Exploit and remediate unsanitized string formatting in backend queries using parameterized statements.
+          </p>
+        </div>
+        <a href="/projects/challenge/1" class="btn btn-sm btn-gh-secondary w-100 text-center font-monospace">
+          Audit Query
+        </a>
+      </div>
+    </div>
+
+    <!-- Raid 4: Reentrancy Smart Contract -->
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 rounded border p-3 font-monospace d-flex flex-column justify-content-between" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+        <div>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-black border border-danger text-danger">SOL</span>
+            <span class="badge bg-black border border-danger text-danger">HARD // +350 XP</span>
+          </div>
+          <h5 class="text-light fw-bold mb-1" style="font-size: 0.9rem;">#6: Reentrancy Attack</h5>
+          <p class="text-muted small mb-3" style="line-height: 1.4; font-size: 0.76rem;">
+            Inspect state updates before external calls to neutralize malicious reentrant drain exploits.
+          </p>
+        </div>
+        <a href="/projects/challenge/6" class="btn btn-sm btn-gh-secondary w-100 text-center font-monospace">
+          Audit Contract
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom GitHub README Style Box -->
+  <div class="p-4 rounded border" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+    <div class="d-flex align-items-center gap-2 border-bottom pb-2 mb-3" style="border-color: var(--gh-border-default) !important;">
+      <i class="codicon codicon-book text-muted fs-5"></i>
+      <span class="fw-bold text-light">README.md</span>
+      <span class="badge bg-black border border-secondary text-muted ms-auto small">Markdown</span>
+    </div>
+    <div class="font-monospace small text-muted" style="line-height: 1.7;">
+      <p class="text-light mb-2">
+        <strong>Welcome to CodeQuest!</strong> This environment incorporates GitHub repository structure with a full-fledged VS Code web workbench:
       </p>
+      <ul class="ps-3 mb-0">
+        <li><strong class="text-go">Go 1.22 Support:</strong> Write and test concurrent goroutines, channels, and mutexes in <code>main.go</code>.</li>
+        <li><strong class="text-vue">Vue 3 SFC Support:</strong> Develop and preview reactive single-file components live in <code>App.vue</code>.</li>
+        <li><strong class="text-info">Real-time Synchronization:</strong> Collaborative CRDT buffer syncing across connected browser tabs and Firebase Firestore.</li>
+        <li><strong class="text-warning">CTF Test Suites:</strong> Automated predefined functional assertions, security boundary checks, and automated XP rewards.</li>
+      </ul>
     </div>
   </div>
 
-  <!-- Quick Metrics Bar -->
-  <div class="row text-center mb-5 g-4">
-    <div class="col-md-4">
-      <div class="p-4 rounded border border-secondary shadow-lg bg-dark hover-lift position-relative overflow-hidden" style="background-color: #12161f !important;">
-        <div class="position-absolute top-0 start-0 w-100 bg-info" style="height: 2px;"></div>
-        <span class="text-muted d-block small font-monospace text-uppercase tracking-wider mb-2">Active Players Online</span>
-        <h3 class="text-primary fw-bold mb-0 font-monospace" style="text-shadow: 0 0 10px rgba(13, 202, 240, 0.3);">1,429</h3>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="p-4 rounded border border-secondary shadow-lg bg-dark hover-lift position-relative overflow-hidden" style="background-color: #12161f !important;">
-        <div class="position-absolute top-0 start-0 w-100 bg-success" style="height: 2px;"></div>
-        <span class="text-muted d-block small font-monospace text-uppercase tracking-wider mb-2">Dungeons Cleared</span>
-        <h3 class="text-success fw-bold mb-0 font-monospace" style="text-shadow: 0 0 10px rgba(25, 135, 84, 0.3);">8,531</h3>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="p-4 rounded border border-secondary shadow-lg bg-dark hover-lift position-relative overflow-hidden" style="background-color: #12161f !important;">
-        <div class="position-absolute top-0 start-0 w-100 bg-warning" style="height: 2px;"></div>
-        <span class="text-muted d-block small font-monospace text-uppercase tracking-wider mb-2">Secured Codebases</span>
-        <h3 class="text-warning fw-bold mb-0 font-monospace" style="text-shadow: 0 0 10px rgba(255, 193, 7, 0.3);">412,890</h3>
-      </div>
-    </div>
-  </div>
-
-  <!-- Core Features Grid -->
-  <div class="row g-4 mb-5">
-    <!-- Feature 1 -->
-    <div class="col-md-4">
-      <div class="card h-100 shadow-lg border-primary bg-dark text-white hover-lift position-relative overflow-hidden" style="background-color: #12161f !important; box-shadow: 0 0 15px rgba(13, 202, 240, 0.12);">
-        <div class="position-absolute top-0 start-0 w-100 bg-primary" style="height: 3px;"></div>
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <div class="d-flex justify-content-between align-items-center mb-3 font-monospace small">
-              <span class="badge bg-black border border-primary text-primary px-2 py-1 shadow-sm">MODULE_01</span>
-              <span class="text-primary">⚡</span>
-            </div>
-            <h3 class="card-title h5 text-primary fw-bold font-monospace mb-2">RPG Progression Layer</h3>
-            <p class="card-text text-muted small font-monospace" style="line-height: 1.6;">
-              Pick your avatar class—whether you're a Frontend Wizard, Backend Architect, or Security Ninja—and earn XP by sharing snippets and solving challenges to level up.
-            </p>
-          </div>
-          <div class="mt-4 pt-3 border-top border-secondary d-flex justify-content-between align-items-center">
-            <span class="text-info font-monospace small fw-bold">STATUS: ONLINE</span>
-            <a href="/projects/" class="btn btn-sm btn-outline-primary font-monospace fw-bold">[ LAUNCH ]</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Feature 2 -->
-    <div class="col-md-4">
-      <div class="card h-100 shadow-lg border-success bg-dark text-white hover-lift position-relative overflow-hidden" style="background-color: #12161f !important; box-shadow: 0 0 15px rgba(25, 135, 84, 0.12);">
-        <div class="position-absolute top-0 start-0 w-100 bg-success" style="height: 3px;"></div>
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <div class="d-flex justify-content-between align-items-center mb-3 font-monospace small">
-              <span class="badge bg-black border border-success text-success px-2 py-1 shadow-sm">MODULE_02</span>
-              <span class="text-success">🌐</span>
-            </div>
-            <h3 class="card-title h5 text-success fw-bold font-monospace mb-2">Collaborative Workspace</h3>
-            <p class="card-text text-muted small font-monospace" style="line-height: 1.6;">
-              Drop into real-time rooms to co-author code, build cheatsheets together, and race against the clock in team sprint hackathons.
-            </p>
-          </div>
-          <div class="mt-4 pt-3 border-top border-secondary d-flex justify-content-between align-items-center">
-            <span class="text-success font-monospace small fw-bold">STATUS: SYNCED</span>
-            <a href="/workspace/" class="btn btn-sm btn-outline-success font-monospace fw-bold">[ LAUNCH ]</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Feature 3 -->
-    <div class="col-md-4">
-      <div class="card h-100 shadow-lg border-danger bg-dark text-white hover-lift position-relative overflow-hidden" style="background-color: #12161f !important; box-shadow: 0 0 15px rgba(220, 53, 69, 0.12);">
-        <div class="position-absolute top-0 start-0 w-100 bg-danger" style="height: 3px;"></div>
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <div class="d-flex justify-content-between align-items-center mb-3 font-monospace small">
-              <span class="badge bg-black border border-danger text-danger px-2 py-1 shadow-sm">MODULE_03</span>
-              <span class="text-danger">🛡️</span>
-            </div>
-            <h3 class="card-title h5 text-danger fw-bold font-monospace mb-2">CTF Security Raids</h3>
-            <p class="card-text text-muted small font-monospace" style="line-height: 1.6;">
-              Enter Code Dungeons to audit, debug, and patch intentionally vulnerable codebases with your guild before time runs out to earn rare epic gear.
-            </p>
-          </div>
-          <div class="mt-4 pt-3 border-top border-secondary d-flex justify-content-between align-items-center">
-            <span class="text-danger font-monospace small fw-bold">STATUS: ARMED</span>
-            <a href="/projects/" class="btn btn-sm btn-outline-danger font-monospace fw-bold">[ LAUNCH ]</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Daily Quest & Live Activity Section -->
-  <div class="row g-4 mb-5">
-    <!-- Daily Bounty Quest Card -->
-    <div class="col-lg-6">
-      <div class="card h-100 border-warning shadow-lg bg-dark text-white position-relative overflow-hidden hover-lift" style="background-color: #12161f !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.12);">
-        <div class="position-absolute top-0 start-0 w-100 bg-warning" style="height: 3px;"></div>
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <div class="d-flex justify-content-between align-items-center mb-3 font-monospace small">
-              <span class="badge bg-black border border-warning text-warning px-2 py-1 shadow-sm">⚠️ DAILY_BOUNTY</span>
-              <span class="text-warning">⚡</span>
-            </div>
-            <h4 class="h5 text-warning fw-bold font-monospace mb-2">Patch the SQL Injection Vulnerability</h4>
-            <p class="card-text small text-muted font-monospace mb-4" style="line-height: 1.6;">Fix the insecure input query in Dungeon #404 before reset to claim your daily reward.</p>
-          </div>
-          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 pt-3 border-top border-secondary">
-            <span class="text-info fw-bold small font-monospace">Reward: +500 XP & 150 Gold</span>
-            <a href="/projects/challenge/1/" class="btn btn-sm btn-outline-warning font-monospace text-uppercase fw-bold px-3 shadow-sm">Accept Bounty</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Live Server Activity Ticker -->
-    <div class="col-lg-6">
-      <div class="card h-100 border-secondary shadow-lg bg-dark text-white position-relative overflow-hidden hover-lift" style="background-color: #12161f !important; box-shadow: 0 0 15px rgba(13, 202, 240, 0.12);">
-        <div class="position-absolute top-0 start-0 w-100 bg-info" style="height: 3px;"></div>
-        <div class="card-body p-4 d-flex flex-column justify-content-between">
-          <div>
-            <div class="d-flex justify-content-between align-items-center mb-3 font-monospace small">
-              <span class="badge bg-black border border-secondary text-info px-2 py-1 shadow-sm">📡 LIVE_SERVER_FEED</span>
-              <span class="spinner-grow spinner-grow-sm text-info" role="status" style="width: 0.5rem; height: 0.5rem;"></span>
-            </div>
-            <ul class="list-unstyled small mb-0 text-muted font-monospace" style="line-height: 2;">
-              <li class="mb-2">🟢 <strong class="text-light">CyberNinja</strong> just patched a vulnerability in Dungeon #404</li>
-              <li class="mb-2">🏆 Guild <strong class="text-light">AlphaSquad</strong> completed a 3-hour sprint hackathon</li>
-              <li>⭐ <strong class="text-light">FrontendWizard</strong> leveled up to Level 15!</li>
-            </ul>
-          </div>
-          <div class="mt-4 pt-3 border-top border-secondary text-end font-monospace small text-muted">
-            TELEMETRY: <span class="text-success">STREAMING_OK</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Action Call -->
-  <div class="row text-center mb-4">
-    <div class="col d-flex justify-content-center gap-3 flex-wrap font-monospace">
-      <a href="/workspace/" class="btn btn-outline-info btn-lg font-monospace px-4 py-2 shadow-sm">Enter Workspace Arena</a>
-      <a href="/projects/" class="btn btn-outline-warning btn-lg font-monospace px-4 py-2 shadow-sm">Explore Raids & Projects</a>
-    </div>
-  </div>
 </div>
-
-<style>
-  .hover-lift {
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease-in-out;
-  }
-  .hover-lift:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8) !important;
-  }
-</style>
 
 <%- include('../partials/footer') %>

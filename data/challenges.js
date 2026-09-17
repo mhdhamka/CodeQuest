@@ -602,6 +602,272 @@ function fetchWebhookAvatar(targetUrl) {
         expected: "Blocked: RFC 1918 private network range disallowed."
       }
     ]
+  },
+  {
+    id: 7,
+    title: "Go Microservice: Goroutine Race & Concurrent Map Mutation",
+    category: "Go Systems & Concurrency Safety",
+    difficulty: "MED",
+    xp_reward: 260,
+    time_limit_seconds: 360,
+    language: "go",
+    filename: "main.go",
+    tags: ["go", "golang", "concurrency", "backend"],
+    flag: "FLAG{g0_r4c3_c0nd1t10n_p4tch3d_4t0m1c}",
+    description: "A high-throughput Go microservice handles concurrent deposit and transfer goroutines updating an in-memory vault map. Because Go maps are not thread-safe, running concurrent goroutine writes without mutex locks or atomic synchronization triggers fatal runtime crashes ('fatal error: concurrent map writes') and memory state corruption.",
+    instructions: "Protect the shared vault map using sync.RWMutex (using mu.Lock() / mu.Unlock() for deposits, mu.RLock() / mu.RUnlock() for balance queries), or use sync.Map / atomic synchronization primitives to prevent data races.",
+    vulnerable_code: `package main
+
+import (
+    "fmt"
+    "time"
+)
+
+type Vault struct {
+    balances map[string]int // INSECURE: Unsynchronized map accessed by multiple goroutines
+}
+
+func (v *Vault) Deposit(account string, amount int) {
+    // Data race: Multiple goroutines writing to map simultaneously
+    v.balances[account] += amount
+}
+
+func main() {
+    v := &Vault{balances: make(map[string]int)}
+    for i := 0; i < 100; i++ {
+        go v.Deposit("operative_alpha", 10) // CRASH: fatal error: concurrent map writes
+    }
+    time.Sleep(50 * time.Millisecond)
+    fmt.Println("Balance:", v.balances["operative_alpha"])
+}`,
+    starter_templates: {
+      go: `// Challenge 7: Patch Go Goroutine Data Race & Map Corruption
+// Objective: Use sync.RWMutex to safeguard concurrent map operations.
+
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+type Vault struct {
+    mu       sync.RWMutex
+    balances map[string]int
+}
+
+func NewVault() *Vault {
+    return &Vault{
+        balances: make(map[string]int),
+    }
+}
+
+func (v *Vault) Deposit(account string, amount int) {
+    v.mu.Lock()
+    defer v.mu.Unlock()
+    v.balances[account] += amount
+}
+
+func (v *Vault) GetBalance(account string) int {
+    v.mu.RLock()
+    defer v.mu.RUnlock()
+    return v.balances[account]
+}
+
+func main() {
+    v := NewVault()
+    var wg sync.WaitGroup
+
+    for i := 0; i < 100; i++ {
+        wg.Add(1)
+        go func() {
+            defer wg.Done()
+            v.Deposit("operative_alpha", 10)
+        }()
+    }
+
+    wg.Wait()
+    fmt.Printf("[OK] Concurrency safe balance: %d\\n", v.GetBalance("operative_alpha"))
+}
+`,
+      javascript: `// JavaScript Alternative: Thread-safe SharedArrayBuffer Mutex / Atomics
+const buffer = new SharedArrayBuffer(4);
+const balance = new Int32Array(buffer);
+Atomics.add(balance, 0, 10);
+console.log("Safe atomic balance:", Atomics.load(balance, 0));
+`,
+      python: `# Python Alternative: threading.Lock synchronization
+import threading
+
+lock = threading.Lock()
+balance = 0
+
+def deposit(amount):
+    global balance
+    with lock:
+        balance += amount
+`
+    },
+    test_cases: [
+      {
+        id: "tc_7_1",
+        title: "Go Race Detector Simulation (-race flag)",
+        type: "Concurrency Check",
+        description: "Run 100 concurrent deposit goroutines to test for data races on the balances map.",
+        input: "100 concurrent goroutines executing v.Deposit('operative_alpha', 10)",
+        expected: "PASS: Zero data race warnings detected by Go runtime scheduler."
+      },
+      {
+        id: "tc_7_2",
+        title: "Mutex Write Lock Acquisition (mu.Lock)",
+        type: "Security Exploit",
+        description: "Verify that write operations properly acquire exclusive lock before mutating map state.",
+        input: "Deposit operation under write contention",
+        expected: "Exclusive write lock acquired; un-synchronized concurrent map write prevented."
+      },
+      {
+        id: "tc_7_3",
+        title: "Concurrent Read Lock (mu.RLock)",
+        type: "Functional",
+        description: "Verify readers can safely query balances concurrently without blocking other readers.",
+        input: "50 simultaneous read requests while write lock idle",
+        expected: "RLock granted to multiple readers concurrently without data race."
+      },
+      {
+        id: "tc_7_4",
+        title: "Deterministic Final Balance Integrity",
+        type: "Boundary Condition",
+        description: "Verify that after 100 deposit iterations of +10, final balance equals exactly 1000.",
+        input: "100 iterations of +10 deposit",
+        expected: "Final balance = 1000 without lost updates or race conditions."
+      }
+    ]
+  },
+  {
+    id: 8,
+    title: "Vue 3 SFC: Reactive DOM XSS & Unsafe v-html Directive",
+    category: "Vue 3 & Frontend Component Security",
+    difficulty: "EASY",
+    xp_reward: 180,
+    time_limit_seconds: 300,
+    language: "vue",
+    filename: "App.vue",
+    tags: ["vue", "sfc", "frontend", "xss"],
+    flag: "FLAG{vu3_sfc_v_htm1_s4n1t1z3d_r34ct1v3}",
+    description: "In this Vue 3 Single File Component (App.vue), an operative's biography from an untrusted API payload is dynamically bound to the DOM using the raw v-html directive without sanitization. An attacker injecting <img src=x onerror=alert('PWNED')> executes arbitrary JavaScript in the victim's session.",
+    instructions: "Replace the unsafe v-html directive with Vue's safe mustache interpolation {{ bio }} (which automatically HTML-entity escapes content), or sanitize the payload through DOMPurify.sanitize() in a computed property before rendering.",
+    vulnerable_code: `<template>
+  <div class="operative-card">
+    <h3 class="name">{{ operativeName }}</h3>
+    <!-- VULNERABLE: Direct unsanitized v-html directive binding -->
+    <div class="bio-content" v-html="rawBiography"></div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+
+const operativeName = ref('ShadowWalker')
+// Payload containing malicious vector: <img src=x onerror=alert(document.cookie)>
+const rawBiography = ref('<p>Level 42 Operative <img src=x onerror=exfiltrate(document.cookie)></p>')
+</script>`,
+    starter_templates: {
+      vue: `<!-- Challenge 8: Secure Vue 3 SFC Component against XSS -->
+<template>
+  <div class="operative-card">
+    <h3 class="name">{{ operativeName }}</h3>
+    
+    <!-- FIX OPTION 1: Safe reactive text interpolation (HTML escaped by Vue automatically) -->
+    <div class="bio-content text-safe">{{ rawBiography }}</div>
+
+    <!-- FIX OPTION 2: Sanitized HTML rendering with DOMPurify -->
+    <div class="bio-content-sanitized" v-html="sanitizedBiography"></div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import DOMPurify from 'dompurify'
+
+const operativeName = ref('ShadowWalker')
+const rawBiography = ref('<p>Level 42 Operative <img src=x onerror=alert(1)></p>')
+
+// Sanitize untrusted input using DOMPurify before rendering via v-html
+const sanitizedBiography = computed(() => {
+  return DOMPurify.sanitize(rawBiography.value, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'span'],
+    ALLOWED_ATTR: []
+  })
+})
+</script>
+
+<style scoped>
+.operative-card {
+  border: 1px solid #42b883;
+  padding: 1.5rem;
+  background: #161b22;
+  border-radius: 6px;
+}
+.name {
+  color: #42b883;
+}
+</style>
+`,
+      javascript: `// Vue 3 Composition API JavaScript equivalent
+import { ref, computed } from 'vue';
+import DOMPurify from 'dompurify';
+
+export default {
+  setup() {
+    const rawBio = ref('<img src=x onerror=alert(1)>');
+    const safeBio = computed(() => DOMPurify.sanitize(rawBio.value));
+    return { safeBio };
+  }
+};
+`,
+      typescript: `// TypeScript Vue 3 Helper
+import DOMPurify from 'dompurify';
+
+export function sanitizeHtml(dirty: string): string {
+    return DOMPurify.sanitize(dirty, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p'] });
+}
+`
+    },
+    test_cases: [
+      {
+        id: "tc_8_1",
+        title: "Standard Benign Text/Markup Rendering",
+        type: "Functional",
+        description: "Verify standard text and safe markup renders correctly without corrupting layout.",
+        input: 'rawBiography = "<p>Standard operative biography content.</p>"',
+        expected: "Rendered safely in DOM without execution of unpermitted tags."
+      },
+      {
+        id: "tc_8_2",
+        title: "Direct Script Injection Filter (<script>)",
+        type: "Security Exploit",
+        description: "Test against direct script payload: <script>document.location='http://attacker.com'</script>",
+        input: 'rawBiography = "<script>alert(1)</script>"',
+        expected: "Script tag stripped or escaped as text; zero script execution."
+      },
+      {
+        id: "tc_8_3",
+        title: "Event Handler Tag Stripping (<img onerror=>)",
+        type: "Security Exploit",
+        description: "Test against inline image onerror exploit payload.",
+        input: 'rawBiography = "<img src=x onerror=alert(document.cookie)>"',
+        expected: "onerror attribute removed or rendered safely as raw text."
+      },
+      {
+        id: "tc_8_4",
+        title: "Vue 3 SFC Reactivity & Scoped Style Integrity",
+        type: "Boundary Condition",
+        description: "Verify Vue 3 reactive ref() or computed() binding functions correctly on dynamic updates.",
+        input: "rawBiography.value updated reactively",
+        expected: "DOM updates reactively while maintaining XSS sanitization invariant."
+      }
+    ]
   }
 ];
 
@@ -987,6 +1253,126 @@ export function validateChallengeCode(challengeId, code, language = 'python') {
         passed: isFixed,
         hint: isFixed ? null : "Filter RFC 1918 subnets (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16).",
         executionTimeMs: Math.floor(Math.random() * 7) + 12
+      });
+      break;
+    }
+
+    case 7: {
+      // Challenge 7: Go Goroutine Race & Unsynchronized Map Access
+      // Checks:
+      // 1) Uses sync.Mutex or sync.RWMutex or sync.Map or atomic
+      // 2) Protects write operation with Lock() and Unlock()
+      const hasMutexOrSync = /sync\.(RW)?Mutex|sync\.Map|atomic\.|threading\.Lock|SharedArrayBuffer|Atomics/i.test(cleanCode);
+      const hasLockUnlock = /(mu|lock|v\.mu)\.Lock\(\)/i.test(cleanCode) || /Lock\(\)/i.test(cleanCode) || /sync\.Map/i.test(cleanCode);
+      const hasSafeRead = /(mu|lock|v\.mu)\.RLock\(\)/i.test(cleanCode) || /RLock\(\)/i.test(cleanCode) || /Lock\(\)/i.test(cleanCode);
+      const isFixed = hasMutexOrSync && hasLockUnlock;
+
+      testResults.push({
+        id: "tc_7_1",
+        title: "Go Race Detector Simulation (-race flag)",
+        type: "Concurrency Check",
+        input: "100 concurrent goroutines executing v.Deposit('operative_alpha', 10)",
+        expected: "PASS: Zero data race warnings detected by Go runtime scheduler.",
+        actual: isFixed ? "PASS: Go race detector reported 0 data races. Thread safety verified." : "FAIL: Data race detected on map write: fatal error: concurrent map writes.",
+        passed: isFixed,
+        hint: isFixed ? null : "Embed a sync.RWMutex or sync.Mutex in Vault and lock before map writes.",
+        executionTimeMs: Math.floor(Math.random() * 9) + 21
+      });
+
+      testResults.push({
+        id: "tc_7_2",
+        title: "Mutex Write Lock Acquisition (mu.Lock)",
+        type: "Security Exploit",
+        input: "Deposit operation under write contention",
+        expected: "Exclusive write lock acquired; un-synchronized concurrent map write prevented.",
+        actual: isFixed ? "Exclusive write lock acquired before updating balance map." : "Unprotected write: goroutine mutated shared map without mutex lock.",
+        passed: isFixed,
+        hint: isFixed ? null : "Call v.mu.Lock() before v.balances[account] += amount, and defer v.mu.Unlock().",
+        executionTimeMs: Math.floor(Math.random() * 6) + 10
+      });
+
+      testResults.push({
+        id: "tc_7_3",
+        title: "Concurrent Read Lock (mu.RLock)",
+        type: "Functional",
+        input: "50 simultaneous read requests while write lock idle",
+        expected: "RLock granted to multiple readers concurrently without data race.",
+        actual: isFixed ? "Read lock granted concurrently across goroutines without race." : "Read operation without synchronization lock.",
+        passed: isFixed,
+        hint: isFixed ? null : "Use mu.RLock() for read operations like GetBalance().",
+        executionTimeMs: Math.floor(Math.random() * 7) + 12
+      });
+
+      testResults.push({
+        id: "tc_7_4",
+        title: "Deterministic Final Balance Integrity",
+        type: "Boundary Condition",
+        input: "100 iterations of +10 deposit",
+        expected: "Final balance = 1000 without lost updates or race conditions.",
+        actual: isFixed ? "Final balance verified: exactly 1000 (100% update retention)." : "Balance discrepancy or panic due to uncoordinated memory writes.",
+        passed: isFixed,
+        hint: isFixed ? null : "Ensure WaitGroup or channels coordinate completion of all goroutines.",
+        executionTimeMs: Math.floor(Math.random() * 8) + 18
+      });
+      break;
+    }
+
+    case 8: {
+      // Challenge 8: Vue 3 SFC Unsafe v-html Directive & Reactive DOM XSS
+      // Checks:
+      // 1) Does not keep raw unsanitized v-html="rawBiography" without DOMPurify
+      // 2) Uses safe text interpolation {{ rawBiography }} OR sanitizes with DOMPurify
+      const hasUnsanitizedVHtml = /v-html=["']rawBiography["']/i.test(cleanCode) && !/DOMPurify|sanitize/i.test(cleanCode);
+      const usesSafeMustache = /\{\{\s*rawBiography\s*\}\}/.test(cleanCode) || /\{\{\s*operativeBio\s*\}\}/.test(cleanCode);
+      const usesDOMPurify = /DOMPurify\.sanitize/i.test(cleanCode) || /sanitizeHtml/i.test(cleanCode) || /sanitize/i.test(cleanCode);
+      const isFixed = (!hasUnsanitizedVHtml && (usesSafeMustache || usesDOMPurify)) || (usesDOMPurify && cleanCode.includes('v-html'));
+
+      testResults.push({
+        id: "tc_8_1",
+        title: "Standard Benign Text/Markup Rendering",
+        type: "Functional",
+        input: 'rawBiography = "<p>Standard operative biography content.</p>"',
+        expected: "Rendered safely in DOM without execution of unpermitted tags.",
+        actual: isFixed ? "Rendered safely in Vue 3 virtual DOM without security warnings." : "Insecure rendering mode active.",
+        passed: isFixed,
+        hint: isFixed ? null : "Use safe text binding {{ rawBiography }} or sanitize with DOMPurify.",
+        executionTimeMs: Math.floor(Math.random() * 6) + 11
+      });
+
+      testResults.push({
+        id: "tc_8_2",
+        title: "Direct Script Injection Filter (<script>)",
+        type: "Security Exploit",
+        input: 'rawBiography = "<script>alert(1)</script>"',
+        expected: "Script tag stripped or escaped as text; zero script execution.",
+        actual: isFixed ? "Script tag escaped into HTML entities or stripped by DOMPurify." : "CRITICAL: Script tag rendered unescaped directly into DOM.",
+        passed: isFixed,
+        hint: isFixed ? null : "Replace raw v-html with text interpolation or DOMPurify.sanitize().",
+        executionTimeMs: Math.floor(Math.random() * 5) + 9
+      });
+
+      testResults.push({
+        id: "tc_8_3",
+        title: "Event Handler Tag Stripping (<img onerror=>)",
+        type: "Security Exploit",
+        input: 'rawBiography = "<img src=x onerror=alert(document.cookie)>"',
+        expected: "onerror attribute removed or rendered safely as raw text.",
+        actual: isFixed ? "onerror handler neutralised: attribute stripped or escaped." : "CRITICAL: Image onerror inline event listener executed in browser context.",
+        passed: isFixed,
+        hint: isFixed ? null : "Ensure DOMPurify sanitizes event attributes before template mounting.",
+        executionTimeMs: Math.floor(Math.random() * 6) + 12
+      });
+
+      testResults.push({
+        id: "tc_8_4",
+        title: "Vue 3 SFC Reactivity & Scoped Style Integrity",
+        type: "Boundary Condition",
+        input: "rawBiography.value updated reactively",
+        expected: "DOM updates reactively while maintaining XSS sanitization invariant.",
+        actual: isFixed ? "Vue 3 reactive ref() updated DOM safely within scoped SFC boundaries." : "Reactivity pipeline flawed or vulnerable to injection on mutation.",
+        passed: isFixed,
+        hint: isFixed ? null : "Use computed(() => DOMPurify.sanitize(rawBiography.value)) for reactive updates.",
+        executionTimeMs: Math.floor(Math.random() * 5) + 14
       });
       break;
     }

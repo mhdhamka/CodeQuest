@@ -15,7 +15,13 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/css/custom.css">
+    <!-- VS Code Codicons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons@0.0.36/dist/codicon.min.css">
+    <!-- Vue 3 & vue3-sfc-loader for native .vue Single-File Components -->
+    <script src="/vendor/vue/vue.global.prod.js"></script>
+    <script src="/vendor/vue3-sfc-loader/vue3-sfc-loader.js"></script>
+    <script src="/static/js/vue-loader-helper.js"></script>
     <!-- Google Identity Services (GIS) OAuth Client SDK -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-<body class="container">
+<body class="<%= typeof fluidBody !== 'undefined' && fluidBody ? 'container-fluid px-2 px-md-3' : 'container' %>">

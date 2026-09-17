@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: 'Multiplayer CRDT Session // ' + room.name }) %>
+<%- include('../partials/header', { title: 'VS Code Codespace // ' + room.name, fluidBody: true }) %>
 <%- include('../partials/navbar', { activeNav: 'workspace' }) %>
 
 <!-- Monaco Editor Styles & Loader CDN -->
@@ -6,181 +6,636 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
 
 <style>
-  #monacoEditorMount {
+  /* VS Code Workspace Styles */
+  .vscode-outer-container {
     width: 100%;
-    height: 440px;
-    background-color: #070b12;
+    margin: 0 auto;
+    border-radius: 8px;
+    border: 1px solid var(--vscode-border);
+    background-color: var(--vscode-editor-bg);
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   }
-  .monaco-editor, .monaco-editor .overflow-guard {
-    border-radius: 4px 4px 0 0 !important;
-  }
-  /* Cyberpunk Monaco Status Bar */
-  .monaco-status-bar {
-    background-color: #06090e;
-    border: 1px solid #1c2638;
-    border-top: none;
-    border-radius: 0 0 4px 4px;
-    color: #8191a6;
-    font-size: 11px;
-    font-family: var(--cyber-font-mono);
+
+  /* VS Code Window Titlebar */
+  .vscode-top-window-bar {
+    height: 36px;
+    background-color: var(--vscode-titlebar-bg);
+    border-bottom: 1px solid var(--vscode-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px;
+    font-size: 0.78rem;
     user-select: none;
   }
-  .monaco-status-bar .status-item {
-    padding: 4px 10px;
-    display: inline-flex;
+
+  .vscode-window-dots {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .vscode-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-red { background-color: #ff5f56; border: 1px solid #e0443e; }
+  .dot-yellow { background-color: #ffbd2e; border: 1px solid #dea123; }
+  .dot-green { background-color: #27c93f; border: 1px solid #1aab29; }
+
+  /* Workbench Body Layout (Activity Bar + Sidebar + Editor + Side Panel) */
+  .vscode-main-layout {
+    display: flex;
+    min-height: 740px;
+    background-color: var(--vscode-editor-bg);
+  }
+
+  /* Activity Bar (Vertical 48px rail) */
+  .vscode-activity-bar {
+    width: 48px;
+    background-color: var(--vscode-activitybar-bg);
+    border-right: 1px solid var(--vscode-border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .activity-icon-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #858585;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    position: relative;
+  }
+  .activity-icon-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .activity-icon-btn.active {
+    color: #ffffff;
+    border-left: 2px solid var(--vscode-accent);
+  }
+  .activity-icon-btn .badge-pill {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: var(--vscode-accent);
+    color: white;
+    font-size: 0.6rem;
+    padding: 1px 4px;
+    border-radius: 10px;
+  }
+
+  /* VS Code Sidebar (File Explorer) */
+  .vscode-sidebar-panel {
+    width: 220px;
+    background-color: var(--vscode-sidebar-bg);
+    border-right: 1px solid var(--vscode-border);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8rem;
+  }
+  .sidebar-header {
+    height: 35px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    font-size: 0.72rem;
+    color: #bbbbbb;
+    border-bottom: 1px solid var(--vscode-border);
+    text-transform: uppercase;
+  }
+  .sidebar-section-title {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #888888;
+    text-transform: uppercase;
+    display: flex;
     align-items: center;
     gap: 4px;
-    border-right: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
   }
-  .monaco-status-bar .status-item:hover {
-    background: rgba(0, 240, 255, 0.08);
-    color: #00f0ff;
+  .vscode-file-item {
+    padding: 4px 12px 4px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    color: #cccccc;
+    cursor: pointer;
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: background 0.12s ease;
   }
+  .vscode-file-item:hover {
+    background-color: var(--vscode-list-hover);
+    color: #ffffff;
+  }
+  .vscode-file-item.active {
+    background-color: var(--vscode-list-active);
+    color: #ffffff;
+    border-left-color: var(--vscode-accent);
+  }
+
+  /* Editor Main Workspace Area */
+  .vscode-editor-pane {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--vscode-editor-bg);
+    overflow: hidden;
+  }
+
+  /* Tab Bar */
+  .vscode-tabs-container {
+    height: 36px;
+    background-color: var(--vscode-tabs-bg);
+    border-bottom: 1px solid var(--vscode-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 8px;
+    overflow-x: auto;
+  }
+  .vscode-tabs-list {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  .vscode-tab {
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 14px;
+    font-size: 0.78rem;
+    color: #969696;
+    background-color: var(--vscode-tab-inactive);
+    border-right: 1px solid var(--vscode-border);
+    border-top: 2px solid transparent;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  .vscode-tab:hover {
+    background-color: #22272e;
+    color: #e6edf3;
+  }
+  .vscode-tab.active {
+    background-color: var(--vscode-tab-active);
+    color: #ffffff;
+    border-top-color: var(--vscode-accent);
+  }
+  .vscode-tab-close {
+    font-size: 11px;
+    border-radius: 3px;
+    padding: 1px 3px;
+    opacity: 0.6;
+  }
+  .vscode-tab:hover .vscode-tab-close {
+    opacity: 1;
+  }
+  .vscode-tab-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Breadcrumbs */
+  .vscode-breadcrumbs {
+    height: 24px;
+    background-color: var(--vscode-editor-bg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    font-size: 0.74rem;
+    color: #8b949e;
+    gap: 6px;
+  }
+
+  /* Monaco Editor Mount */
+  #monacoEditorMount {
+    width: 100%;
+    height: 380px;
+    background-color: var(--vscode-editor-bg);
+  }
+
+  /* VS Code Status Bar */
+  .vscode-statusbar {
+    height: 24px;
+    background-color: var(--vscode-statusbar-bg);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    font-size: 0.72rem;
+    user-select: none;
+    font-family: var(--gh-font-mono);
+  }
+  .statusbar-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 6px;
+    height: 100%;
+    cursor: pointer;
+  }
+  .statusbar-item:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  /* VS Code Bottom Panel (Terminal / Output / Vue Preview / Test Runner) */
+  .vscode-bottom-panel {
+    background-color: var(--vscode-panel-bg);
+    border-top: 1px solid var(--vscode-border);
+    display: flex;
+    flex-direction: column;
+    height: 240px;
+  }
+  .vscode-panel-tabs {
+    height: 32px;
+    border-bottom: 1px solid var(--vscode-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+  }
+  .panel-tab-btn {
+    background: transparent;
+    border: none;
+    color: #8b949e;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 0.72rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 2px solid transparent;
+  }
+  .panel-tab-btn:hover {
+    color: #ffffff;
+  }
+  .panel-tab-btn.active {
+    color: #ffffff;
+    border-bottom-color: var(--vscode-accent);
+  }
+  .panel-tab-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    font-family: var(--gh-font-mono);
+    font-size: 0.78rem;
+  }
+
+  /* Live Vue SFC Preview Panel */
+  #vueComponentPreviewArea {
+    background: #0d1117;
+    border: 1px solid var(--gh-border-default);
+    border-radius: 6px;
+    padding: 16px;
+    min-height: 140px;
+    color: #e6edf3;
+  }
+
   /* Remote Peer Cursor Marker in Monaco */
   .peer-remote-cursor-line {
-    border-left: 2px solid #ffe600 !important;
+    border-left: 2px solid #58a6ff !important;
     position: relative;
   }
   .peer-cursor-glyph-marker {
-    background: #ffe600;
+    background: #58a6ff;
     width: 6px !important;
     height: 6px !important;
     border-radius: 50%;
     margin-top: 6px;
     margin-left: 4px;
-    box-shadow: 0 0 6px #ffe600;
-  }
-  .monaco-toolbar-select {
-    background-color: #0b0f17 !important;
-    border: 1px solid #21262d !important;
-    color: #00e5ff !important;
-    font-family: var(--cyber-font-mono) !important;
-    font-size: 0.75rem !important;
-    height: 28px !important;
-    padding-top: 2px;
-    padding-bottom: 2px;
-  }
-  .monaco-toolbar-select:focus {
-    border-color: #00e5ff !important;
-    box-shadow: 0 0 8px rgba(0, 229, 255, 0.3) !important;
-  }
-  /* Mission Urgency Countdown Styles */
-  @keyframes criticalPulse {
-    0% {
-      box-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
-      border-color: #ff0055;
-    }
-    50% {
-      box-shadow: 0 0 28px rgba(255, 0, 85, 0.9);
-      border-color: #ff3377;
-    }
-    100% {
-      box-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
-      border-color: #ff0055;
-    }
-  }
-  @keyframes textGlowRed {
-    0%, 100% {
-      color: #ff0055;
-      text-shadow: 0 0 10px rgba(255, 0, 85, 0.85);
-    }
-    50% {
-      color: #ffffff;
-      text-shadow: 0 0 20px rgba(255, 0, 85, 1);
-    }
-  }
-  .timer-critical-pulse {
-    animation: criticalPulse 1s infinite ease-in-out !important;
-  }
-  .timer-critical-text {
-    animation: textGlowRed 0.8s infinite ease-in-out !important;
+    box-shadow: 0 0 6px #58a6ff;
   }
 </style>
 
-<div class="container-fluid my-4 px-4">
+<div class="container-fluid px-3 py-2">
   
-  <!-- Top Navigation / Portal Status Bar -->
-  <div class="d-flex justify-content-between align-items-center p-3 mb-4 rounded font-monospace" style="background-color: #0d1117; border: 1px solid #00e5ff; box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);">
-    <div class="d-inline-flex align-items-center flex-wrap gap-2">
-      <a href="/workspace/" class="btn btn-sm btn-outline-info" style="color: #00e5ff; border-color: #00e5ff;">// WORKSPACE_INDEX_ARENA</a>
-      <span class="text-muted">|</span>
-      <span class="text-info small fw-bold font-monospace text-uppercase tracking-wider d-inline-flex align-items-center gap-2">
-        <span class="spinner-grow spinner-grow-sm text-info" role="status" style="width: 0.5rem; height: 0.5rem;"></span>
-        ARENA_PORTAL_ONLINE [v4.2]
-      </span>
-    </div>
-    <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
-      <!-- Classroom Mode Toggle (Replit-Inspired) -->
-      <button class="btn btn-sm btn-outline-warning font-monospace" id="lockModeBtn">
-        [ HOST_MODE: UNLOCKED ]
-      </button>
-      <a href="/workspace/rooms/<%= room.id %>/edit/" class="btn btn-sm btn-outline-warning" style="border-color: #ffb700; color: #ffb700;">[ EDIT ROOM ]</a>
-      <a href="/projects/profile/" class="btn btn-sm btn-outline-secondary">[ PLAYER_DOSSIER ]</a>
-    </div>
-  </div>
-
-  <!-- Section Header and Big Title -->
-  <div class="text-center mb-4">
-    <div class="mb-2">
-      <span class="badge bg-black rounded-pill px-3 py-2 font-monospace small shadow-sm" style="color: #00e5ff; border: 1px solid #00e5ff; box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);">
-        // MULTIPLAYER_CRDT_SESSION ACTIVE
-      </span>
-    </div>
-    <h1 class="text-white fw-bold font-monospace tracking-wide display-6" style="text-shadow: 0 0 12px rgba(0, 229, 255, 0.4);">
-      <%= room.name %>
-    </h1>
-    <p class="text-muted small font-monospace mt-1">
-      [ROOM ID: <%= room.id %>] — Monaco Real-Time Collaborative Code Environment Active
-    </p>
-
-    <% if (room.description) { %>
-      <p class="text-light font-monospace mt-2 mx-auto" style="max-width: 700px; font-size: 0.9rem; line-height: 1.5;">
-        <%= room.description %>
-      </p>
-    <% } %>
-
-    <% if (room.focus) { %>
-      <div class="mt-2">
-        <span class="badge bg-black border border-warning text-warning px-3 py-1 font-monospace" style="font-size: 0.75rem;">
-          // FOCUS: <%= room.focus %>
-        </span>
-      </div>
-    <% } %>
-  </div>
-
-  <!-- Main Room Dashboard Grid Layout -->
-  <div class="row g-4">
+  <!-- Outer VS Code Workbench Window -->
+  <div class="vscode-outer-container">
     
-    <!-- Left Column: Real-Time Monaco Code Editor & Container Sandbox -->
-    <div class="col-lg-8">
-      <div class="card text-white shadow-lg p-3 h-100" id="editorCardContainer" style="background-color: #0d1117 !important; border: 1px solid #00e5ff; box-shadow: 0 0 15px rgba(0, 229, 255, 0.2) !important; transition: border-color 0.3s ease, box-shadow 0.3s ease;">
-        
-        <!-- Editor Header with Presence Counter -->
-        <div class="d-flex align-items-center justify-content-between mb-2 font-monospace small border-bottom pb-2 flex-wrap gap-2" style="border-color: #21262d !important;">
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="badge bg-black px-2 py-1" id="syncStatusBadge" style="color: #00e5ff; border: 1px solid #00e5ff;">
-              🟢 FIREBASE_SYNC: CONNECTING...
-            </span>
-            <span class="badge bg-black px-2 py-1 text-warning border border-warning d-none" id="peerTypingBadge">
-              ⚡ Remote edit synced
-            </span>
-            <span class="text-muted" id="activePeersCount">// 2 PEERS CONNECTED</span>
-          </div>
-          <div class="d-flex align-items-center gap-2">
-            <span class="text-warning small"> Branch: <code class="text-info">main-feature</code></span>
+    <!-- Top VS Code Titlebar -->
+    <div class="vscode-top-window-bar">
+      <!-- Mac Window Buttons + Codespace Identity -->
+      <div class="d-flex align-items-center gap-3">
+        <div class="vscode-window-dots">
+          <span class="vscode-dot dot-red"></span>
+          <span class="vscode-dot dot-yellow"></span>
+          <span class="vscode-dot dot-green"></span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="codicon codicon-vscode text-info"></i>
+          <span class="fw-semibold text-light">codequest-arena</span>
+          <span class="text-muted">—</span>
+          <span class="text-light" id="topBarRoomTitle"><%= room.name %></span>
+          <span class="badge bg-black border border-secondary text-muted small ms-1">[Room #<%= room.id %>]</span>
+        </div>
+      </div>
+
+      <!-- Center Search & Command Palette Trigger -->
+      <div class="d-none d-md-flex align-items-center justify-content-center">
+        <div class="px-3 py-1 rounded bg-black border border-secondary text-muted font-monospace small d-flex align-items-center gap-2" style="cursor: pointer; border-color: var(--gh-border-default) !important;" onclick="openCommandPalette()">
+          <i class="codicon codicon-search"></i>
+          <span>codequest: <span id="titlebarActiveFile">main.go</span></span>
+          <kbd style="background: #21262d; border: 1px solid #30363d; color: #c9d1d9; font-size: 0.65rem;">⌘P</kbd>
+        </div>
+      </div>
+
+      <!-- Right Controls: Port, Branch, Host Lock, Room Actions -->
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-success text-black fw-semibold d-none d-sm-inline-flex align-items-center gap-1">
+          <i class="codicon codicon-radio-tower"></i>
+          <span>Port 3000 Active</span>
+        </span>
+        <span class="badge bg-black border border-info text-info font-monospace d-none d-md-inline-block" id="syncStatusBadge">
+          🟢 LIVE
+        </span>
+        <button class="btn btn-sm btn-outline-secondary py-0 px-2 font-monospace" id="lockModeBtn" style="height: 24px; font-size: 0.7rem;">
+          Host: Unlocked
+        </button>
+        <button class="btn btn-sm btn-gh-secondary py-0 px-2 font-monospace text-light d-flex align-items-center gap-1" id="toggleWorkbenchModeBtn" onclick="toggleWorkbenchMode()" style="height: 24px; font-size: 0.7rem;">
+          <i class="codicon codicon-symbol-class text-vue"></i>
+          <span>Vue 3 SFC Mode</span>
+        </button>
+        <a href="/workspace/rooms/<%= room.id %>/edit/" class="btn btn-sm btn-outline-secondary py-0 px-2 font-monospace" style="height: 24px; font-size: 0.7rem;">
+          Edit Room
+        </a>
+      </div>
+    </div>
+
+    <!-- Vue 3 Single-File Component Workbench Container (Mounted Dynamically) -->
+    <div id="vue-workbench-container" style="display: none; min-height: 600px;"></div>
+
+    <!-- Main Workbench Layout -->
+    <div class="vscode-main-layout">
+      
+      <!-- Activity Bar (Left 48px) -->
+      <div class="vscode-activity-bar">
+        <a href="javascript:void(0)" class="activity-icon-btn active" id="actBarExplorer" title="Explorer (Ctrl+Shift+E)">
+          <i class="codicon codicon-files fs-5"></i>
+        </a>
+        <a href="javascript:void(0)" class="activity-icon-btn" onclick="openCommandPalette()" title="Search (Ctrl+Shift+F)">
+          <i class="codicon codicon-search fs-5"></i>
+        </a>
+        <a href="javascript:void(0)" class="activity-icon-btn" title="Source Control (Ctrl+Shift+G)">
+          <i class="codicon codicon-source-control fs-5"></i>
+          <span class="badge-pill">1</span>
+        </a>
+        <a href="javascript:void(0)" class="activity-icon-btn" onclick="document.getElementById('runContainerBtn').click()" title="Run & Debug (Ctrl+Shift+D)">
+          <i class="codicon codicon-debug-alt fs-5"></i>
+        </a>
+        <a href="javascript:void(0)" class="activity-icon-btn" onclick="toggleMissionDrawer()" title="CTF Challenges (8 available)">
+          <i class="codicon codicon-extensions fs-5"></i>
+          <span class="badge-pill bg-warning text-black">8</span>
+        </a>
+        <div class="mt-auto d-flex flex-column gap-2">
+          <a href="/projects/profile/" class="activity-icon-btn" title="Developer Profile Dossier">
+            <i class="codicon codicon-account fs-5"></i>
+          </a>
+          <a href="javascript:void(0)" class="activity-icon-btn" title="Settings (Ctrl+,)">
+            <i class="codicon codicon-settings-gear fs-5"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Sidebar (File Explorer Tree) -->
+      <div class="vscode-sidebar-panel" id="vscodeSidebar">
+        <div class="sidebar-header">
+          <span>Explorer</span>
+          <div class="d-flex align-items-center gap-1">
+            <i class="codicon codicon-new-file" title="New File" style="cursor: pointer;"></i>
+            <i class="codicon codicon-refresh" title="Refresh Explorer" style="cursor: pointer;" onclick="refreshExplorerTree()"></i>
+            <i class="codicon codicon-collapse-all" title="Collapse All" style="cursor: pointer;"></i>
           </div>
         </div>
 
-        <!-- Cyberpunk Target Challenge Selection & Mission Intel Bar -->
-        <div class="p-2 mb-2 rounded font-monospace" style="background-color: #0c121e; border: 1px solid #ff4466; box-shadow: 0 0 12px rgba(255, 68, 102, 0.2);">
+        <div class="py-1">
+          <!-- Section 1: Open Editors -->
+          <div class="sidebar-section-title">
+            <i class="codicon codicon-chevron-down"></i>
+            <span>Open Editors</span>
+          </div>
+          <div id="openEditorsList">
+            <div class="vscode-file-item" data-lang="go" onclick="selectWorkspaceLanguage('go')">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-file-code text-go"></i>
+                <span>main.go</span>
+              </span>
+              <span class="badge badge-go" style="font-size: 0.6rem; padding: 1px 4px;">.go</span>
+            </div>
+            <div class="vscode-file-item" data-lang="vue" onclick="selectWorkspaceLanguage('vue')">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-symbol-class text-vue"></i>
+                <span>App.vue</span>
+              </span>
+              <span class="badge badge-vue" style="font-size: 0.6rem; padding: 1px 4px;">.vue</span>
+            </div>
+            <div class="vscode-file-item" data-lang="python" onclick="selectWorkspaceLanguage('python')">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-file-code text-warning"></i>
+                <span>solution.py</span>
+              </span>
+              <span class="badge bg-black border border-secondary text-muted" style="font-size: 0.6rem; padding: 1px 4px;">.py</span>
+            </div>
+          </div>
+
+          <!-- Section 2: CodeQuest Workspace Tree -->
+          <div class="sidebar-section-title mt-2">
+            <i class="codicon codicon-chevron-down"></i>
+            <span>codequest // src</span>
+          </div>
+          <div class="ps-1">
+            <!-- Go file -->
+            <div class="vscode-file-item" data-lang="go" onclick="selectWorkspaceLanguage('go')">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-file-code text-go"></i>
+                <span>main.go</span>
+              </span>
+              <span class="badge badge-go" style="font-size: 0.6rem; padding: 1px 4px;">GO</span>
+            </div>
+            <!-- Vue 3 SFC file -->
+            <div class="vscode-file-item" data-lang="vue" onclick="selectWorkspaceLanguage('vue')">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-symbol-class text-vue"></i>
+                <span>App.vue</span>
+              </span>
+              <span class="badge badge-vue" style="font-size: 0.6rem; padding: 1px 4px;">VUE</span>
+            </div>
+            <!-- TypeScript -->
+            <div class="vscode-file-item" data-lang="typescript" onclick="selectWorkspaceLanguage('typescript')">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-file-code text-info"></i>
+                <span>handler.ts</span>
+              </span>
+              <span class="badge bg-black border border-secondary text-muted" style="font-size: 0.6rem; padding: 1px 4px;">TS</span>
+            </div>
+            <!-- JavaScript -->
+            <div class="vscode-file-item" data-lang="javascript" onclick="selectWorkspaceLanguage('javascript')">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-file-code text-warning"></i>
+                <span>index.js</span>
+              </span>
+              <span class="badge bg-black border border-secondary text-muted" style="font-size: 0.6rem; padding: 1px 4px;">JS</span>
+            </div>
+            <!-- SQL -->
+            <div class="vscode-file-item" data-lang="sql" onclick="selectWorkspaceLanguage('sql')">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-database text-light"></i>
+                <span>query.sql</span>
+              </span>
+              <span class="badge bg-black border border-secondary text-muted" style="font-size: 0.6rem; padding: 1px 4px;">SQL</span>
+            </div>
+            <!-- C++ -->
+            <div class="vscode-file-item" data-lang="cpp" onclick="selectWorkspaceLanguage('cpp')">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-file-code text-primary"></i>
+                <span>main.cpp</span>
+              </span>
+              <span class="badge bg-black border border-secondary text-muted" style="font-size: 0.6rem; padding: 1px 4px;">CPP</span>
+            </div>
+            <!-- Shell -->
+            <div class="vscode-file-item" data-lang="shell" onclick="selectWorkspaceLanguage('shell')">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-terminal text-success"></i>
+                <span>deploy.sh</span>
+              </span>
+              <span class="badge bg-black border border-secondary text-muted" style="font-size: 0.6rem; padding: 1px 4px;">SH</span>
+            </div>
+          </div>
+
+          <!-- Section 3: CTF Raids Folder -->
+          <div class="sidebar-section-title mt-2">
+            <i class="codicon codicon-chevron-down"></i>
+            <span>ctf-targets</span>
+          </div>
+          <div class="ps-1">
+            <div class="vscode-file-item" onclick="selectChallenge(7)">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-bug text-go"></i>
+                <span>07_race_condition.go</span>
+              </span>
+              <span class="badge badge-go" style="font-size: 0.6rem;">#7</span>
+            </div>
+            <div class="vscode-file-item" onclick="selectChallenge(8)">
+              <span class="d-flex align-items-center gap-2">
+                <i class="codicon codicon-shield text-vue"></i>
+                <span>08_vue_xss.vue</span>
+              </span>
+              <span class="badge badge-vue" style="font-size: 0.6rem;">#8</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center: Editor Pane + Bottom Panels -->
+      <div class="vscode-editor-pane">
+        
+        <!-- VS Code Tab Bar -->
+        <div class="vscode-tabs-container">
+          <div class="vscode-tabs-list" id="editorTabsBar">
+            <!-- Go Tab -->
+            <div class="vscode-tab" id="tabGo" data-lang="go" onclick="selectWorkspaceLanguage('go')">
+              <i class="codicon codicon-file-code text-go"></i>
+              <span>main.go</span>
+              <span class="badge badge-go" style="font-size: 0.6rem; padding: 1px 4px;">.go</span>
+              <span class="vscode-tab-close" onclick="event.stopPropagation()">×</span>
+            </div>
+            <!-- Vue Tab -->
+            <div class="vscode-tab" id="tabVue" data-lang="vue" onclick="selectWorkspaceLanguage('vue')">
+              <i class="codicon codicon-symbol-class text-vue"></i>
+              <span>App.vue</span>
+              <span class="badge badge-vue" style="font-size: 0.6rem; padding: 1px 4px;">.vue</span>
+              <span class="vscode-tab-close" onclick="event.stopPropagation()">×</span>
+            </div>
+            <!-- Python Tab -->
+            <div class="vscode-tab active" id="tabPython" data-lang="python" onclick="selectWorkspaceLanguage('python')">
+              <i class="codicon codicon-file-code text-warning"></i>
+              <span>solution.py</span>
+              <span class="vscode-tab-close" onclick="event.stopPropagation()">×</span>
+            </div>
+            <!-- JavaScript Tab -->
+            <div class="vscode-tab" id="tabJavascript" data-lang="javascript" onclick="selectWorkspaceLanguage('javascript')">
+              <i class="codicon codicon-file-code text-warning"></i>
+              <span>index.js</span>
+              <span class="vscode-tab-close" onclick="event.stopPropagation()">×</span>
+            </div>
+          </div>
+
+          <!-- Top-Right Editor Action Icons -->
+          <div class="d-flex align-items-center gap-2">
+            <!-- Run Container Button -->
+            <button class="btn btn-sm btn-gh-primary py-0 px-2 d-flex align-items-center gap-1 font-monospace" id="runContainerBtn" style="height: 26px; font-size: 0.72rem;" title="Run in container sandbox">
+              <i class="codicon codicon-play"></i>
+              <span>Run</span>
+            </button>
+            <!-- Validate & Submit Button -->
+            <button class="btn btn-sm btn-gh-secondary py-0 px-2 d-flex align-items-center gap-1 font-monospace text-light" id="submitMonacoChallengeBtn" style="height: 26px; font-size: 0.72rem;" title="Run test suite & submit">
+              <i class="codicon codicon-pass text-success"></i>
+              <span>Test &amp; Submit</span>
+            </button>
+            <span class="text-muted">|</span>
+            <!-- Format Buffer -->
+            <button class="btn btn-sm btn-dark py-0 px-2 text-muted" id="btnFormatCode" title="Format Buffer" style="background: transparent; border: none; height: 26px;">
+              <i class="codicon codicon-symbol-misc"></i>
+            </button>
+            <!-- Minimap toggle -->
+            <button class="btn btn-sm btn-dark py-0 px-2 text-muted" id="btnToggleMinimap" title="Toggle Minimap" style="background: transparent; border: none; height: 26px;">
+              <i class="codicon codicon-layout-sidebar-right"></i>
+            </button>
+            <!-- Zoom -->
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-dark py-0 px-1 text-muted" id="btnFontDec" style="background: transparent; border: none; font-size: 0.7rem;">A-</button>
+              <button class="btn btn-dark py-0 px-1 text-muted" id="btnFontInc" style="background: transparent; border: none; font-size: 0.7rem;">A+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Breadcrumbs Navigation Bar -->
+        <div class="vscode-breadcrumbs">
+          <i class="codicon codicon-folder"></i>
+          <span>codequest</span>
+          <i class="codicon codicon-chevron-right" style="font-size: 0.65rem;"></i>
+          <i class="codicon codicon-folder"></i>
+          <span>src</span>
+          <i class="codicon codicon-chevron-right" style="font-size: 0.65rem;"></i>
+          <span class="text-light fw-semibold" id="breadcrumbFilename">solution.py</span>
+          <span class="text-muted ms-auto d-flex align-items-center gap-2">
+            <span id="activePeersCount"><i class="codicon codicon-organization"></i> 2 Peers</span>
+            <span class="badge bg-black border border-secondary text-warning d-none" id="peerTypingBadge">Peer editing</span>
+          </span>
+        </div>
+
+        <!-- Target Challenge & Urgency Header (GitHub Issue Style) -->
+        <div class="px-3 py-2 border-bottom" style="background: var(--gh-canvas-subtle); border-color: var(--gh-border-default) !important;">
           <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div class="d-flex align-items-center gap-2 flex-wrap flex-grow-1">
-              <span class="badge bg-danger text-black fw-bold px-2 py-1 small">MISSION TARGET:</span>
-              <div class="input-group input-group-sm" style="min-width: 270px; max-width: 420px;">
-                <label class="input-group-text bg-black border-secondary text-danger small py-0 px-2" for="challengeSelect">
-                  <span>🎯</span>
-                </label>
-                <select class="form-select monaco-toolbar-select bg-black text-light border-secondary pe-4" id="challengeSelect">
+              <span class="badge bg-dark border border-secondary text-muted small">TARGET CTF:</span>
+              <div class="input-group input-group-sm" style="max-width: 380px;">
+                <select class="form-select bg-dark text-light border-secondary pe-4 font-monospace" id="challengeSelect" style="font-size: 0.75rem; height: 28px;">
                   <% (challenges || []).forEach((c, idx) => { %>
                     <option value="<%= c.id %>" <%= idx === 0 ? 'selected' : '' %>>
                       #<%= c.id %>: <%= c.title %> [<%= c.difficulty %> // +<%= c.xp_reward %> XP]
@@ -188,294 +643,295 @@
                   <% }); %>
                 </select>
               </div>
-              <button type="button" class="btn btn-sm btn-outline-info font-monospace py-0 px-2 d-flex align-items-center gap-1" id="toggleMissionBriefBtn" style="height: 28px; font-size: 0.72rem;">
-                📖 Mission Intel &amp; Tests (<span id="testCaseCountBadge">4</span>) ▾
+              <button type="button" class="btn btn-sm btn-gh-secondary font-monospace py-0 px-2 d-flex align-items-center gap-1" id="toggleMissionBriefBtn" style="height: 28px; font-size: 0.72rem;">
+                <i class="codicon codicon-book"></i>
+                <span>Mission Intel &amp; Tests (<span id="testCaseCountBadge">4</span>) ▾</span>
               </button>
-            </div>
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-              <button type="button" class="btn btn-sm btn-outline-warning font-monospace py-0 px-2" id="loadChallengeStarterBtn" style="height: 28px; font-size: 0.72rem;" title="Load challenge template into editor buffer">
-                📥 Load Challenge Skeleton
+              <button type="button" class="btn btn-sm btn-gh-secondary font-monospace py-0 px-2 text-warning" id="loadChallengeStarterBtn" style="height: 28px; font-size: 0.72rem;" title="Load challenge skeleton into editor">
+                <i class="codicon codicon-cloud-download"></i>
+                <span>Load Starter</span>
               </button>
               <span class="badge bg-black border border-secondary text-muted px-2 py-1" id="challengeStatusBadge">
                 UNSOLVED
               </span>
             </div>
+
+            <!-- Urgency Timer Pill -->
+            <div class="d-flex align-items-center gap-2 flex-wrap" id="missionTimerBar">
+              <div class="d-flex align-items-center gap-1 px-2 py-1 rounded bg-black border border-secondary font-monospace" style="border-color: var(--gh-border-default) !important;">
+                <i class="codicon codicon-history text-muted"></i>
+                <span class="text-muted small">CLOCK:</span>
+                <span id="countdownClockDisplay" class="fw-bold text-info" style="min-width: 48px; text-align: center;">05:00</span>
+              </div>
+              <button type="button" class="btn btn-sm btn-gh-secondary font-monospace py-0 px-2 text-info" id="timerToggleBtn" style="height: 26px; font-size: 0.7rem;">
+                ▶ Start
+              </button>
+              <button type="button" class="btn btn-sm btn-gh-secondary font-monospace py-0 px-2 text-warning" id="timerResetBtn" style="height: 26px; font-size: 0.7rem;" title="Restart countdown">
+                🔄 Reset
+              </button>
+              <button type="button" class="btn btn-sm btn-gh-secondary font-monospace py-0 px-1 text-muted" id="timerSoundToggleBtn" style="height: 26px; font-size: 0.7rem;" title="Toggle sound">
+                🔊
+              </button>
+            </div>
           </div>
 
-          <!-- Expandable Mission Intel & Predefined Test Suite Drawer -->
-          <div id="missionBriefDrawer" class="mt-2 pt-2 border-top border-secondary small d-none" style="background: rgba(4, 7, 14, 0.85); border-radius: 4px; padding: 10px;">
-            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+          <!-- Progress Bar -->
+          <div class="progress mt-2" style="height: 3px; background-color: #21262d;">
+            <div id="countdownProgressBar" class="progress-bar bg-info" role="progressbar" style="width: 100%; transition: width 0.8s linear;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+
+          <!-- Expandable Mission Intel Drawer -->
+          <div id="missionBriefDrawer" class="mt-2 pt-2 border-top border-secondary small d-none" style="border-color: var(--gh-border-default) !important;">
+            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
               <div>
                 <span class="text-danger fw-bold" id="briefChallengeCategory">Injection &amp; Database Security</span>
                 <span class="text-muted mx-1">|</span>
                 <span class="badge bg-black border border-danger text-danger" id="briefChallengeDiff">EASY</span>
                 <span class="badge bg-black border border-warning text-warning ms-1" id="briefChallengeReward">+150 XP</span>
               </div>
-              <span class="text-muted" style="font-size: 0.7rem;">// PREDEFINED TEST SUITE VERIFICATION</span>
+              <span class="badge bg-black border border-info text-info small" id="timerUrgencyStatusBadge">⏱️ TIMER READY</span>
             </div>
-            <p class="text-light mb-2" id="briefChallengeDesc" style="font-size: 0.8rem; line-height: 1.5;"></p>
-            <div class="p-2 mb-2 rounded bg-black border border-warning font-monospace text-warning" style="font-size: 0.75rem;" id="briefChallengeInstructions"></div>
-            
-            <!-- Predefined Test Cases Grid Preview -->
+            <p class="text-light mb-2 small" id="briefChallengeDesc"></p>
+            <div class="p-2 mb-2 rounded bg-black border border-warning font-monospace text-warning small" id="briefChallengeInstructions"></div>
             <div class="mt-2">
-              <div class="text-info fw-bold mb-1" style="font-size: 0.72rem;">🧪 PREDEFINED TEST CASES TO SATISFY:</div>
+              <div class="text-info fw-bold mb-1 small">🧪 PREDEFINED TEST SUITE TO SATISFY:</div>
               <div class="row g-2" id="briefTestCasesList"></div>
             </div>
           </div>
         </div>
 
-        <!-- Cyberpunk Mission Urgency Visual Countdown Timer Bar -->
-        <div id="missionTimerBar" class="p-2 mb-2 rounded font-monospace" style="background-color: #0b0f19; border: 1px solid #00e5ff; box-shadow: 0 0 14px rgba(0, 229, 255, 0.15); transition: all 0.3s ease;">
-          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <!-- Left: Digital Clock Display & Urgency Level -->
-            <div class="d-flex align-items-center gap-3 flex-wrap">
-              <div class="d-flex align-items-center gap-2">
-                <span class="text-muted small fw-bold tracking-wider">// MISSION CLOCK:</span>
-                <span id="countdownClockDisplay" class="fs-4 fw-bold text-info px-3 py-0 rounded bg-black border border-info font-monospace shadow-sm" style="letter-spacing: 2px; min-width: 96px; text-align: center; text-shadow: 0 0 8px rgba(0, 229, 255, 0.6); display: inline-block;">
-                  05:00
-                </span>
-              </div>
-              <div class="d-flex align-items-center gap-2 flex-wrap">
-                <span class="badge bg-black border border-info text-info px-2 py-1 small" id="timerUrgencyStatusBadge">
-                  ⏱️ TIMER READY
-                </span>
-                <span class="badge bg-black border border-secondary text-muted px-2 py-1 small" id="timerChallengeLimitInfo">
-                  Limit: 5m 00s
-                </span>
-              </div>
-            </div>
-
-            <!-- Right: Timer Controls & Sound Toggle -->
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-              <button type="button" class="btn btn-sm btn-outline-info font-monospace py-0 px-2 d-flex align-items-center gap-1" id="timerToggleBtn" style="height: 28px; font-size: 0.72rem;">
-                ▶ START MISSION CLOCK
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-warning font-monospace py-0 px-2 d-flex align-items-center gap-1" id="timerResetBtn" style="height: 28px; font-size: 0.72rem;" title="Restart countdown timer for active challenge">
-                🔄 RESTART TIMER
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary font-monospace py-0 px-2 d-flex align-items-center gap-1" id="timerSoundToggleBtn" style="height: 28px; font-size: 0.72rem;" title="Toggle urgency audio beeps">
-                🔊 SOUND: ON
-              </button>
-            </div>
-          </div>
-
-          <!-- Linear Urgency Progress Meter -->
-          <div class="progress mt-2" style="height: 6px; background-color: #04070e; border: 1px solid #1c2638; border-radius: 3px;">
-            <div id="countdownProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 100%; transition: width 0.8s linear, background-color 0.4s ease;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-          </div>
+        <!-- Hidden selectors for script compatibility -->
+        <div class="d-none">
+          <span id="activeFileTab"><span id="activeFileName">solution.py</span></span>
+          <select id="languageSelect">
+            <option value="go">Go 1.22</option>
+            <option value="vue">Vue 3 SFC</option>
+            <option value="python" selected>Python 3.11</option>
+            <option value="javascript">JavaScript (Node.js)</option>
+            <option value="typescript">TypeScript</option>
+            <option value="sql">SQL (Postgres)</option>
+            <option value="cpp">C++ (GCC)</option>
+            <option value="shell">Bash / Shell</option>
+            <option value="html">HTML5 / Web</option>
+          </select>
+          <select id="themeSelect">
+            <option value="vs-dark" selected>VS Dark+</option>
+            <option value="cyberpunk-neon">Cyberpunk Neon</option>
+            <option value="hc-black">High Contrast</option>
+          </select>
+          <button id="btnCopyCode"></button>
+          <button id="btnResetBuffer"></button>
+          <button id="manualSyncBtn"></button>
+          <span id="charCountBadge">0 chars</span>
+          <span id="timerChallengeLimitInfo">Limit: 5m</span>
         </div>
 
-        <!-- Interactive Monaco Editor Control Toolbar -->
-        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded font-monospace flex-wrap gap-2" style="background-color: #080c14; border: 1px solid #1c2638;">
-          <!-- Left: Tab Pill & Language & Theme Dropdowns -->
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="badge bg-black border border-info text-info px-2 py-1 small d-flex align-items-center gap-1 shadow-sm" id="activeFileTab">
-              <span>⚡</span> <span id="activeFileName">solution.py</span>
-            </span>
-
-            <div class="input-group input-group-sm" style="width: auto;">
-              <label class="input-group-text bg-black border-secondary text-muted small py-0 px-2" for="languageSelect">
-                <span class="text-info">LANG:</span>
-              </label>
-              <select class="form-select monaco-toolbar-select pe-4" id="languageSelect">
-                <option value="python" selected>Python 3.11</option>
-                <option value="javascript">JavaScript (Node.js)</option>
-                <option value="typescript">TypeScript</option>
-                <option value="sql">SQL (Postgres)</option>
-                <option value="cpp">C++ (GCC)</option>
-                <option value="shell">Bash / Shell</option>
-                <option value="html">HTML5 / Web</option>
-              </select>
-            </div>
-
-            <div class="input-group input-group-sm" style="width: auto;">
-              <label class="input-group-text bg-black border-secondary text-muted small py-0 px-2" for="themeSelect">
-                <span class="text-warning">THEME:</span>
-              </label>
-              <select class="form-select monaco-toolbar-select pe-4" id="themeSelect">
-                <option value="cyberpunk-neon" selected>Cyberpunk Neon</option>
-                <option value="vs-dark">VS Dark+</option>
-                <option value="hc-black">High Contrast</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Right: Editor Action Controls (Font Zoom, Minimap, Format, Copy, Reset) -->
-          <div class="d-flex align-items-center gap-1 flex-wrap">
-            <div class="btn-group btn-group-sm" role="group">
-              <button type="button" class="btn btn-outline-secondary py-0 px-2 text-light font-monospace" id="btnFontDec" title="Zoom Out Code" style="font-size: 0.72rem; height: 28px;">A-</button>
-              <button type="button" class="btn btn-outline-secondary py-0 px-2 text-light font-monospace" id="btnFontInc" title="Zoom In Code" style="font-size: 0.72rem; height: 28px;">A+</button>
-            </div>
-            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 text-light font-monospace" id="btnToggleMinimap" title="Toggle Minimap View" style="font-size: 0.72rem; height: 28px;">
-              🗺️ Minimap: ON
-            </button>
-            <button type="button" class="btn btn-outline-info btn-sm py-0 px-2 font-monospace" id="btnFormatCode" title="Format Buffer (Shift+Alt+F)" style="font-size: 0.72rem; height: 28px;">
-              ⚡ Format
-            </button>
-            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 font-monospace text-light" id="btnCopyCode" title="Copy Buffer to Clipboard" style="font-size: 0.72rem; height: 28px;">
-              📋 Copy
-            </button>
-            <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 font-monospace" id="btnResetBuffer" title="Reset to Starter Template" style="font-size: 0.72rem; height: 28px;">
-              ↺ Reset
-            </button>
-          </div>
+        <!-- Alerts -->
+        <div id="conflictAlertBanner" class="alert alert-danger py-1 px-3 font-monospace small m-2 d-none" style="background-color: #2d1114; border-color: #f85149; color: #ff7b72;">
+          <strong>MERGE CONFLICT:</strong> Concurrent line modification detected. Resolve before committing.
         </div>
-
-        <!-- GitLive-Inspired Conflict Warning Banner -->
-        <div id="conflictAlertBanner" class="alert alert-danger py-2 px-3 font-monospace small mb-2 d-none" style="background-color: #2d1114; border-color: #f85149; color: #ff7b72;">
-          <strong>MERGE CONFLICT DETECTED:</strong> Peer <code>@developer_b</code> modified lines concurrently. Resolve before committing.
-        </div>
-
-        <!-- Classroom Lock Alert Banner -->
-        <div id="classroomLockBanner" class="alert alert-warning py-2 px-3 font-monospace small mb-2 d-none" style="background-color: #2d2611; border-color: #ffb700; color: #ffe600;">
-          🔒 <strong>CLASSROOM MODE ACTIVE:</strong> The host has temporarily locked the Monaco editing buffer for all students.
+        <div id="classroomLockBanner" class="alert alert-warning py-1 px-3 font-monospace small m-2 d-none" style="background-color: #2d2611; border-color: #ffb700; color: #ffe600;">
+          🔒 <strong>CLASSROOM MODE ACTIVE:</strong> The host has locked the editing buffer for all peers.
         </div>
 
         <!-- Monaco Editor Mount Container -->
-        <div class="position-relative border border-secondary rounded-top bg-black font-monospace" style="overflow: hidden; min-height: 440px; box-shadow: inset 0 0 25px rgba(0,0,0,0.9);">
-          
-          <!-- Monaco Mount Div -->
+        <div class="position-relative flex-grow-1" style="background-color: var(--vscode-editor-bg);">
           <div id="monacoEditorMount"></div>
 
           <!-- Loading Spinner Overlay -->
-          <div id="monacoLoading" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-black bg-opacity-95 font-monospace text-info z-3">
-            <div class="spinner-border spinner-border-sm text-info mb-2" role="status" style="width: 1.8rem; height: 1.8rem;"></div>
-            <div class="small fw-bold tracking-wider">// INITIALIZING MONACO RUNTIME ENGINE...</div>
-            <div class="text-muted small mt-1" style="font-size: 0.72rem;">Mounting VS Code syntax tokenizers, CRDT sync socket & peer presence</div>
+          <div id="monacoLoading" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-dark bg-opacity-95 font-monospace text-info z-3">
+            <div class="spinner-border spinner-border-sm text-info mb-2" role="status"></div>
+            <div class="small fw-semibold">// INITIALIZING VS CODE MONACO ENGINE...</div>
+            <div class="text-muted small mt-1" style="font-size: 0.72rem;">Mounting syntax tokenizers (.go, .vue, .ts, .py), CRDT peer presence &amp; Codespace container</div>
           </div>
 
           <!-- Fallback textarea -->
           <textarea id="roomScratchpad" class="d-none"></textarea>
         </div>
 
-        <!-- Monaco VS Code-Style Status Bar -->
-        <div class="monaco-status-bar d-flex justify-content-between align-items-center px-2 py-1 mb-3 flex-wrap">
-          <div class="d-flex align-items-center flex-wrap">
-            <span class="status-item text-info fw-bold" id="statusPos">Ln 1, Col 1</span>
-            <span class="status-item text-muted" id="statusSelection">0 sel</span>
-            <span class="status-item text-light" id="statusLength">0 lines, 0 chars</span>
-            <span class="status-item text-warning d-none" id="statusPeerActive">
-              <span class="spinner-grow spinner-grow-sm text-warning me-1" style="width: 0.4rem; height: 0.4rem;"></span>
+        <!-- VS Code Status Bar (Bottom Blue Strip) -->
+        <div class="vscode-statusbar">
+          <div class="d-flex align-items-center h-100">
+            <span class="statusbar-item" title="Git Branch">
+              <i class="codicon codicon-git-branch"></i>
+              <span>main*</span>
+            </span>
+            <span class="statusbar-item" title="Cloud Sync Status">
+              <i class="codicon codicon-cloud"></i>
+              <span id="statusBarCloudSync">Live Sync</span>
+            </span>
+            <span class="statusbar-item" title="Problems">
+              <i class="codicon codicon-error"></i> <span>0</span>
+              <i class="codicon codicon-warning ms-1"></i> <span>0</span>
+            </span>
+            <span class="statusbar-item d-none" id="statusPeerActive">
+              <span class="spinner-grow spinner-grow-sm text-light me-1" style="width: 0.35rem; height: 0.35rem;"></span>
               <span id="statusPeerText">Peer typing...</span>
             </span>
           </div>
-          <div class="d-flex align-items-center flex-wrap">
-            <span class="status-item" id="statusSpaces">Spaces: 4</span>
-            <span class="status-item" id="statusEncoding">UTF-8</span>
-            <span class="status-item text-info" id="statusLangName">Python 3.11</span>
-            <span class="status-item text-success fw-bold" id="statusLockBadge">🔓 HOST: UNLOCKED</span>
+
+          <div class="d-flex align-items-center h-100">
+            <span class="statusbar-item" id="statusPos">Ln 1, Col 1</span>
+            <span class="statusbar-item" id="statusSelection">0 sel</span>
+            <span class="statusbar-item" id="statusSpaces">Spaces: 4</span>
+            <span class="statusbar-item" id="statusEncoding">UTF-8</span>
+            <span class="statusbar-item" id="statusLangName">Go 1.22</span>
+            <span class="statusbar-item text-light" id="activeRuntimeBadge">Go 1.22.3 Linux</span>
+            <span class="statusbar-item fw-bold" id="statusLockBadge">🔓 HOST: UNLOCKED</span>
           </div>
         </div>
 
-        <!-- Action Controls for Container Sandbox, Buffer & Monaco Challenge Submission -->
-        <div class="d-flex justify-content-between align-items-center mb-3 font-monospace flex-wrap gap-2">
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <span class="badge bg-dark text-light border border-secondary" id="activeRuntimeBadge">Runtime: Python 3.11</span>
-            <span class="badge bg-black border border-info text-info small" id="charCountBadge">0 chars</span>
-          </div>
-          <div class="d-flex gap-2 flex-wrap">
-            <button class="btn btn-sm btn-outline-info font-monospace" id="manualSyncBtn">
-              [ MANUAL SYNC ]
-            </button>
-            <button class="btn btn-sm fw-bold font-monospace shadow" id="runContainerBtn" style="background-color: #00e5ff; color: #000; border: none;">
-              ▶ [ RUN CONTAINER ]
-            </button>
-            <button class="btn btn-sm fw-bold font-monospace shadow text-black" id="submitMonacoChallengeBtn" style="background-color: #00ff66; border: none; box-shadow: 0 0 14px rgba(0, 255, 102, 0.45) !important;">
-              🚀 [ VALIDATE &amp; SUBMIT ]
-            </button>
-          </div>
-        </div>
-
-        <!-- Output / Execution Container Console & Predefined Test Runner Tabs -->
-        <div class="mt-auto pt-2 border-top" style="border-color: #21262d !important;">
-          <!-- Tab Navigation -->
-          <div class="d-flex justify-content-between align-items-center mb-2 font-monospace small flex-wrap gap-2">
-            <div class="btn-group btn-group-sm" role="group">
-              <button type="button" class="btn btn-outline-warning active py-1 px-3" id="tabContainerLogsBtn">
-                ☁️ CONTAINER LOGS
+        <!-- VS Code Bottom Panel (Terminal / Output / Vue Preview / Test Runner) -->
+        <div class="vscode-bottom-panel">
+          <!-- Panel Tabs -->
+          <div class="vscode-panel-tabs">
+            <div class="d-flex align-items-center">
+              <button type="button" class="panel-tab-btn active" id="panelTabTerminal" onclick="switchVsCodePanel('terminal')">
+                <i class="codicon codicon-terminal"></i>
+                <span>Terminal</span>
               </button>
-              <button type="button" class="btn btn-outline-info py-1 px-3 position-relative" id="tabTestRunnerBtn">
-                🧪 TEST RUNNER SUITE <span class="badge bg-black border border-info ms-1" id="testRunnerTabBadge">Ready</span>
+              <button type="button" class="panel-tab-btn" id="panelTabOutput" onclick="switchVsCodePanel('output')">
+                <i class="codicon codicon-output"></i>
+                <span>Output</span>
+              </button>
+              <!-- Live Vue Component Preview Tab -->
+              <button type="button" class="panel-tab-btn" id="panelTabVuePreview" onclick="switchVsCodePanel('vuePreview')">
+                <i class="codicon codicon-symbol-class text-vue"></i>
+                <span>Vue Component Preview</span>
+                <span class="badge badge-vue" style="font-size: 0.6rem; padding: 1px 4px;">.vue</span>
+              </button>
+              <!-- Predefined Test Runner Tab -->
+              <button type="button" class="panel-tab-btn" id="panelTabTests" onclick="switchVsCodePanel('tests')">
+                <i class="codicon codicon-beaker text-info"></i>
+                <span>Test Runner</span>
+                <span class="badge bg-black border border-info ms-1" id="testRunnerTabBadge" style="font-size: 0.6rem;">Ready</span>
+              </button>
+              <button type="button" class="panel-tab-btn" id="panelTabProblems" onclick="switchVsCodePanel('problems')">
+                <span>Problems (0)</span>
               </button>
             </div>
             <div class="d-flex align-items-center gap-2">
-              <span class="text-muted small" id="testSuiteSummaryStatus">0/4 Tests Executed</span>
-              <button class="btn btn-link text-muted p-0 text-decoration-none small font-monospace" id="clearConsoleBtn">Clear Logs</button>
+              <span class="text-muted small" id="testSuiteSummaryStatus" style="font-size: 0.72rem;">0/4 Tests Executed</span>
+              <button class="btn btn-link text-muted p-0 text-decoration-none small font-monospace" id="clearConsoleBtn" style="font-size: 0.72rem;" title="Clear Output">
+                <i class="codicon codicon-clear-all"></i> Clear
+              </button>
             </div>
           </div>
 
-          <!-- Panel 1: Shared Container Logs -->
-          <div id="containerLogsPanel" class="p-2 bg-black border border-secondary rounded font-monospace small text-light" style="height: 160px; overflow-y: auto; background-color: #000 !important;">
-            <span class="text-muted">&gt; Ephemeral container sandbox initialized. Press [RUN CONTAINER] or [VALIDATE &amp; SUBMIT] to test your code buffer...</span><br>
+          <!-- Hidden Tab Buttons for script compatibility -->
+          <div class="d-none">
+            <button id="tabContainerLogsBtn"></button>
+            <button id="tabTestRunnerBtn"></button>
           </div>
 
-          <!-- Panel 2: Predefined Test Runner Suite Output -->
-          <div id="testRunnerPanel" class="p-3 bg-black border border-info rounded font-monospace small text-light d-none" style="height: 220px; overflow-y: auto; background-color: #05080f !important; box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.1);">
-            <div id="testRunnerEmptyState" class="d-flex flex-column align-items-center justify-content-center h-100 text-muted text-center p-3">
-              <div style="font-size: 1.6rem;" class="mb-1">🧪</div>
-              <div class="fw-bold text-info mb-1">// PREDEFINED TEST SUITE RUNNER READY</div>
-              <div class="small">Click <span class="text-success fw-bold">[VALIDATE &amp; SUBMIT]</span> to test the Monaco editor buffer against the selected challenge's predefined test cases.</div>
-            </div>
-            
-            <div id="testRunnerLoadingState" class="d-flex flex-column align-items-center justify-content-center h-100 text-info text-center d-none">
-              <div class="spinner-border spinner-border-sm text-info mb-2" role="status"></div>
-              <div class="fw-bold tracking-wider">// VALIDATING CODE BUFFER AGAINST TEST SUITE...</div>
-              <div class="text-muted small mt-1" id="testRunnerProgressText">Executing functional checks, security exploit payloads, and boundary conditions...</div>
-            </div>
-
-            <div id="testRunnerResultsContainer" class="d-none">
-              <!-- Summary Header will be injected here -->
-              <div id="testResultsSummaryHeader" class="mb-2"></div>
-              <!-- Test Cases List will be injected here -->
-              <div id="testCasesResultsList" class="d-flex flex-column gap-2"></div>
+          <!-- Panel 1: Terminal & Container Logs -->
+          <div class="panel-tab-content" id="panelContentTerminal" style="background: #0d1117;">
+            <div id="containerLogsPanel" class="font-monospace small text-light">
+              <span class="text-muted">&gt; CodeQuest Codespace container initialized [Linux/x86_64].</span><br>
+              <span class="text-muted">&gt; Run <code>go run main.go</code> or <code>npm run dev</code> using the [Run] button above.</span><br>
             </div>
           </div>
+
+          <!-- Panel 2: Output Logs -->
+          <div class="panel-tab-content d-none" id="panelContentOutput" style="background: #0d1117;">
+            <div class="text-muted font-monospace small">
+              [CodeQuest Daemon] CRDT synchronized broadcast socket online.<br>
+              [Language Server] Go gopls v0.15 &amp; Vue Volar v2.0 language server active.<br>
+            </div>
+          </div>
+
+          <!-- Panel 3: Live Interactive Vue 3 SFC Component Preview -->
+          <div class="panel-tab-content d-none" id="panelContentVuePreview" style="background: #0d1117;">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-vue fw-bold small d-flex align-items-center gap-1">
+                <i class="codicon codicon-symbol-class"></i> Live Vue 3 Component Render
+              </span>
+              <span class="badge badge-vue small">Reactive Virtual DOM</span>
+            </div>
+            <div id="vueComponentPreviewArea">
+              <!-- Rendered Vue SFC output here -->
+            </div>
+          </div>
+
+          <!-- Panel 4: Predefined Test Runner Suite Output -->
+          <div class="panel-tab-content d-none" id="panelContentTests" style="background: #0d1117;">
+            <div id="testRunnerPanel">
+              <div id="testRunnerEmptyState" class="d-flex flex-column align-items-center justify-content-center h-100 text-muted text-center p-3">
+                <i class="codicon codicon-beaker text-info fs-3 mb-1"></i>
+                <div class="fw-semibold text-info mb-1">Predefined Test Suite Runner Ready</div>
+                <div class="small">Click <span class="text-success fw-bold">[Test &amp; Submit]</span> to validate your code against the challenge test cases.</div>
+              </div>
+              
+              <div id="testRunnerLoadingState" class="d-flex flex-column align-items-center justify-content-center h-100 text-info text-center d-none">
+                <div class="spinner-border spinner-border-sm text-info mb-2" role="status"></div>
+                <div class="fw-semibold tracking-wider">VALIDATING CODE BUFFER AGAINST TEST SUITE...</div>
+                <div class="text-muted small mt-1" id="testRunnerProgressText">Executing functional checks, security exploit payloads, and boundary conditions...</div>
+              </div>
+
+              <div id="testRunnerResultsContainer" class="d-none">
+                <div id="testResultsSummaryHeader" class="mb-2"></div>
+                <div id="testCasesResultsList" class="d-flex flex-column gap-2"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel 5: Problems -->
+          <div class="panel-tab-content d-none" id="panelContentProblems" style="background: #0d1117;">
+            <div class="text-muted small font-monospace">
+              <i class="codicon codicon-check text-success me-1"></i> No problems detected in workspace buffer.
+            </div>
+          </div>
+
         </div>
 
       </div>
-    </div>
 
-    <!-- Right Column: Roster, WebRTC Audio Huddle & Room Telemetry -->
-    <div class="col-lg-4">
-      <div class="card text-white shadow-lg p-3 h-100" style="background-color: #0d1117 !important; border: 1px solid #00e5ff; box-shadow: 0 0 15px rgba(0, 229, 255, 0.2) !important;">
+      <!-- Right Column: GitHub Sidebar (Collaborator Panel) -->
+      <div class="d-none d-xl-flex flex-column p-3" style="width: 280px; background-color: var(--gh-canvas-subtle); border-left: 1px solid var(--gh-border-default); flex-shrink: 0; font-size: 0.8rem;">
         
-        <!-- WebRTC Audio Huddle Widget (Voice Chat) -->
-        <div class="mb-3 p-2 rounded border border-info bg-black font-monospace">
+        <!-- WebRTC Voice Huddle Widget -->
+        <div class="mb-3 p-2 rounded border font-monospace" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="text-info small fw-bold">🎙️ VOICE HUDDLE (P2P)</span>
-            <span class="badge bg-success text-black small" id="huddleStatus">OFF</span>
+            <span class="text-light small fw-bold d-flex align-items-center gap-1">
+              <i class="codicon codicon-unmute text-info"></i> Voice Huddle (P2P)
+            </span>
+            <span class="badge bg-secondary small" id="huddleStatus">OFF</span>
           </div>
           <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-outline-success w-100 font-monospace py-1" id="joinHuddleBtn" style="font-size: 0.75rem;">
-              [ JOIN AUDIO ]
+            <button class="btn btn-sm btn-gh-secondary w-100 font-monospace py-1" id="joinHuddleBtn" style="font-size: 0.72rem;">
+              Join Audio
             </button>
-            <button class="btn btn-sm btn-outline-danger font-monospace py-1 px-2" id="muteMicBtn" title="Mute Mic" style="font-size: 0.75rem;">
-              🔇
+            <button class="btn btn-sm btn-gh-secondary font-monospace py-1 px-2" id="muteMicBtn" title="Mute Mic" style="font-size: 0.72rem;">
+              <i class="codicon codicon-mute"></i>
             </button>
           </div>
         </div>
 
         <!-- Participants List (Roster) -->
-        <div class="d-flex align-items-center justify-content-between mb-2 font-monospace small border-bottom pb-2" style="border-color: #21262d !important;">
-          <span class="text-warning fw-bold">TEAM ROSTER & PRESENCE</span>
-          <span class="badge bg-black text-warning border border-warning" id="rosterCountBadge">2 ONLINE</span>
+        <div class="d-flex align-items-center justify-content-between mb-2 small border-bottom pb-1" style="border-color: var(--gh-border-default) !important;">
+          <span class="text-muted fw-bold">COLLABORATORS</span>
+          <span class="badge bg-black text-light border border-secondary" id="rosterCountBadge" style="font-size: 0.65rem;">2 Online</span>
         </div>
 
-        <div class="font-monospace small mb-3" id="rosterList">
-          <div class="d-flex align-items-center justify-content-between p-2 bg-black rounded border border-secondary mb-2">
-            <span class="text-light">🟢 You (<%= userProfile ? userProfile.username : 'Operative_X' %>)</span>
-            <span class="text-success small fw-bold">HOST</span>
+        <div class="small mb-3" id="rosterList">
+          <div class="d-flex align-items-center justify-content-between p-2 rounded border mb-2" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+            <span class="text-light d-flex align-items-center gap-1">
+              <span style="color: #2ea043;">●</span> @<%= userProfile ? userProfile.username : 'Developer_X' %> (You)
+            </span>
+            <span class="badge bg-info text-dark" style="font-size: 0.6rem;">HOST</span>
           </div>
-          <div class="d-flex align-items-center justify-content-between p-2 bg-black rounded border border-secondary text-light">
-            <span id="peerNameDisplay">🔵 Peer @developer_b</span>
-            <span class="text-info small" id="peerStatusDisplay">SYNCED</span>
+          <div class="d-flex align-items-center justify-content-between p-2 rounded border text-light" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+            <span id="peerNameDisplay" class="d-flex align-items-center gap-1">
+              <span style="color: #58a6ff;">●</span> @developer_b
+            </span>
+            <span class="text-success small" id="peerStatusDisplay" style="font-size: 0.7rem;">SYNCED</span>
           </div>
         </div>
 
         <!-- Room Challenge Mission Progress Widget -->
-        <div class="mb-3 p-2 rounded border border-danger bg-black font-monospace">
+        <div class="mb-3 p-2 rounded border font-monospace" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
           <div class="d-flex justify-content-between align-items-center mb-1">
-            <span class="text-danger small fw-bold">// MISSION INTEL HUD</span>
+            <span class="text-danger small fw-bold">// TARGET INTEL</span>
             <span class="badge bg-black border border-info text-info" id="sidebarChallengeDiff">EASY</span>
           </div>
           <div class="text-light small fw-bold text-truncate" id="sidebarChallengeTitle">#1: SQL Injection</div>
@@ -488,7 +944,7 @@
             <span class="text-info fw-bold" id="sidebarTestCount">4 Test Cases</span>
           </div>
           <div class="d-flex justify-content-between align-items-center mt-1 small">
-            <span class="text-muted">Clock Countdown:</span>
+            <span class="text-muted">Remaining:</span>
             <span class="text-info fw-bold" id="sidebarTimeRemaining">05:00</span>
           </div>
           <div class="d-flex justify-content-between align-items-center mt-1 small">
@@ -496,41 +952,42 @@
             <span class="text-muted" id="sidebarTimeLimit">5m 00s</span>
           </div>
           <div class="d-flex justify-content-between align-items-center mt-1 small">
-            <span class="text-muted">Mission Status:</span>
+            <span class="text-muted">Status:</span>
             <span class="text-warning" id="sidebarStatusText">UNSOLVED</span>
           </div>
         </div>
 
-        <!-- GitLive Gutter Status Tracker Widget -->
-        <div class="mb-3 p-2 rounded border border-secondary bg-black font-monospace">
-          <span class="text-muted small d-block mb-1">// BRANCH CONFLICT MONITOR</span>
+        <!-- GitLive Branch Conflict Monitor -->
+        <div class="mb-3 p-2 rounded border font-monospace" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+          <span class="text-muted small d-block mb-1">// GITLIVE BRANCH MONITOR</span>
           <div class="d-flex justify-content-between align-items-center small text-light">
-            <span>Unmerged changes:</span>
+            <span>Branch conflicts:</span>
             <span class="text-success" id="conflictStatusText">0 Conflicts</span>
           </div>
-          <button class="btn btn-sm btn-outline-warning w-100 mt-2 font-monospace py-1" id="scanConflictBtn" style="font-size: 0.7rem;">
-            [ RUN CONFLICT SCAN ]
+          <button class="btn btn-sm btn-gh-secondary w-100 mt-2 font-monospace py-1" id="scanConflictBtn" style="font-size: 0.7rem;">
+            Run Conflict Scan
           </button>
         </div>
 
-        <!-- System Logs / Telemetry Box -->
+        <!-- Telemetry Logs -->
         <div class="mb-3">
           <span class="text-muted small font-monospace d-block mb-1">// TELEMETRY LOGS</span>
-          <div id="telemetryBox" class="p-2 bg-black border border-secondary rounded text-start text-muted small font-monospace" style="max-height: 110px; overflow-y: auto; font-size: 0.75rem;">
-            <code>&gt; WebSocket handshake OK.<br>&gt; Initializing Firebase synchronized database listener...</code>
+          <div id="telemetryBox" class="p-2 rounded border text-start text-muted small font-monospace" style="background: #070a0f; border-color: var(--gh-border-default) !important; max-height: 100px; overflow-y: auto; font-size: 0.72rem;">
+            <code>&gt; WebSocket handshake OK.<br>&gt; Connected to Codespace buffer.</code>
           </div>
         </div>
 
         <!-- Action Control Buttons -->
         <div class="d-grid gap-2 mt-auto font-monospace">
-          <button class="btn btn-sm fw-bold py-2" id="shareInviteBtn" style="background-color: #00e5ff; color: #000; border: none;">
-            [ SHARE INVITE LINK ]
+          <button class="btn btn-sm btn-gh-primary py-2" id="shareInviteBtn" style="font-size: 0.78rem;">
+            <i class="codicon codicon-link"></i> Copy Invite Link
           </button>
-          <a href="/workspace/" class="btn btn-sm btn-outline-secondary">
-            ← Return to Workspace Index
+          <a href="/workspace/" class="btn btn-sm btn-gh-secondary text-center" style="font-size: 0.75rem;">
+            ← Return to Codespaces Index
           </a>
         </div>
       </div>
+
     </div>
 
   </div>
@@ -550,8 +1007,6 @@
   const peerTypingBadge = document.getElementById('peerTypingBadge');
   const consoleOutput = document.getElementById('containerLogsPanel') || document.getElementById('consoleOutput');
   const telemetryBox = document.getElementById('telemetryBox');
-  const editorCard = document.getElementById('editorCardContainer');
-  const charCountBadge = document.getElementById('charCountBadge');
   const lockModeBtn = document.getElementById('lockModeBtn');
   const classroomLockBanner = document.getElementById('classroomLockBanner');
   const peerStatusDisplay = document.getElementById('peerStatusDisplay');
@@ -562,12 +1017,15 @@
   const themeSelect = document.getElementById('themeSelect');
   const statusPos = document.getElementById('statusPos');
   const statusSelection = document.getElementById('statusSelection');
-  const statusLength = document.getElementById('statusLength');
+  const statusSpaces = document.getElementById('statusSpaces');
+  const statusEncoding = document.getElementById('statusEncoding');
   const statusPeerActive = document.getElementById('statusPeerActive');
   const statusPeerText = document.getElementById('statusPeerText');
   const statusLangName = document.getElementById('statusLangName');
   const statusLockBadge = document.getElementById('statusLockBadge');
   const activeRuntimeBadge = document.getElementById('activeRuntimeBadge');
+  const breadcrumbFilename = document.getElementById('breadcrumbFilename');
+  const titlebarActiveFile = document.getElementById('titlebarActiveFile');
 
   // Challenge Selection & Test Runner DOM References
   const challengeSelect = document.getElementById('challengeSelect');
@@ -598,39 +1056,21 @@
   const sidebarChallengeTitle = document.getElementById('sidebarChallengeTitle');
   const sidebarChallengeXp = document.getElementById('sidebarChallengeXp');
   const sidebarTestCount = document.getElementById('sidebarTestCount');
-  const sidebarStatusText = document.getElementById('sidebarStatusText');
   const sidebarTimeRemaining = document.getElementById('sidebarTimeRemaining');
   const sidebarTimeLimit = document.getElementById('sidebarTimeLimit');
+  const sidebarStatusText = document.getElementById('sidebarStatusText');
 
-  // Mission Urgency Countdown Timer DOM Elements
+  // Mission Countdown Urgency Elements
   const missionTimerBar = document.getElementById('missionTimerBar');
   const countdownClockDisplay = document.getElementById('countdownClockDisplay');
-  const timerUrgencyStatusBadge = document.getElementById('timerUrgencyStatusBadge');
-  const timerChallengeLimitInfo = document.getElementById('timerChallengeLimitInfo');
+  const countdownProgressBar = document.getElementById('countdownProgressBar');
   const timerToggleBtn = document.getElementById('timerToggleBtn');
   const timerResetBtn = document.getElementById('timerResetBtn');
   const timerSoundToggleBtn = document.getElementById('timerSoundToggleBtn');
-  const countdownProgressBar = document.getElementById('countdownProgressBar');
+  const timerUrgencyStatusBadge = document.getElementById('timerUrgencyStatusBadge');
+  const timerChallengeLimitInfo = document.getElementById('timerChallengeLimitInfo');
 
-  // Challenges Dataset and Solved Set
-  const roomChallenges = <%- JSON.stringify(challenges || []) %>;
-  let userSolvedChallengeIds = new Set(<%- JSON.stringify((userProfile && userProfile.solved_submissions) ? userProfile.solved_submissions.filter(s => s.is_correct).map(s => s.challengeId) : []) %>);
-  let selectedChallenge = roomChallenges.length > 0 ? roomChallenges[0] : null;
-  let isSubmittingChallenge = false;
-  let lastSolvedTimestamp = 0;
-
-  // Countdown Timer State Variables
-  let timerTotalSeconds = selectedChallenge ? (selectedChallenge.time_limit_seconds || 300) : 300;
-  let timerSecondsRemaining = timerTotalSeconds;
-  let isTimerRunning = false;
-  let timerIntervalId = null;
-  let timerExpired = false;
-  let timerSoundEnabled = localStorage.getItem('codequest_timer_sound') !== 'false';
-  let lastTimerSyncTimestamp = 0;
-  let hasAlerted60s = false;
-  let hasAlerted30s = false;
-  let hasAlerted10s = false;
-
+  // Internal Runtime State
   let codeEditor = null;
   let isMonacoReady = false;
   let isLocked = false;
@@ -644,8 +1084,162 @@
   let currentFontSize = 14;
   let isMinimapEnabled = true;
 
-  // Language Templates & Filename Mapping
+  // Language Templates & Filename Mapping with Go (.go) and Vue (.vue)
   const languageConfigs = {
+    go: {
+      filename: 'main.go',
+      label: 'Go 1.22',
+      runtime: 'Go 1.22.3 Linux/AMD64',
+      icon: 'codicon-file-code text-go',
+      template: `// Room: <%= room.name %>
+// Real-time Go Microservice & Goroutine Concurrency Arena
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+type BankAccount struct {
+	mu      sync.Mutex
+	balance int
+}
+
+func (a *BankAccount) Deposit(amount int) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.balance += amount
+}
+
+func (a *BankAccount) Balance() int {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.balance
+}
+
+func main() {
+	account := &BankAccount{balance: 0}
+	var wg sync.WaitGroup
+
+	// Launch 100 concurrent workers
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go func(workerId int) {
+			defer wg.Done()
+			account.Deposit(10)
+		}(i)
+	}
+
+	wg.Wait()
+	fmt.Printf("[OK] Concurrency safe balance: %d (Expected: 1000)\\n", account.Balance())
+	fmt.Println("[STATUS] Goroutine worker pool completed without data race.")
+}
+`
+    },
+    vue: {
+      filename: 'App.vue',
+      label: 'Vue 3 SFC',
+      runtime: 'Vue 3.4 / Vite 5.2',
+      icon: 'codicon-symbol-class text-vue',
+      template: `<!-- Room: <%= room.name %> -->
+<!-- Real-time Vue 3 Single File Component (SFC) -->
+<template>
+  <div class="codequest-vue-card">
+    <div class="card-header">
+      <span class="badge">VUE 3.4 SFC</span>
+      <h4>{{ title }}</h4>
+    </div>
+
+    <div class="card-body">
+      <p class="status-badge">
+        <span class="pulse-dot"></span>
+        Runtime Status: <strong>{{ status }}</strong>
+      </p>
+
+      <div class="interactive-cluster">
+        <button @click="incrementSync" class="btn-vue-sync">
+          Peer Sync Pulse: {{ syncCount }}
+        </button>
+      </div>
+
+      <div class="telemetry-bar">
+        <code>[TELEMETRY] Latency: {{ latency }}ms | Peers: {{ syncCount + 1 }}</code>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+
+const title = ref('<%= room.name %> // Vue Component')
+const status = ref('LIVE_COLLABORATION_READY')
+const syncCount = ref(42)
+const latency = ref(16)
+
+function incrementSync() {
+  syncCount.value++
+  status.value = 'PACKET_TRANSMITTED'
+  setTimeout(() => { status.value = 'IN_SYNC' }, 800)
+}
+</script>
+
+<style scoped>
+.codequest-vue-card {
+  padding: 1.25rem;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  color: #e6edf3;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.badge {
+  background: rgba(66, 184, 131, 0.15);
+  color: #42b883;
+  border: 1px solid #42b883;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: bold;
+}
+.btn-vue-sync {
+  background: #42b883;
+  color: #0d1117;
+  border: none;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-vue-sync:hover {
+  opacity: 0.9;
+}
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #42b883;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.telemetry-bar {
+  margin-top: 12px;
+  padding: 6px 10px;
+  background: #0d1117;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+</style>
+`
+    },
     python: {
       filename: 'solution.py',
       label: 'Python 3.11',
@@ -729,7 +1323,7 @@ LIMIT 10;
 #include <string>
 
 int main() {
-    std::cout << "[CYBER_CORE] Real-time collaborative buffer initialized.\\n";
+    std::cout << "[CODEQUEST_CORE] Real-time collaborative buffer initialized.\\n";
     std::cout << "[STATUS] 2 operatives synchronized.\\n";
     return 0;
 }
@@ -756,8 +1350,8 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
   <meta charset="UTF-8">
   <title><%= room.name %> // Shared View</title>
 </head>
-<body style="background:#070b12; color:#00f0ff; font-family:monospace; padding:2rem;">
-  <h2>OPERATIVE HUD ACTIVE</h2>
+<body style="background:#0d1117; color:#58a6ff; font-family:sans-serif; padding:2rem;">
+  <h2>CodeQuest Codespace Active</h2>
   <p>Real-time Monaco collaborative room buffer synced.</p>
 </body>
 </html>
@@ -765,60 +1359,57 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     }
   };
 
-  // Setup BroadcastChannel for instant local multi-tab sync
+  // BroadcastChannel Setup for instant local tab synchronization
   try {
     broadcastChannel = new BroadcastChannel('codequest_room_' + roomId);
     broadcastChannel.onmessage = (event) => {
-      if (!event.data) return;
-      if (event.data.type === 'code_update' && event.data.sender !== currentUser) {
-        handleRemoteCode(event.data.code, event.data.sender);
-      } else if (event.data.type === 'cursor_move' && event.data.sender !== currentUser) {
-        handleRemoteCursor(event.data);
-      } else if (event.data.type === 'container_run') {
-        appendConsoleLog(event.data.log);
-      } else if (event.data.type === 'lock_update') {
-        applyLockState(event.data.isLocked);
-      } else if (event.data.type === 'challenge_solved') {
-        appendConsoleLog(`<span class="text-success fw-bold">[MISSION ACCOMPLISHED] Peer @${event.data.solver} passed all ${event.data.testsTotal} test cases for Challenge #${event.data.challengeId}: ${event.data.challengeTitle}! (+${event.data.xpAwarded} XP)</span><br>`);
-        addTelemetry(`Peer @${event.data.solver} solved Challenge #${event.data.challengeId}!`);
-        if (selectedChallenge && selectedChallenge.id === event.data.challengeId) {
-          if (sidebarStatusText) {
-            sidebarStatusText.innerText = `SOLVED by @${event.data.solver}`;
-            sidebarStatusText.className = 'text-success fw-bold';
-          }
-        }
-      } else if (event.data.type === 'timer_sync') {
-        handleRemoteTimerSync(event.data);
+      const data = event.data;
+      if (!data) return;
+
+      if (data.type === 'code_update' && data.sender !== currentUser) {
+        handleRemoteCode(data.code, data.sender);
+      } else if (data.type === 'cursor_move' && data.sender !== currentUser) {
+        handleRemoteCursor(data);
+      } else if (data.type === 'lock_update') {
+        applyLockState(data.isLocked);
+      } else if (data.type === 'timer_sync') {
+        handleRemoteTimerSync(data);
+      } else if (data.type === 'container_run') {
+        appendConsoleLog(data.log);
       }
     };
   } catch (e) {
-    console.log('BroadcastChannel fallback unavailable:', e);
+    console.warn('BroadcastChannel not supported in this browser environment:', e);
   }
 
-  function addTelemetry(msg) {
-    if (telemetryBox) {
-      const line = document.createElement('div');
-      line.innerHTML = `<code>&gt; ${msg}</code>`;
-      telemetryBox.appendChild(line);
-      telemetryBox.scrollTop = telemetryBox.scrollHeight;
-    }
-  }
+  // Predefined Challenges and Solved Submissions
+  const allChallenges = <%- JSON.stringify(challenges || []) %>;
+  const userSolvedSubmissions = <%- JSON.stringify(userProfile?.solved_submissions || []) %>;
+  const userSolvedChallengeIds = new Set(userSolvedSubmissions.filter(s => s.is_correct).map(s => Number(s.challengeId)));
+  let selectedChallenge = allChallenges.length > 0 ? allChallenges[0] : null;
+  let isSubmittingChallenge = false;
 
-  function appendConsoleLog(logText) {
+  // Mission Urgency Countdown Timer State
+  let timerInterval = null;
+  let timerTotalSeconds = selectedChallenge ? (selectedChallenge.time_limit_seconds || 300) : 300;
+  let timerSecondsRemaining = timerTotalSeconds;
+  let isTimerRunning = false;
+  let timerExpired = false;
+  let lastTimerSyncTimestamp = 0;
+  let timerSoundEnabled = localStorage.getItem('codequest_timer_sound') !== 'false';
+
+  function appendConsoleLog(html) {
     if (consoleOutput) {
-      consoleOutput.innerHTML += logText;
+      consoleOutput.innerHTML += html;
       consoleOutput.scrollTop = consoleOutput.scrollHeight;
     }
   }
 
-  function flashEditorBorder() {
-    if (editorCard) {
-      editorCard.style.borderColor = '#00ff66';
-      editorCard.style.boxShadow = '0 0 25px rgba(0, 255, 102, 0.45)';
-      setTimeout(() => {
-        editorCard.style.borderColor = '#00e5ff';
-        editorCard.style.boxShadow = '0 0 15px rgba(0, 229, 255, 0.2)';
-      }, 500);
+  function addTelemetry(msg) {
+    if (telemetryBox) {
+      const timestamp = new Date().toLocaleTimeString();
+      telemetryBox.innerHTML += `<div>&gt; [${timestamp}] ${msg}</div>`;
+      telemetryBox.scrollTop = telemetryBox.scrollHeight;
     }
   }
 
@@ -826,21 +1417,143 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     if (!codeEditor) return;
     const model = codeEditor.getModel();
     if (!model) return;
-    
     const lineCount = model.getLineCount();
     const charCount = model.getValueLength();
+    if (charCountBadge) charCountBadge.innerText = `${charCount} chars`;
+  }
 
-    if (statusLength) {
-      statusLength.innerText = `${lineCount} lines, ${charCount} chars`;
+  function flashEditorBorder() {
+    const workbench = document.querySelector('.vscode-outer-container');
+    if (workbench) {
+      workbench.style.borderColor = 'var(--vscode-accent)';
+      setTimeout(() => {
+        workbench.style.borderColor = 'var(--vscode-border)';
+      }, 600);
     }
-    if (charCountBadge) {
-      charCountBadge.innerText = `${charCount} chars`;
+  }
+
+  // Language Switcher Function (supports Go, Vue, Python, etc.)
+  window.selectWorkspaceLanguage = function(langKey) {
+    const conf = languageConfigs[langKey] || languageConfigs.python;
+    if (languageSelect) languageSelect.value = langKey;
+    if (activeFileName) activeFileName.innerText = conf.filename;
+    if (statusLangName) statusLangName.innerText = conf.label;
+    if (breadcrumbFilename) breadcrumbFilename.innerText = conf.filename;
+    if (titlebarActiveFile) titlebarActiveFile.innerText = conf.filename;
+    if (activeRuntimeBadge) activeRuntimeBadge.innerText = conf.runtime;
+
+    // Update active tab styles
+    document.querySelectorAll('#editorTabsBar .vscode-tab').forEach(tab => {
+      if (tab.getAttribute('data-lang') === langKey) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+
+    // Update explorer file items
+    document.querySelectorAll('.vscode-file-item').forEach(item => {
+      if (item.getAttribute('data-lang') === langKey) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
+
+    // Update Monaco language model
+    if (codeEditor && window.monaco) {
+      const model = codeEditor.getModel();
+      const monacoLang = langKey === 'vue' ? 'html' : langKey;
+      window.monaco.editor.setModelLanguage(model, monacoLang);
+
+      // If editor currently has default template or empty, load new template
+      const currentCode = codeEditor.getValue().trim();
+      const isDefaultCode = Object.values(languageConfigs).some(c => c.template.trim() === currentCode);
+      if (isDefaultCode || currentCode === '') {
+        codeEditor.setValue(conf.template);
+        broadcastLocalEdit();
+      }
+
+      // If Vue is selected, render component preview
+      if (langKey === 'vue') {
+        renderVueComponentPreview(codeEditor.getValue());
+      }
     }
+
+    addTelemetry(`Switched workspace environment to ${conf.label} (${conf.filename})`);
+  };
+
+  // VS Code Panel Tab Switcher
+  window.switchVsCodePanel = function(panelKey) {
+    const tabs = ['terminal', 'output', 'vuePreview', 'tests', 'problems'];
+    tabs.forEach(t => {
+      const capKey = t.charAt(0).toUpperCase() + t.slice(1);
+      const tabBtn = document.getElementById('panelTab' + capKey);
+      const content = document.getElementById('panelContent' + capKey);
+      if (tabBtn) tabBtn.classList.toggle('active', t === panelKey);
+      if (content) content.classList.toggle('d-none', t !== panelKey);
+    });
+
+    if (panelKey === 'vuePreview') {
+      const code = codeEditor ? codeEditor.getValue() : scratchpad.value;
+      renderVueComponentPreview(code);
+    }
+  };
+
+  // Live Vue SFC Component Renderer
+  function renderVueComponentPreview(code) {
+    const container = document.getElementById('vueComponentPreviewArea');
+    if (!container) return;
+
+    if (!code || !code.includes('<template>')) {
+      container.innerHTML = `
+        <div class="text-muted text-center py-4 font-monospace small">
+          <i class="codicon codicon-symbol-class text-vue fs-3 mb-2"></i><br>
+          Select or write a Vue 3 SFC component in <code>App.vue</code> to render live.
+        </div>
+      `;
+      return;
+    }
+
+    // Extract template and style
+    const templateMatch = code.match(/<template>([\s\S]*?)<\/template>/);
+    const styleMatch = code.match(/<style[^>]*>([\s\S]*?)<\/style>/);
+
+    let templateHtml = templateMatch ? templateMatch[1] : '<p>No template found</p>';
+    let customCss = styleMatch ? styleMatch[1] : '';
+
+    // Simple template interpolation replacement
+    templateHtml = templateHtml
+      .replace(/\{\{\s*workspaceTitle\s*\}\}/g, "<%= room.name %> // Vue Room")
+      .replace(/\{\{\s*title\s*\}\}/g, "<%= room.name %> // Vue Component")
+      .replace(/\{\{\s*status\s*\}\}/g, "LIVE_IN_SYNC")
+      .replace(/\{\{\s*syncCount\s*\}\}/g, "42")
+      .replace(/\{\{\s*latency\s*\}\}/g, "16")
+      .replace(/\{\{\s*syncCount \+ 1\s*\}\}/g, "43");
+
+    container.innerHTML = `
+      <style>${customCss}</style>
+      <div class="vue-mount-sandbox">
+        ${templateHtml}
+      </div>
+    `;
+
+    // Attach click events for any button inside the preview
+    container.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const span = container.querySelector('.status-badge strong') || container.querySelector('strong');
+        if (span) {
+          span.innerText = 'TRANSMITTED_PULSE_ACK';
+          setTimeout(() => { span.innerText = 'IN_SYNC'; }, 900);
+        }
+        btn.style.transform = 'scale(0.97)';
+        setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+      });
+    });
   }
 
   function handleRemoteCode(newCode, lastEditor) {
     if (newCode === undefined) return;
-    
     const currentCode = codeEditor ? codeEditor.getValue() : scratchpad.value;
     if (newCode === currentCode) return;
 
@@ -849,9 +1562,7 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
       const prevPosition = codeEditor.getPosition();
       codeEditor.setValue(newCode);
       if (prevPosition) {
-        try {
-          codeEditor.setPosition(prevPosition);
-        } catch (e) {}
+        try { codeEditor.setPosition(prevPosition); } catch (e) {}
       }
       updateStatusMetrics();
     }
@@ -861,27 +1572,20 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     flashEditorBorder();
 
     if (peerTypingBadge) {
-      peerTypingBadge.innerText = `⚡ ${lastEditor || 'Peer'} updated code`;
+      peerTypingBadge.innerText = `⚡ ${lastEditor || 'Peer'} updated buffer`;
       peerTypingBadge.classList.remove('d-none');
       setTimeout(() => peerTypingBadge.classList.add('d-none'), 2500);
     }
-
     if (peerStatusDisplay) {
       peerStatusDisplay.innerText = 'SYNCED';
       peerStatusDisplay.className = 'text-success small fw-bold';
     }
-    if (peerNameDisplay && lastEditor && lastEditor !== currentUser) {
-      peerNameDisplay.innerText = `🔵 Peer @${lastEditor}`;
-    }
-
-    addTelemetry(`[SYNC] Buffer synced from @${lastEditor || 'collaborator'} (${newCode.length} bytes)`);
+    addTelemetry(`[SYNC] Buffer synced from @${lastEditor || 'collaborator'}`);
   }
 
   function handleRemoteCursor(data) {
     if (!codeEditor || !window.monaco) return;
     const { sender, line, column } = data;
-    
-    // Highlight peer cursor position
     try {
       peerCursorDecorations = codeEditor.deltaDecorations(peerCursorDecorations, [
         {
@@ -895,7 +1599,6 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
       ]);
     } catch (e) {}
 
-    // Show temporary typing presence in status bar
     if (statusPeerActive && statusPeerText) {
       statusPeerText.innerText = `@${sender} @ Ln ${line}, Col ${column}`;
       statusPeerActive.classList.remove('d-none');
@@ -908,43 +1611,34 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
 
   function applyLockState(locked) {
     isLocked = !!locked;
-    if (codeEditor) {
-      codeEditor.updateOptions({ readOnly: isLocked });
-    }
+    if (codeEditor) codeEditor.updateOptions({ readOnly: isLocked });
     if (isLocked) {
       scratchpad.setAttribute('readonly', 'true');
       classroomLockBanner.classList.remove('d-none');
-      lockModeBtn.innerText = '[ CLASSROOM MODE: LOCKED ]';
+      lockModeBtn.innerText = 'Host: Locked';
       lockModeBtn.className = 'btn btn-sm btn-danger font-monospace';
-      if (statusLockBadge) {
-        statusLockBadge.innerText = '🔒 HOST: LOCKED';
-        statusLockBadge.className = 'status-item text-danger fw-bold';
-      }
+      if (statusLockBadge) statusLockBadge.innerText = '🔒 HOST: LOCKED';
     } else {
       scratchpad.removeAttribute('readonly');
       classroomLockBanner.classList.add('d-none');
-      lockModeBtn.innerText = '[ HOST_MODE: UNLOCKED ]';
-      lockModeBtn.className = 'btn btn-sm btn-outline-warning font-monospace';
-      if (statusLockBadge) {
-        statusLockBadge.innerText = '🔓 HOST: UNLOCKED';
-        statusLockBadge.className = 'status-item text-success fw-bold';
-      }
+      lockModeBtn.innerText = 'Host: Unlocked';
+      lockModeBtn.className = 'btn btn-sm btn-outline-secondary font-monospace';
+      if (statusLockBadge) statusLockBadge.innerText = '🔓 HOST: UNLOCKED';
     }
   }
 
-  // Push local edits to Firebase + BroadcastChannel
   function broadcastLocalEdit() {
     if (isApplyingRemoteEdit) return;
     isWritingLocal = true;
-    syncBadge.innerText = '⚡ SYNCING...';
-    syncBadge.style.color = '#ffe600';
-    syncBadge.style.borderColor = '#ffe600';
+    if (syncBadge) {
+      syncBadge.innerText = '⚡ SYNCING...';
+      syncBadge.style.color = '#e3b341';
+    }
 
     const code = codeEditor ? codeEditor.getValue() : scratchpad.value;
     scratchpad.value = code;
     localStorage.setItem('room_buffer_' + roomId, code);
 
-    // Broadcast immediately across same-browser tabs
     if (broadcastChannel) {
       broadcastChannel.postMessage({
         type: 'code_update',
@@ -960,22 +1654,22 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
         updatedAt: serverTimestamp()
       }, { merge: true }).then(() => {
         isWritingLocal = false;
-        syncBadge.innerText = '🟢 MONACO_SYNC: LIVE';
-        syncBadge.style.color = '#00ff66';
-        syncBadge.style.borderColor = '#00ff66';
-      }).catch(err => {
+        if (syncBadge) {
+          syncBadge.innerText = '🟢 LIVE';
+          syncBadge.style.color = '#3fb950';
+        }
+      }).catch(() => {
         isWritingLocal = false;
-        syncBadge.innerText = '🟢 MONACO_SYNC: LIVE';
+        if (syncBadge) syncBadge.innerText = '🟢 LIVE';
       });
     } else {
       setTimeout(() => {
         isWritingLocal = false;
-        syncBadge.innerText = '🟢 LOCAL_CRDT_SYNC: LIVE';
+        if (syncBadge) syncBadge.innerText = '🟢 LOCAL LIVE';
       }, 150);
     }
   }
 
-  // Broadcast local cursor position
   function broadcastCursorMove(position) {
     if (!position || !broadcastChannel) return;
     broadcastChannel.postMessage({
@@ -986,10 +1680,9 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     });
   }
 
-  // Monaco Editor Initialization
+  // Monaco Editor Initialization with VS Dark+ Theme
   function initMonacoEditor() {
     if (typeof window.require === 'undefined') {
-      console.warn('Monaco loader not loaded yet, retrying...');
       setTimeout(initMonacoEditor, 250);
       return;
     }
@@ -1002,48 +1695,22 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
 
     window.require(['vs/editor/editor.main'], function () {
       try {
-        // Define Cyberpunk Neon Theme
-        window.monaco.editor.defineTheme('cyberpunk-neon', {
-          base: 'vs-dark',
-          inherit: true,
-          rules: [
-            { token: 'comment', foreground: '00ff66', fontStyle: 'italic' },
-            { token: 'keyword', foreground: '00f0ff', fontStyle: 'bold' },
-            { token: 'identifier', foreground: 'e6edf3' },
-            { token: 'string', foreground: 'ffe600' },
-            { token: 'number', foreground: 'ff7b72' },
-            { token: 'type', foreground: '79c0ff' },
-            { token: 'function', foreground: 'd2a8ff' },
-            { token: 'delimiter', foreground: '8b949e' }
-          ],
-          colors: {
-            'editor.background': '#070b12',
-            'editor.foreground': '#e6edf3',
-            'editorCursor.foreground': '#00f0ff',
-            'editor.lineHighlightBackground': '#0f172a88',
-            'editorLineNumber.foreground': '#334155',
-            'editorLineNumber.activeForeground': '#00f0ff',
-            'editor.selectionBackground': '#00e5ff26',
-            'editor.inactiveSelectionBackground': '#00e5ff13',
-            'editorGutter.background': '#04070c',
-            'editorWidget.background': '#0b0f17',
-            'editorWidget.border': '#00e5ff',
-            'minimap.background': '#04070c'
-          }
-        });
+        // Detect initial language from URL query or default to go/python
+        const urlParams = new URLSearchParams(window.location.search);
+        let initialLang = urlParams.get('lang') || 'go';
+        if (!languageConfigs[initialLang]) initialLang = 'go';
 
-        const initialCode = languageConfigs.python.template;
+        const conf = languageConfigs[initialLang];
+        const initialCode = conf.template;
         scratchpad.value = initialCode;
 
-        // Instantiate Monaco Editor
         const mount = document.getElementById('monacoEditorMount');
         codeEditor = window.monaco.editor.create(mount, {
           value: initialCode,
-          language: 'python',
-          theme: 'cyberpunk-neon',
+          language: initialLang === 'vue' ? 'html' : initialLang,
+          theme: 'vs-dark',
           fontSize: currentFontSize,
-          fontFamily: "'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, Monaco, Consolas, monospace",
-          fontLigatures: true,
+          fontFamily: "'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace",
           automaticLayout: true,
           minimap: { enabled: isMinimapEnabled },
           scrollBeyondLastLine: false,
@@ -1052,30 +1719,27 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
           cursorBlinking: 'smooth',
           cursorSmoothCaretAnimation: 'on',
           bracketPairColorization: { enabled: true },
-          glyphMargin: true,
-          lineNumbersMinChars: 3,
           tabSize: 4,
           insertSpaces: true
         });
 
         isMonacoReady = true;
 
-        // Fade out loading spinner
         if (monacoLoading) {
-          monacoLoading.style.transition = 'opacity 0.4s ease';
+          monacoLoading.style.transition = 'opacity 0.3s ease';
           monacoLoading.style.opacity = '0';
-          setTimeout(() => monacoLoading.remove(), 400);
+          setTimeout(() => monacoLoading.remove(), 300);
         }
 
-        // Event: Model content changed
-        codeEditor.onDidChangeModelContent((e) => {
-          updateStatusMetrics();
+        // Apply initial active language tab
+        selectWorkspaceLanguage(initialLang);
 
+        codeEditor.onDidChangeModelContent(() => {
+          updateStatusMetrics();
           if (peerStatusDisplay) {
             peerStatusDisplay.innerText = 'TYPING...';
             peerStatusDisplay.className = 'text-warning small';
           }
-
           if (!isApplyingRemoteEdit) {
             clearTimeout(syncDebounceTimeout);
             syncDebounceTimeout = setTimeout(() => {
@@ -1084,7 +1748,6 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
           }
         });
 
-        // Event: Cursor position changed
         codeEditor.onDidChangeCursorPosition((e) => {
           if (statusPos) {
             statusPos.innerText = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
@@ -1092,7 +1755,6 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
           broadcastCursorMove(e.position);
         });
 
-        // Event: Selection changed
         codeEditor.onDidChangeCursorSelection((e) => {
           if (statusSelection) {
             const sel = e.selection;
@@ -1106,16 +1768,13 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
         });
 
         updateStatusMetrics();
-        addTelemetry('Monaco Editor runtime initialized successfully.');
+        addTelemetry('VS Code Monaco runtime initialized successfully.');
 
-        // Keyboard Shortcut: Ctrl+Enter or Cmd+Enter to trigger Challenge Submission
+        // Shortcut: Cmd+Enter to run/test
         codeEditor.addCommand(window.monaco.KeyMod.CtrlCmd | window.monaco.KeyCode.Enter, () => {
-          if (submitMonacoChallengeBtn) {
-            submitMonacoChallengeBtn.click();
-          }
+          if (submitMonacoChallengeBtn) submitMonacoChallengeBtn.click();
         });
 
-        // Initialize Firebase synchronization once editor is ready
         initFirebaseSync();
 
       } catch (err) {
@@ -1125,43 +1784,35 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     });
   }
 
-  // Fallback if CDN is unreachable
   function fallbackToTextarea() {
     if (monacoLoading) monacoLoading.remove();
     scratchpad.classList.remove('d-none');
-    scratchpad.classList.add('form-control', 'bg-black', 'text-info', 'font-monospace');
-    scratchpad.style.height = '440px';
-    addTelemetry('Monaco CDN fallback: Operating in native editor mode.');
+    scratchpad.classList.add('form-control', 'bg-dark', 'text-light', 'font-monospace');
+    scratchpad.style.height = '400px';
+    addTelemetry('Monaco fallback: Using native textarea editor.');
     initFirebaseSync();
   }
 
-  // Safety timeout in case Monaco loader is delayed
   setTimeout(() => {
     if (!isMonacoReady && !codeEditor) {
-      console.warn('Monaco took > 4000ms, triggering fallback...');
       fallbackToTextarea();
     }
   }, 4000);
 
-  // Initialize Firebase Database Listener
+  // Firebase Real-Time Database Connection
   let db = null;
   let roomDocRef = null;
 
   async function initFirebaseSync() {
     try {
       let config = <%- JSON.stringify(firebaseConfig || {}) %>;
-      
-      // Fallback: fetch from API if not embedded
       if (!config || !config.apiKey) {
         const resp = await fetch('/api/firebase-config');
         config = await resp.json();
       }
 
       if (!config || !config.apiKey) {
-        syncBadge.innerText = '🟢 LOCAL_CRDT_SYNC: LIVE';
-        syncBadge.style.borderColor = '#00ff66';
-        syncBadge.style.color = '#00ff66';
-        addTelemetry('Firebase config absent: Operating in high-speed local broadcast mode.');
+        if (syncBadge) syncBadge.innerText = '🟢 LOCAL SYNC';
         return;
       }
 
@@ -1169,202 +1820,101 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
       db = config.firestoreDatabaseId ? getFirestore(app, config.firestoreDatabaseId) : getFirestore(app);
       roomDocRef = doc(db, 'rooms', 'room_' + roomId);
 
-      addTelemetry('Connected to Firebase Realtime Database socket.');
-      syncBadge.innerText = '🟢 MONACO_SYNC: LIVE';
-      syncBadge.style.borderColor = '#00ff66';
-      syncBadge.style.color = '#00ff66';
+      addTelemetry('Connected to Firebase Realtime Database.');
+      if (syncBadge) syncBadge.innerText = '🟢 CLOUD LIVE';
 
-      // Subscribe to real-time changes
       onSnapshot(roomDocRef, (snap) => {
         if (snap.exists()) {
           const data = snap.data();
           const currentCode = codeEditor ? codeEditor.getValue() : scratchpad.value;
-          
           if (data.code !== undefined && data.code !== currentCode) {
-            // Ignore if we just pushed this exact update
             if (!isWritingLocal || (data.lastEditor && data.lastEditor !== currentUser)) {
               handleRemoteCode(data.code, data.lastEditor);
             }
           }
-
           if (data.isLocked !== undefined && data.isLocked !== isLocked) {
             applyLockState(data.isLocked);
           }
-
           if (data.latestLog && data.logTimestamp && data.logTimestamp > lastRemoteTimestamp) {
             lastRemoteTimestamp = data.logTimestamp;
             appendConsoleLog(data.latestLog);
           }
-
           if (data.missionTimer && data.missionTimer.timestamp && data.missionTimer.timestamp > lastTimerSyncTimestamp) {
             lastTimerSyncTimestamp = data.missionTimer.timestamp;
             handleRemoteTimerSync(data.missionTimer);
           }
-        } else {
-          // Initialize document in Firebase
-          const initialCode = codeEditor ? codeEditor.getValue() : scratchpad.value;
-          setDoc(roomDocRef, {
-            name: "<%= room.name %>",
-            code: initialCode,
-            lastEditor: currentUser,
-            isLocked: false,
-            updatedAt: serverTimestamp()
-          }, { merge: true }).catch(err => console.warn('Init doc error:', err));
         }
       }, (error) => {
-        console.warn('Firebase snapshot warning:', error);
-        syncBadge.innerText = '🟢 LOCAL_CRDT_SYNC: LIVE';
-        addTelemetry('Fallback to peer broadcast synchronization.');
+        console.warn('Firebase snapshot notice:', error);
       });
 
     } catch (err) {
-      console.warn('Firebase initialization notice:', err);
-      syncBadge.innerText = '🟢 LOCAL_CRDT_SYNC: LIVE';
-      addTelemetry('Switched to peer broadcast room synchronization.');
+      console.warn('Firebase init notice:', err);
     }
   }
 
-  // Toolbar Handlers
-
-  // 1. Language selector
-  if (languageSelect) {
-    languageSelect.addEventListener('change', (e) => {
-      const selectedLang = e.target.value;
-      const conf = languageConfigs[selectedLang] || languageConfigs.python;
-
-      if (activeFileName) activeFileName.innerText = conf.filename;
-      if (statusLangName) statusLangName.innerText = conf.label;
-      if (activeRuntimeBadge) activeRuntimeBadge.innerText = `Runtime: ${conf.runtime}`;
-
-      if (codeEditor && window.monaco) {
-        const model = codeEditor.getModel();
-        window.monaco.editor.setModelLanguage(model, selectedLang);
-        
-        // If code is still the default starter code of another language, replace with new template
-        const currentCode = codeEditor.getValue().trim();
-        const isDefaultCode = Object.values(languageConfigs).some(c => c.template.trim() === currentCode);
-        if (isDefaultCode || currentCode === '') {
-          codeEditor.setValue(conf.template);
-          broadcastLocalEdit();
-        }
-      }
-      addTelemetry(`Switched language environment to ${conf.label}`);
-    });
-  }
-
-  // 2. Theme selector
-  if (themeSelect) {
-    themeSelect.addEventListener('change', (e) => {
-      if (window.monaco) {
-        window.monaco.editor.setTheme(e.target.value);
-        addTelemetry(`Applied theme: ${e.target.value}`);
-      }
-    });
-  }
-
-  // 3. Zoom controls
+  // Format zoom handlers
   document.getElementById('btnFontInc')?.addEventListener('click', () => {
     if (currentFontSize < 22 && codeEditor) {
       currentFontSize += 1;
       codeEditor.updateOptions({ fontSize: currentFontSize });
     }
   });
-
   document.getElementById('btnFontDec')?.addEventListener('click', () => {
-    if (currentFontSize > 11 && codeEditor) {
+    if (currentFontSize > 10 && codeEditor) {
       currentFontSize -= 1;
       codeEditor.updateOptions({ fontSize: currentFontSize });
     }
   });
 
-  // 4. Minimap toggle
+  // Minimap toggle
   document.getElementById('btnToggleMinimap')?.addEventListener('click', () => {
-    if (!codeEditor) return;
-    isMinimapEnabled = !isMinimapEnabled;
-    codeEditor.updateOptions({ minimap: { enabled: isMinimapEnabled } });
-    const btn = document.getElementById('btnToggleMinimap');
-    if (btn) {
-      btn.innerText = isMinimapEnabled ? '🗺️ Minimap: ON' : '🗺️ Minimap: OFF';
-      btn.classList.toggle('btn-outline-secondary', !isMinimapEnabled);
-      btn.classList.toggle('btn-outline-info', isMinimapEnabled);
+    if (codeEditor) {
+      isMinimapEnabled = !isMinimapEnabled;
+      codeEditor.updateOptions({ minimap: { enabled: isMinimapEnabled } });
     }
   });
 
-  // 5. Format Document
+  // Format code
   document.getElementById('btnFormatCode')?.addEventListener('click', () => {
     if (codeEditor) {
       codeEditor.getAction('editor.action.formatDocument')?.run();
-      addTelemetry('Code formatted.');
+      addTelemetry('Formatted code buffer.');
     }
   });
 
-  // 6. Copy Code
-  document.getElementById('btnCopyCode')?.addEventListener('click', () => {
-    const code = codeEditor ? codeEditor.getValue() : scratchpad.value;
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(code).then(() => {
-        const btn = document.getElementById('btnCopyCode');
-        const orig = btn.innerText;
-        btn.innerText = '✓ Copied!';
-        btn.classList.replace('btn-outline-secondary', 'btn-success');
-        setTimeout(() => {
-          btn.innerText = orig;
-          btn.classList.replace('btn-success', 'btn-outline-secondary');
-        }, 1800);
-      });
-    }
-  });
-
-  // 7. Reset starter template
-  document.getElementById('btnResetBuffer')?.addEventListener('click', () => {
-    if (confirm('Reset editor buffer to clean starter template?')) {
-      const selectedLang = languageSelect ? languageSelect.value : 'python';
-      const conf = languageConfigs[selectedLang] || languageConfigs.python;
-      if (codeEditor) {
-        codeEditor.setValue(conf.template);
-      }
-      broadcastLocalEdit();
-      addTelemetry('Buffer reset to starter template.');
-    }
-  });
-
-  // Manual Sync Button
-  document.getElementById('manualSyncBtn').addEventListener('click', () => {
-    broadcastLocalEdit();
-    const timestamp = new Date().toLocaleTimeString();
-    const len = codeEditor ? codeEditor.getValue().length : scratchpad.value.length;
-    appendConsoleLog(`<span class="text-info">[${timestamp}] Manual buffer sync confirmed: ${len} bytes broadcasted.</span><br>`);
-    addTelemetry(`Manual sync broadcast completed.`);
-  });
-
-  // Run in container button
+  // RUN CONTAINER BUTTON (with Go & Vue runtime simulations)
   document.getElementById('runContainerBtn').addEventListener('click', () => {
     const timestamp = new Date().toLocaleTimeString();
     const currentCode = codeEditor ? codeEditor.getValue() : scratchpad.value;
-    const selectedLang = languageSelect ? languageSelect.value : 'python';
-    const conf = languageConfigs[selectedLang] || languageConfigs.python;
+    const selectedLang = languageSelect ? languageSelect.value : 'go';
+    const conf = languageConfigs[selectedLang] || languageConfigs.go;
 
+    switchVsCodePanel('terminal');
     appendConsoleLog(`<span class="text-muted">[${timestamp}] Spawning ephemeral container sandbox (${conf.runtime})...</span><br>`);
-    
+
     setTimeout(() => {
-      appendConsoleLog(`<span class="text-info">&gt; Executing script in sandboxed runtime...</span><br>`);
+      appendConsoleLog(`<span class="text-info">&gt; Executing script in container...</span><br>`);
       setTimeout(() => {
         let resultLog = '';
-        if (selectedLang === 'python') {
+        if (selectedLang === 'go') {
+          resultLog = `<span class="text-go fw-bold">&gt; [GOLANG 1.22] go run main.go -race</span><br><span class="text-success">&gt; [OK] Concurrency safe balance: 1000</span><br><span class="text-light">&gt; [OK] Goroutine worker pool: 100 goroutines completed without data race</span><br><span class="text-info">&gt; Process finished with exit code 0 (elapsed: 0.042s).</span><br><br>`;
+        } else if (selectedLang === 'vue') {
+          resultLog = `<span class="text-vue fw-bold">&gt; [VUE 3.4 SFC] vite build --mode development</span><br><span class="text-success">&gt; [OK] Compiled App.vue single file component in 14ms</span><br><span class="text-light">&gt; [VUE] Scoped styles mounted to virtual DOM</span><br><span class="text-info">&gt; Live reactive preview rendered in 'Vue Component Preview' tab.</span><br><br>`;
+          renderVueComponentPreview(currentCode);
+          switchVsCodePanel('vuePreview');
+        } else if (selectedLang === 'python') {
           resultLog = `<span class="text-success">&gt; {'status': 'SECURE', 'nodes': 2, 'synced_by': '${currentUser}'}</span><br><span class="text-info">&gt; Process finished with exit code 0 (execution time: 0.038s).</span><br><br>`;
         } else if (selectedLang === 'javascript' || selectedLang === 'typescript') {
           resultLog = `<span class="text-success">&gt; Container metrics: { "status": "SECURE", "nodes": 2, "timestamp": "${new Date().toISOString()}" }</span><br><span class="text-info">&gt; Node runtime completed with exit code 0.</span><br><br>`;
         } else if (selectedLang === 'sql') {
           resultLog = `<span class="text-warning">&gt; Query OK, 2 rows affected (0.012 sec)</span><br><span class="text-light">&gt; (1, '${currentUser}', 5, 2450, 'ACTIVE')</span><br><span class="text-light">&gt; (2, 'developer_b', 4, 1820, 'ACTIVE')</span><br><br>`;
-        } else if (selectedLang === 'cpp') {
-          resultLog = `<span class="text-success">&gt; [CYBER_CORE] Real-time collaborative buffer initialized.</span><br><span class="text-light">&gt; [STATUS] 2 operatives synchronized.</span><br><span class="text-info">&gt; Binary exited with code 0.</span><br><br>`;
         } else {
           resultLog = `<span class="text-success">&gt; [SYSTEM] Execution finished successfully.</span><br><span class="text-info">&gt; Process exited with code 0.</span><br><br>`;
         }
 
         appendConsoleLog(resultLog);
-        
-        // Broadcast run output to Firebase and peers
+
         const fullLog = `<span class="text-muted">[${timestamp}] Container Run by @${currentUser}:</span><br>${resultLog}`;
         if (roomDocRef) {
           setDoc(roomDocRef, {
@@ -1383,24 +1933,24 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     }, 350);
   });
 
-  // Clear Console Button
+  // Clear Console
   document.getElementById('clearConsoleBtn').addEventListener('click', () => {
-    consoleOutput.innerHTML = `<span class="text-muted">&gt; Container terminal reset.</span><br>`;
+    if (consoleOutput) {
+      consoleOutput.innerHTML = `<span class="text-muted">&gt; Codespace terminal reset.</span><br>`;
+    }
   });
 
-  // Teacher / Host Lock Button
+  // Host Lock Button
   lockModeBtn.addEventListener('click', () => {
     const newLockState = !isLocked;
     applyLockState(newLockState);
-
     if (roomDocRef) {
       setDoc(roomDocRef, { isLocked: newLockState }, { merge: true });
     }
     if (broadcastChannel) {
       broadcastChannel.postMessage({ type: 'lock_update', isLocked: newLockState });
     }
-
-    addTelemetry(newLockState ? 'Host locked the collaborative editing buffer.' : 'Host unlocked buffer for all peers.');
+    addTelemetry(newLockState ? 'Host locked the collaborative buffer.' : 'Host unlocked buffer for all peers.');
   });
 
   // Audio Huddle
@@ -1408,25 +1958,19 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     isHuddleActive = !isHuddleActive;
     const btn = document.getElementById('joinHuddleBtn');
     const statusBadge = document.getElementById('huddleStatus');
-    
     if (isHuddleActive) {
-      btn.innerText = '[ LEAVE AUDIO ]';
+      btn.innerText = 'Leave Audio';
       btn.className = 'btn btn-sm btn-outline-danger w-100 font-monospace py-1';
       statusBadge.innerText = 'LIVE';
       statusBadge.className = 'badge bg-danger text-light small';
-      addTelemetry('Joined P2P Audio Huddle channel.');
+      addTelemetry('Connected to P2P Voice Huddle.');
     } else {
-      btn.innerText = '[ JOIN AUDIO ]';
-      btn.className = 'btn btn-sm btn-outline-success w-100 font-monospace py-1';
+      btn.innerText = 'Join Audio';
+      btn.className = 'btn btn-sm btn-gh-secondary w-100 font-monospace py-1';
       statusBadge.innerText = 'OFF';
-      statusBadge.className = 'badge bg-success text-black small';
+      statusBadge.className = 'badge bg-secondary small';
       addTelemetry('Disconnected from Audio Huddle.');
     }
-  });
-
-  document.getElementById('muteMicBtn').addEventListener('click', () => {
-    const status = isHuddleActive ? 'Microphone muted/unmuted.' : 'Join the audio huddle first to use mic controls.';
-    addTelemetry(status);
   });
 
   // Conflict scan
@@ -1434,7 +1978,7 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     const banner = document.getElementById('conflictAlertBanner');
     const statusText = document.getElementById('conflictStatusText');
     banner.classList.remove('d-none');
-    statusText.innerText = '1 Conflict Found!';
+    statusText.innerText = '1 Conflict';
     statusText.className = 'text-danger fw-bold';
     addTelemetry('GitLive scan: Concurrent line modification detected.');
   });
@@ -1444,17 +1988,14 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     if (navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href);
       const btn = document.getElementById('shareInviteBtn');
-      const orig = btn.innerText;
-      btn.innerText = '[ LINK COPIED! ]';
-      setTimeout(() => btn.innerText = orig, 2000);
-      addTelemetry('Room invite link copied to clipboard.');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '✔ Link Copied!';
+      setTimeout(() => btn.innerHTML = orig, 2000);
+      addTelemetry('Codespace invite link copied to clipboard.');
     }
   });
 
-  // =========================================================================
-  // Challenge Selection, Predefined Test Runner Suite & Submission Engine
-  // =========================================================================
-
+  // Challenge Selection & Mission Intel
   function escapeHtml(str) {
     if (str === null || str === undefined) return '';
     return String(str)
@@ -1465,19 +2006,16 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
       .replace(/'/g, '&#039;');
   }
 
-  // Render Mission Intel Drawer & Predefined Test List
   function renderMissionBrief(challenge) {
     if (!challenge) return;
     if (briefChallengeCategory) briefChallengeCategory.innerText = challenge.category || 'Security Defense';
     if (briefChallengeDiff) {
       briefChallengeDiff.innerText = (challenge.difficulty || 'MEDIUM').toUpperCase();
-      const diffClass = challenge.difficulty === 'Easy' ? 'border-success text-success' : (challenge.difficulty === 'Hard' ? 'border-danger text-danger' : 'border-warning text-warning');
-      briefChallengeDiff.className = `badge bg-black border ${diffClass}`;
     }
     if (briefChallengeReward) briefChallengeReward.innerText = `+${challenge.xp_reward || 100} XP`;
     if (briefChallengeDesc) briefChallengeDesc.innerText = challenge.description || '';
     if (briefChallengeInstructions) {
-      briefChallengeInstructions.innerHTML = `<strong>MISSION OBJECTIVE:</strong> ${escapeHtml(challenge.instructions || 'Inspect code vulnerabilities, patch them to pass all predefined test cases, and submit.')}`;
+      briefChallengeInstructions.innerHTML = `<strong>MISSION OBJECTIVE:</strong> ${escapeHtml(challenge.instructions || '')}`;
     }
     if (testCaseCountBadge) {
       testCaseCountBadge.innerText = (challenge.test_cases || []).length;
@@ -1486,7 +2024,7 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     if (briefTestCasesList) {
       const tests = challenge.test_cases || [];
       if (tests.length === 0) {
-        briefTestCasesList.innerHTML = `<div class="col-12 text-muted small">No predefined test cases specified for this challenge.</div>`;
+        briefTestCasesList.innerHTML = `<div class="col-12 text-muted small">No predefined test cases specified.</div>`;
       } else {
         briefTestCasesList.innerHTML = tests.map((t, idx) => `
           <div class="col-md-6">
@@ -1506,53 +2044,30 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
       }
     }
 
-    // Update Sidebar HUD
     if (sidebarChallengeTitle) sidebarChallengeTitle.innerText = `#${challenge.id}: ${challenge.title}`;
-    if (sidebarChallengeDiff) {
-      sidebarChallengeDiff.innerText = (challenge.difficulty || 'MEDIUM').toUpperCase();
-      const diffClass = challenge.difficulty === 'Easy' ? 'border-success text-success' : (challenge.difficulty === 'Hard' ? 'border-danger text-danger' : 'border-warning text-warning');
-      sidebarChallengeDiff.className = `badge bg-black border ${diffClass}`;
-    }
+    if (sidebarChallengeDiff) sidebarChallengeDiff.innerText = (challenge.difficulty || 'MEDIUM').toUpperCase();
     if (sidebarChallengeXp) sidebarChallengeXp.innerText = `+${challenge.xp_reward || 100} XP`;
     if (sidebarTestCount) sidebarTestCount.innerText = `${(challenge.test_cases || []).length} Test Cases`;
     if (sidebarTimeLimit) sidebarTimeLimit.innerText = formatTimeLimit(challenge.time_limit_seconds || 300);
-    if (timerChallengeLimitInfo) timerChallengeLimitInfo.innerText = `Limit: ${formatTimeLimit(challenge.time_limit_seconds || 300)}`;
 
-    // Solved status badge
     const isSolved = userSolvedChallengeIds.has(Number(challenge.id));
     if (challengeStatusBadge) {
-      if (isSolved) {
-        challengeStatusBadge.innerText = 'SOLVED';
-        challengeStatusBadge.className = 'badge bg-black border border-success text-success px-2 py-1';
-      } else {
-        challengeStatusBadge.innerText = 'UNSOLVED';
-        challengeStatusBadge.className = 'badge bg-black border border-secondary text-muted px-2 py-1';
-      }
+      challengeStatusBadge.innerText = isSolved ? 'SOLVED' : 'UNSOLVED';
+      challengeStatusBadge.className = isSolved ? 'badge bg-success text-black' : 'badge bg-black border border-secondary text-muted';
     }
     if (sidebarStatusText) {
-      if (isSolved) {
-        sidebarStatusText.innerText = 'SOLVED';
-        sidebarStatusText.className = 'text-success fw-bold';
-      } else {
-        sidebarStatusText.innerText = 'UNSOLVED';
-        sidebarStatusText.className = 'text-warning';
-      }
+      sidebarStatusText.innerText = isSolved ? 'SOLVED' : 'UNSOLVED';
+      sidebarStatusText.className = isSolved ? 'text-success fw-bold' : 'text-warning';
     }
   }
 
-  // =========================================================================
-  // Mission Urgency Visual Countdown Timer & Audio Feedback Engine
-  // =========================================================================
-
-  // Format seconds to mm:ss
   function formatTime(totalSecs) {
-    if (totalSecs === undefined || totalSecs === null || isNaN(totalSecs) || totalSecs < 0) totalSecs = 0;
+    if (!totalSecs || totalSecs < 0) totalSecs = 0;
     const mins = Math.floor(totalSecs / 60);
     const secs = Math.floor(totalSecs % 60);
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   }
 
-  // Format seconds to human readable limit e.g. "5m 00s"
   function formatTimeLimit(totalSecs) {
     if (!totalSecs || totalSecs < 0) return '5m 00s';
     const mins = Math.floor(totalSecs / 60);
@@ -1560,69 +2075,6 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     return `${mins}m ${String(secs).padStart(2, '0')}s`;
   }
 
-  // Web Audio API Synthesizer for Cyberpunk Urgency Cues
-  let audioCtx = null;
-  function getAudioContext() {
-    if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
-    return audioCtx;
-  }
-
-  function playUrgencyBeep(type = 'tick') {
-    if (!timerSoundEnabled) return;
-    try {
-      const ctx = getAudioContext();
-      if (!ctx) return;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      const now = ctx.currentTime;
-      if (type === 'tick') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, now);
-        gain.gain.setValueAtTime(0.025, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-        osc.start(now);
-        osc.stop(now + 0.05);
-      } else if (type === 'critical') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(1040, now);
-        osc.frequency.setValueAtTime(1380, now + 0.06);
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
-        osc.start(now);
-        osc.stop(now + 0.18);
-      } else if (type === 'buzzer') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(160, now);
-        osc.frequency.setValueAtTime(110, now + 0.2);
-        gain.gain.setValueAtTime(0.12, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-        osc.start(now);
-        osc.stop(now + 0.45);
-      } else if (type === 'victory') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(523.25, now);
-        osc.frequency.setValueAtTime(659.25, now + 0.09);
-        osc.frequency.setValueAtTime(783.99, now + 0.18);
-        osc.frequency.setValueAtTime(1046.5, now + 0.27);
-        gain.gain.setValueAtTime(0.09, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
-        osc.start(now);
-        osc.stop(now + 0.55);
-      }
-    } catch (e) {
-      console.warn('Audio cue notice:', e);
-    }
-  }
-
-  // Update Visual Timer HUD & Urgency Styles
   function updateTimerVisuals() {
     const formatted = formatTime(timerSecondsRemaining);
     if (countdownClockDisplay) countdownClockDisplay.innerText = formatted;
@@ -1631,806 +2083,213 @@ echo "[STATUS] Sandboxed environment running with unprivileged namespace."
     const percent = timerTotalSeconds > 0 ? Math.max(0, Math.min(100, (timerSecondsRemaining / timerTotalSeconds) * 100)) : 0;
     if (countdownProgressBar) {
       countdownProgressBar.style.width = `${percent}%`;
-      countdownProgressBar.setAttribute('aria-valuenow', Math.round(percent));
-    }
-
-    // Urgency styling states
-    if (timerSecondsRemaining <= 0) {
-      // 00:00 - Time Expired
-      timerExpired = true;
-      if (countdownClockDisplay) {
-        countdownClockDisplay.innerText = '00:00';
-        countdownClockDisplay.className = 'fs-4 fw-bold text-danger px-3 py-0 rounded bg-black border border-danger font-monospace shadow-sm';
-      }
-      if (sidebarTimeRemaining) {
-        sidebarTimeRemaining.innerText = '00:00 [LOCKED]';
-        sidebarTimeRemaining.className = 'text-danger fw-bold';
-      }
-      if (timerUrgencyStatusBadge) {
-        timerUrgencyStatusBadge.innerText = '💀 TIME EXPIRED // SUBMISSIONS LOCKED';
-        timerUrgencyStatusBadge.className = 'badge bg-danger text-black fw-bold px-2 py-1 small';
-      }
-      if (missionTimerBar) {
-        missionTimerBar.classList.remove('timer-critical-pulse');
-        missionTimerBar.style.borderColor = '#ff0055';
-        missionTimerBar.style.boxShadow = '0 0 16px rgba(255, 0, 85, 0.4)';
-      }
-      if (countdownProgressBar) {
-        countdownProgressBar.className = 'progress-bar bg-danger';
-      }
-      if (submitMonacoChallengeBtn) {
-        submitMonacoChallengeBtn.disabled = true;
-        submitMonacoChallengeBtn.innerHTML = '⏰ [ TIME EXPIRED - RESTART TIMER ]';
-        submitMonacoChallengeBtn.title = 'Mission time expired. Click RESTART TIMER to begin a new attempt.';
-      }
-      if (timerToggleBtn) {
-        timerToggleBtn.innerText = '▶ RESTART MISSION CLOCK';
-        timerToggleBtn.className = 'btn btn-sm btn-outline-warning font-monospace py-0 px-2 d-flex align-items-center gap-1';
-      }
-    } else if (timerSecondsRemaining <= 60) {
-      // Danger Zone (< 60s remaining)
-      timerExpired = false;
-      if (countdownClockDisplay) {
-        countdownClockDisplay.className = 'fs-4 fw-bold text-danger px-3 py-0 rounded bg-black border border-danger font-monospace shadow-sm timer-critical-text';
-      }
-      if (sidebarTimeRemaining) {
-        sidebarTimeRemaining.innerText = formatted;
-        sidebarTimeRemaining.className = 'text-danger fw-bold';
-      }
-      if (timerUrgencyStatusBadge) {
-        timerUrgencyStatusBadge.innerText = '⚠️ CRITICAL: EXPIRING SOON (<60s)';
-        timerUrgencyStatusBadge.className = 'badge bg-danger text-black fw-bold px-2 py-1 small';
-      }
-      if (missionTimerBar) {
-        missionTimerBar.classList.add('timer-critical-pulse');
-      }
-      if (countdownProgressBar) {
-        countdownProgressBar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-danger';
-      }
-      if (submitMonacoChallengeBtn && !isSubmittingChallenge) {
-        submitMonacoChallengeBtn.disabled = false;
-        submitMonacoChallengeBtn.innerHTML = '🚀 [ VALIDATE &amp; SUBMIT ]';
-      }
-    } else if (timerSecondsRemaining <= timerTotalSeconds * 0.4) {
-      // Pacing Warning (20% - 40%)
-      timerExpired = false;
-      if (countdownClockDisplay) {
-        countdownClockDisplay.classList.remove('timer-critical-text');
-        countdownClockDisplay.className = 'fs-4 fw-bold text-warning px-3 py-0 rounded bg-black border border-warning font-monospace shadow-sm';
-      }
-      if (sidebarTimeRemaining) {
-        sidebarTimeRemaining.innerText = formatted;
-        sidebarTimeRemaining.className = 'text-warning fw-bold';
-      }
-      if (timerUrgencyStatusBadge) {
-        timerUrgencyStatusBadge.innerText = isTimerRunning ? '⚡ PACING WARNING' : '⏱️ PAUSED';
-        timerUrgencyStatusBadge.className = 'badge bg-black border border-warning text-warning px-2 py-1 small';
-      }
-      if (missionTimerBar) {
-        missionTimerBar.classList.remove('timer-critical-pulse');
-        missionTimerBar.style.borderColor = '#ffb700';
-        missionTimerBar.style.boxShadow = '0 0 12px rgba(255, 183, 0, 0.2)';
-      }
-      if (countdownProgressBar) {
-        countdownProgressBar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-warning';
-      }
-      if (submitMonacoChallengeBtn && !isSubmittingChallenge) {
-        submitMonacoChallengeBtn.disabled = false;
-        submitMonacoChallengeBtn.innerHTML = '🚀 [ VALIDATE &amp; SUBMIT ]';
-      }
-    } else {
-      // Normal / Safe Zone (> 40%)
-      timerExpired = false;
-      if (countdownClockDisplay) {
-        countdownClockDisplay.classList.remove('timer-critical-text');
-        countdownClockDisplay.className = 'fs-4 fw-bold text-info px-3 py-0 rounded bg-black border border-info font-monospace shadow-sm';
-      }
-      if (sidebarTimeRemaining) {
-        sidebarTimeRemaining.innerText = formatted;
-        sidebarTimeRemaining.className = 'text-info fw-bold';
-      }
-      if (timerUrgencyStatusBadge) {
-        timerUrgencyStatusBadge.innerText = isTimerRunning ? '⚡ MISSION CLOCK ACTIVE' : '⏱️ TIMER READY';
-        timerUrgencyStatusBadge.className = 'badge bg-black border border-info text-info px-2 py-1 small';
-      }
-      if (missionTimerBar) {
-        missionTimerBar.classList.remove('timer-critical-pulse');
-        missionTimerBar.style.borderColor = '#00e5ff';
-        missionTimerBar.style.boxShadow = '0 0 14px rgba(0, 229, 255, 0.15)';
-      }
-      if (countdownProgressBar) {
-        countdownProgressBar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-info';
-      }
-      if (submitMonacoChallengeBtn && !isSubmittingChallenge) {
-        submitMonacoChallengeBtn.disabled = false;
-        submitMonacoChallengeBtn.innerHTML = '🚀 [ VALIDATE &amp; SUBMIT ]';
-      }
-    }
-
-    if (timerChallengeLimitInfo) {
-      timerChallengeLimitInfo.innerText = `Limit: ${formatTimeLimit(timerTotalSeconds)}`;
-    }
-    if (sidebarTimeLimit) {
-      sidebarTimeLimit.innerText = formatTimeLimit(timerTotalSeconds);
     }
   }
 
-  // Ticker loop
-  function timerTick() {
-    if (!isTimerRunning) return;
-
-    if (timerSecondsRemaining > 0) {
-      timerSecondsRemaining -= 1;
-
-      // Audio alerts at critical milestones
-      if (timerSecondsRemaining === 60 && !hasAlerted60s) {
-        hasAlerted60s = true;
-        playUrgencyBeep('critical');
-        appendConsoleLog(`<span class="text-danger fw-bold">[URGENCY ALERT] ⚠️ Less than 60 seconds remaining for Challenge #${selectedChallenge?.id}! Prepare solution submission.</span><br>`);
-        addTelemetry(`Urgency alert: 60s remaining on challenge #${selectedChallenge?.id}.`);
-      } else if (timerSecondsRemaining === 30 && !hasAlerted30s) {
-        hasAlerted30s = true;
-        playUrgencyBeep('critical');
-        appendConsoleLog(`<span class="text-danger fw-bold">[URGENCY ALERT] ⚠️ 30 seconds remaining! Submit code promptly.</span><br>`);
-      } else if (timerSecondsRemaining <= 10 && timerSecondsRemaining > 0) {
-        // High urgency ticking on last 10 seconds
-        playUrgencyBeep('tick');
-      }
-
-      updateTimerVisuals();
-
-      // Broadcast periodic sync every 5 seconds
-      if (timerSecondsRemaining % 5 === 0) {
-        broadcastTimerState();
-      }
-    } else {
-      // Time Expired
-      timerSecondsRemaining = 0;
-      isTimerRunning = false;
-      clearInterval(timerIntervalId);
-      timerIntervalId = null;
-      timerExpired = true;
-
-      playUrgencyBeep('buzzer');
-      updateTimerVisuals();
-
-      appendConsoleLog(`<span class="text-danger fw-bold">[MISSION TIMEOUT] 💀 Time limit expired for Challenge #${selectedChallenge?.id}. Submissions locked. Hit "RESTART TIMER" to re-attempt.</span><br>`);
-      addTelemetry(`Mission timeout: Challenge #${selectedChallenge?.id} time limit expired.`);
-
-      broadcastTimerState();
-    }
-  }
-
-  function startCountdownTimer(broadcast = true) {
-    if (timerSecondsRemaining <= 0) {
-      restartCountdownTimer(true, broadcast);
-      return;
-    }
-    if (isTimerRunning) return;
-
-    isTimerRunning = true;
-    if (timerToggleBtn) {
-      timerToggleBtn.innerText = '⏸ PAUSE TIMER';
-      timerToggleBtn.className = 'btn btn-sm btn-outline-warning font-monospace py-0 px-2 d-flex align-items-center gap-1';
-    }
-
-    clearInterval(timerIntervalId);
-    timerIntervalId = setInterval(timerTick, 1000);
-    playUrgencyBeep('tick');
-    updateTimerVisuals();
-
-    appendConsoleLog(`<span class="text-info">[TIMER STARTED] Mission countdown active: ${formatTime(timerSecondsRemaining)} remaining.</span><br>`);
-    addTelemetry(`Mission clock started (${timerSecondsRemaining}s).`);
-
-    if (broadcast) {
-      broadcastTimerState();
-    }
-  }
-
-  function pauseCountdownTimer(broadcast = true) {
-    if (!isTimerRunning) return;
-    isTimerRunning = false;
-    clearInterval(timerIntervalId);
-    timerIntervalId = null;
-
-    if (timerToggleBtn) {
-      timerToggleBtn.innerText = '▶ RESUME MISSION CLOCK';
-      timerToggleBtn.className = 'btn btn-sm btn-outline-info font-monospace py-0 px-2 d-flex align-items-center gap-1';
-    }
-    updateTimerVisuals();
-
-    appendConsoleLog(`<span class="text-muted">[TIMER PAUSED] Mission countdown paused at ${formatTime(timerSecondsRemaining)}.</span><br>`);
-    addTelemetry(`Mission clock paused at ${formatTime(timerSecondsRemaining)}.`);
-
-    if (broadcast) {
-      broadcastTimerState();
-    }
-  }
-
-  function toggleCountdownTimer() {
-    if (isTimerRunning) {
-      pauseCountdownTimer(true);
-    } else {
-      startCountdownTimer(true);
-    }
-  }
-
-  function restartCountdownTimer(autoStart = false, broadcast = true) {
-    clearInterval(timerIntervalId);
-    timerIntervalId = null;
-    isTimerRunning = false;
-    timerExpired = false;
-
-    hasAlerted60s = false;
-    hasAlerted30s = false;
-    hasAlerted10s = false;
-
-    timerTotalSeconds = selectedChallenge ? (selectedChallenge.time_limit_seconds || 300) : 300;
-    timerSecondsRemaining = timerTotalSeconds;
-
-    if (timerToggleBtn) {
-      timerToggleBtn.innerText = '▶ START MISSION CLOCK';
-      timerToggleBtn.className = 'btn btn-sm btn-outline-info font-monospace py-0 px-2 d-flex align-items-center gap-1';
-    }
-
-    updateTimerVisuals();
-
-    if (submitMonacoChallengeBtn) {
-      submitMonacoChallengeBtn.disabled = false;
-      submitMonacoChallengeBtn.innerHTML = '🚀 [ VALIDATE &amp; SUBMIT ]';
-      submitMonacoChallengeBtn.title = 'Validate solution against predefined test cases';
-    }
-
-    appendConsoleLog(`<span class="text-warning">[TIMER RESET] Mission clock reset to full challenge limit: ${formatTime(timerTotalSeconds)}.</span><br>`);
-    addTelemetry(`Mission countdown reset to ${formatTime(timerTotalSeconds)}.`);
-
-    if (autoStart) {
-      startCountdownTimer(broadcast);
-    } else if (broadcast) {
-      broadcastTimerState();
-    }
-  }
-
-  function broadcastTimerState() {
-    const payload = {
-      type: 'timer_sync',
-      challengeId: selectedChallenge ? selectedChallenge.id : null,
-      secondsRemaining: timerSecondsRemaining,
-      totalSeconds: timerTotalSeconds,
-      isRunning: isTimerRunning,
-      expired: timerExpired,
-      timestamp: Date.now(),
-      sender: currentUser
-    };
-
-    if (broadcastChannel) {
-      broadcastChannel.postMessage(payload);
-    }
-
-    if (roomDocRef) {
-      setDoc(roomDocRef, {
-        missionTimer: payload
-      }, { merge: true }).catch(err => console.warn('Timer doc sync notice:', err));
-    }
-  }
-
-  function handleRemoteTimerSync(data) {
-    if (!data || data.sender === currentUser) return;
-    if (selectedChallenge && data.challengeId && data.challengeId !== selectedChallenge.id) {
-      selectChallenge(data.challengeId, false);
-    }
-
-    timerTotalSeconds = data.totalSeconds || timerTotalSeconds;
-    timerSecondsRemaining = typeof data.secondsRemaining === 'number' ? data.secondsRemaining : timerSecondsRemaining;
-    timerExpired = !!data.expired;
-
-    if (data.isRunning && !isTimerRunning) {
-      isTimerRunning = true;
-      if (timerToggleBtn) {
-        timerToggleBtn.innerText = '⏸ PAUSE TIMER';
-        timerToggleBtn.className = 'btn btn-sm btn-outline-warning font-monospace py-0 px-2 d-flex align-items-center gap-1';
-      }
-      clearInterval(timerIntervalId);
-      timerIntervalId = setInterval(timerTick, 1000);
-    } else if (!data.isRunning && isTimerRunning) {
-      isTimerRunning = false;
-      clearInterval(timerIntervalId);
-      timerIntervalId = null;
-      if (timerToggleBtn) {
-        timerToggleBtn.innerText = timerSecondsRemaining <= 0 ? '▶ RESTART MISSION CLOCK' : '▶ RESUME MISSION CLOCK';
-        timerToggleBtn.className = 'btn btn-sm btn-outline-info font-monospace py-0 px-2 d-flex align-items-center gap-1';
-      }
-    }
-
-    updateTimerVisuals();
-  }
-
-  window.restartCountdownTimer = restartCountdownTimer;
-  window.startCountdownTimer = startCountdownTimer;
-
-  // Switch Active Selected Challenge
-  function selectChallenge(challengeId, autoLoadStarter = false) {
-    const found = roomChallenges.find(c => String(c.id) === String(challengeId));
+  window.selectChallenge = function(challengeId) {
+    const found = allChallenges.find(c => String(c.id) === String(challengeId));
     if (!found) return;
     selectedChallenge = found;
-    renderMissionBrief(found);
+    renderMissionBrief(selectedChallenge);
 
-    // Reset countdown timer to match the newly selected challenge's time limit
-    restartCountdownTimer(false, true);
-
-    if (autoLoadStarter) {
-      loadChallengeStarter();
+    // Auto-switch language if challenge matches go or vue
+    if (selectedChallenge.id === 7 || selectedChallenge.title.toLowerCase().includes('go')) {
+      selectWorkspaceLanguage('go');
+    } else if (selectedChallenge.id === 8 || selectedChallenge.title.toLowerCase().includes('vue')) {
+      selectWorkspaceLanguage('vue');
     }
-    addTelemetry(`Switched target challenge to #${found.id}: ${found.title}`);
-  }
 
-  // Load starter template / vulnerable code into Monaco editor
+    addTelemetry(`Selected CTF Challenge #${selectedChallenge.id}: ${selectedChallenge.title}`);
+  };
+
+  window.toggleMissionDrawer = function() {
+    if (missionBriefDrawer) {
+      missionBriefDrawer.classList.toggle('d-none');
+    }
+  };
+
+  // Load challenge skeleton code into editor
   function loadChallengeStarter() {
     if (!selectedChallenge) return;
-    const currentCode = codeEditor ? codeEditor.getValue() : scratchpad.value;
-    const hasCustomCode = currentCode.trim().length > 0 && !Object.values(languageConfigs).some(c => c.template.trim() === currentCode.trim());
-
-    if (hasCustomCode) {
-      const ok = confirm(`Replace editor buffer with starter skeleton for Challenge #${selectedChallenge.id}: "${selectedChallenge.title}"?`);
-      if (!ok) return;
-    }
-
-    // Determine starter code based on active or preferred language
-    let starterCode = selectedChallenge.vulnerable_code || '';
-    const currentLang = languageSelect ? languageSelect.value : 'python';
+    const currentLang = languageSelect ? languageSelect.value : 'go';
+    let starterCode = '';
     if (selectedChallenge.starter_templates && selectedChallenge.starter_templates[currentLang]) {
       starterCode = selectedChallenge.starter_templates[currentLang];
+    } else if (selectedChallenge.starter_templates) {
+      const keys = Object.keys(selectedChallenge.starter_templates);
+      if (keys.length > 0) {
+        starterCode = selectedChallenge.starter_templates[keys[0]];
+      }
     }
 
-    if (codeEditor) {
+    if (starterCode && codeEditor) {
       codeEditor.setValue(starterCode);
-    } else {
-      scratchpad.value = starterCode;
-    }
-
-    broadcastLocalEdit();
-    appendConsoleLog(`<span class="text-warning">[CHALLENGE SKELETON LOADED] #${selectedChallenge.id}: ${selectedChallenge.title}</span><br>`);
-    addTelemetry(`Loaded starter skeleton for Challenge #${selectedChallenge.id}.`);
-
-    // Automatically trigger mission timer countdown when operative begins the challenge
-    if (!isTimerRunning && !timerExpired) {
-      startCountdownTimer(true);
+      broadcastLocalEdit();
+      addTelemetry(`Loaded starter skeleton for #${selectedChallenge.id}`);
     }
   }
 
-  // Console / Test Runner Tab Switcher
-  function switchConsoleTab(tabName) {
-    if (tabName === 'testRunner') {
-      if (tabTestRunnerBtn) {
-        tabTestRunnerBtn.className = 'btn btn-outline-info active py-1 px-3 position-relative';
-      }
-      if (tabContainerLogsBtn) {
-        tabContainerLogsBtn.className = 'btn btn-outline-warning py-1 px-3';
-      }
-      if (testRunnerPanel) testRunnerPanel.classList.remove('d-none');
-      if (containerLogsPanel) containerLogsPanel.classList.add('d-none');
-    } else {
-      if (tabContainerLogsBtn) {
-        tabContainerLogsBtn.className = 'btn btn-outline-warning active py-1 px-3';
-      }
-      if (tabTestRunnerBtn) {
-        tabTestRunnerBtn.className = 'btn btn-outline-info py-1 px-3 position-relative';
-      }
-      if (containerLogsPanel) containerLogsPanel.classList.remove('d-none');
-      if (testRunnerPanel) testRunnerPanel.classList.add('d-none');
-    }
-  }
-
-  // Submit Monaco Editor Code for Challenge Predefined Test Verification
+  // Predefined Test Suite Submission
   async function submitMonacoChallenge() {
-    if (isSubmittingChallenge) return;
-    if (!selectedChallenge) {
-      alert('Please select a target challenge first.');
-      return;
-    }
-
-    // Urgency Check: Rejection if Countdown Timer Expired
-    if (timerExpired || timerSecondsRemaining <= 0) {
-      switchConsoleTab('testRunner');
-      if (testRunnerResultsContainer) testRunnerResultsContainer.classList.remove('d-none');
-      if (testRunnerEmptyState) testRunnerEmptyState.classList.add('d-none');
-      if (testRunnerLoadingState) testRunnerLoadingState.classList.add('d-none');
-      if (testResultsSummaryHeader) {
-        testResultsSummaryHeader.innerHTML = `
-          <div class="p-3 rounded border border-danger bg-black font-monospace">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="text-danger fw-bold fs-6">⏰ MISSION TIME LIMIT EXPIRED</span>
-              <span class="badge bg-danger text-black fw-bold">SUBMISSION LOCKED</span>
-            </div>
-            <p class="text-secondary small mb-2">
-              The allowed time window (${formatTimeLimit(timerTotalSeconds)}) for Challenge #${selectedChallenge.id} has closed.
-              Late submissions are disabled to maintain mission urgency pacing. Hit 'RESTART TIMER' to launch a fresh attempt.
-            </p>
-            <button type="button" class="btn btn-sm btn-outline-warning font-monospace" onclick="restartCountdownTimer(true, true)">
-              🔄 RESTART TIMER &amp; RETRY
-            </button>
-          </div>
-        `;
-      }
-      playUrgencyBeep('buzzer');
-      appendConsoleLog(`<span class="text-danger">[MISSION LOCKED] Submission rejected: Time limit expired for Challenge #${selectedChallenge.id}.</span><br>`);
-      addTelemetry(`Submission blocked: Timer expired.`);
-      return;
-    }
+    if (isSubmittingChallenge || !selectedChallenge) return;
 
     const code = codeEditor ? codeEditor.getValue() : scratchpad.value;
     if (!code || !code.trim()) {
-      switchConsoleTab('testRunner');
-      if (testRunnerResultsContainer) testRunnerResultsContainer.classList.remove('d-none');
-      if (testRunnerEmptyState) testRunnerEmptyState.classList.add('d-none');
-      if (testRunnerLoadingState) testRunnerLoadingState.classList.add('d-none');
-      if (testResultsSummaryHeader) {
-        testResultsSummaryHeader.innerHTML = `
-          <div class="p-2 rounded border border-danger bg-black text-danger font-monospace small">
-            ⚠️ <strong>BUFFER EMPTY:</strong> Please write or patch solution code before submitting to the test runner.
-          </div>
-        `;
-      }
+      alert('Please write or patch your solution code first.');
       return;
     }
 
     isSubmittingChallenge = true;
-    switchConsoleTab('testRunner');
+    switchVsCodePanel('tests');
 
-    // UI Loading State
     if (submitMonacoChallengeBtn) {
       submitMonacoChallengeBtn.disabled = true;
-      submitMonacoChallengeBtn.innerHTML = `
-        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-        [ VALIDATING... ]
-      `;
+      submitMonacoChallengeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Testing...';
     }
     if (testRunnerEmptyState) testRunnerEmptyState.classList.add('d-none');
     if (testRunnerResultsContainer) testRunnerResultsContainer.classList.add('d-none');
     if (testRunnerLoadingState) testRunnerLoadingState.classList.remove('d-none');
-    if (testRunnerTabBadge) {
-      testRunnerTabBadge.className = 'badge bg-warning text-black ms-1';
-      testRunnerTabBadge.innerText = 'TESTING...';
-    }
-
-    const timestamp = new Date().toLocaleTimeString();
-    const elapsed = Math.max(0, timerTotalSeconds - timerSecondsRemaining);
-    appendConsoleLog(`<span class="text-info">[${timestamp}] Submitting code buffer for Challenge #${selectedChallenge.id}: "${selectedChallenge.title}" (Elapsed: ${formatTime(elapsed)} / Limit: ${formatTimeLimit(timerTotalSeconds)})...</span><br>`);
-    addTelemetry(`Validating challenge #${selectedChallenge.id} against predefined test suite...`);
 
     try {
       const response = await fetch('/api/challenges/submit', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           challengeId: selectedChallenge.id,
           code: code,
-          language: languageSelect ? languageSelect.value : 'python',
-          roomId: roomId,
-          timeExpired: timerExpired || timerSecondsRemaining <= 0,
-          elapsedSeconds: elapsed
+          language: languageSelect ? languageSelect.value : 'go',
+          roomId: roomId
         })
       });
 
       const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Server rejected challenge verification.');
-      }
-
-      // Display results
       if (testRunnerLoadingState) testRunnerLoadingState.classList.add('d-none');
       if (testRunnerResultsContainer) testRunnerResultsContainer.classList.remove('d-none');
 
       const allPassed = !!data.allPassed;
       const passedCount = data.testsPassed || 0;
       const totalCount = data.testsTotal || 0;
-      const failedCount = data.testsFailed || 0;
 
-      // Update Tab badge & count
       if (testRunnerTabBadge) {
         testRunnerTabBadge.className = allPassed ? 'badge bg-success text-black ms-1' : 'badge bg-danger text-white ms-1';
         testRunnerTabBadge.innerText = allPassed ? `PASS (${passedCount}/${totalCount})` : `FAIL (${passedCount}/${totalCount})`;
       }
       if (testSuiteSummaryStatus) {
-        testSuiteSummaryStatus.innerText = `${passedCount}/${totalCount} Tests Passed`;
+        testSuiteSummaryStatus.innerText = `${passedCount}/${totalCount} Passed`;
         testSuiteSummaryStatus.className = allPassed ? 'text-success fw-bold small' : 'text-danger small';
       }
 
-      // Render Summary Header Banner
       if (testResultsSummaryHeader) {
         if (allPassed) {
-          // Pause timer and mark mission solved on the countdown clock
-          pauseCountdownTimer(false);
-          if (timerUrgencyStatusBadge) {
-            timerUrgencyStatusBadge.innerText = `🏆 SOLVED (${formatTime(timerSecondsRemaining)} REMAINING)`;
-            timerUrgencyStatusBadge.className = 'badge bg-success text-black fw-bold px-2 py-1 small';
-          }
-          if (countdownProgressBar) {
-            countdownProgressBar.className = 'progress-bar bg-success';
-          }
-          playUrgencyBeep('victory');
-
           testResultsSummaryHeader.innerHTML = `
-            <div class="p-3 mb-3 rounded border border-success font-monospace text-light" style="background: rgba(0, 255, 102, 0.08); box-shadow: 0 0 16px rgba(0, 255, 102, 0.25);">
+            <div class="p-3 mb-2 rounded border border-success font-monospace" style="background: rgba(46, 160, 67, 0.15);">
               <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div class="d-flex align-items-center gap-2">
-                  <span style="font-size: 1.5rem;">🏆</span>
-                  <div>
-                    <div class="text-success fw-bold" style="font-size: 0.95rem;">
-                      ALL ${totalCount}/${totalCount} PREDEFINED TEST CASES PASSED!
-                    </div>
-                    <div class="text-muted small">
-                      Vulnerability successfully remediated in ${formatTime(elapsed)} (${formatTime(timerSecondsRemaining)} remaining). Code meets all security, functional & boundary assertions.
-                    </div>
-                  </div>
+                <div>
+                  <div class="text-success fw-bold">🏆 ALL ${totalCount}/${totalCount} TEST CASES PASSED!</div>
+                  <div class="text-light small">Vulnerability remediated. Code meets all assertions.</div>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge bg-success text-black fw-bold px-2 py-1" style="font-size: 0.85rem;">
-                    +${data.xpAwarded || selectedChallenge.xp_reward || 100} XP AWARDED
-                  </span>
-                  <span class="badge bg-black border border-info text-info small">
-                    Level ${data.newLevel || 1}
-                  </span>
-                </div>
+                <span class="badge bg-success text-black fw-bold px-2 py-1">+${data.xpAwarded || selectedChallenge.xp_reward || 100} XP</span>
               </div>
-
-              ${data.flag ? `
-                <div class="mt-2 p-2 rounded bg-black border border-success d-flex justify-content-between align-items-center flex-wrap gap-2">
-                  <div>
-                    <span class="text-muted small">FLAG CAPTURED:</span>
-                    <code class="text-warning fw-bold ms-2" style="font-size: 0.9rem;" id="capturedFlagCode">${escapeHtml(data.flag)}</code>
-                  </div>
-                  <button type="button" class="btn btn-sm btn-outline-success font-monospace py-0 px-2" id="copyFlagBtn" style="font-size: 0.72rem;">
-                    📋 Copy Flag
-                  </button>
-                </div>
-              ` : ''}
+              ${data.flag ? `<div class="mt-2 p-1 bg-black border border-success small">FLAG: <code class="text-warning fw-bold">${escapeHtml(data.flag)}</code></div>` : ''}
             </div>
           `;
-
-          const copyBtn = document.getElementById('copyFlagBtn');
-          if (copyBtn) {
-            copyBtn.addEventListener('click', () => {
-              const flagText = document.getElementById('capturedFlagCode')?.innerText;
-              if (flagText && navigator.clipboard) {
-                navigator.clipboard.writeText(flagText);
-                copyBtn.innerText = '✔ COPIED!';
-                setTimeout(() => copyBtn.innerText = '📋 Copy Flag', 2000);
-              }
-            });
-          }
-
-          // Mark challenge as solved locally
           userSolvedChallengeIds.add(Number(selectedChallenge.id));
           if (challengeStatusBadge) {
             challengeStatusBadge.innerText = 'SOLVED';
-            challengeStatusBadge.className = 'badge bg-black border border-success text-success px-2 py-1';
+            challengeStatusBadge.className = 'badge bg-success text-black';
           }
-          if (sidebarStatusText) {
-            sidebarStatusText.innerText = 'SOLVED (PASS)';
-            sidebarStatusText.className = 'text-success fw-bold';
-          }
-
-          // Visual celebration feedback on Monaco editor card
-          if (editorCard) {
-            editorCard.style.transition = 'box-shadow 0.4s ease, border-color 0.4s ease';
-            editorCard.style.borderColor = '#00ff66';
-            editorCard.style.boxShadow = '0 0 25px rgba(0, 255, 102, 0.6)';
-            setTimeout(() => {
-              editorCard.style.borderColor = '#00e5ff';
-              editorCard.style.boxShadow = '0 0 15px rgba(0, 229, 255, 0.2)';
-            }, 2500);
-          }
-
-          appendConsoleLog(`<span class="text-success fw-bold">[TEST SUITE PASSED] All ${totalCount} test cases validated successfully for #${selectedChallenge.id}: ${selectedChallenge.title}! (+${data.xpAwarded} XP) [Solved in ${formatTime(elapsed)}]</span><br>`);
-          addTelemetry(`MISSION COMPLETE: Challenge #${selectedChallenge.id} passed all ${totalCount} test cases!`);
-
-          // Broadcast victory to peer collaborators across room
-          if (broadcastChannel) {
-            broadcastChannel.postMessage({
-              type: 'challenge_solved',
-              challengeId: selectedChallenge.id,
-              challengeTitle: selectedChallenge.title,
-              solver: currentUser,
-              testsPassed: passedCount,
-              testsTotal: totalCount,
-              xpAwarded: data.xpAwarded || selectedChallenge.xp_reward
-            });
-          }
-
-          if (roomDocRef) {
-            setDoc(roomDocRef, {
-              lastSolvedChallenge: {
-                id: selectedChallenge.id,
-                title: selectedChallenge.title,
-                solver: currentUser,
-                testsPassed: passedCount,
-                testsTotal: totalCount,
-                timestamp: Date.now()
-              }
-            }, { merge: true }).catch(e => console.warn('Room sync notice:', e));
-          }
-
         } else {
-          // Play warning audio feedback on test failure
-          playUrgencyBeep('critical');
-
-          // Failure banner
           testResultsSummaryHeader.innerHTML = `
-            <div class="p-2 mb-3 rounded border border-danger font-monospace text-light" style="background: rgba(255, 68, 102, 0.08); box-shadow: 0 0 12px rgba(255, 68, 102, 0.2);">
-              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <div>
-                  <div class="text-danger fw-bold">
-                    ❌ TEST SUITE FAILED: ${passedCount}/${totalCount} PASSED (${failedCount} FAILED)
-                  </div>
-                  <div class="text-muted small">
-                    One or more predefined security exploits or edge case assertions failed. Inspect details below.
-                  </div>
-                </div>
-                <span class="badge bg-danger text-black fw-bold px-2 py-1">REVISE BUFFER</span>
-              </div>
+            <div class="p-2 mb-2 rounded border border-danger font-monospace" style="background: rgba(248, 81, 73, 0.15);">
+              <div class="text-danger fw-bold">❌ TEST SUITE FAILED: ${passedCount}/${totalCount} PASSED</div>
+              <div class="text-muted small">One or more security assertions failed. Review diagnostics below.</div>
             </div>
           `;
-
-          // Flash editor border with red warning glow
-          if (editorCard) {
-            editorCard.style.transition = 'box-shadow 0.3s ease, border-color 0.3s ease';
-            editorCard.style.borderColor = '#ff4466';
-            editorCard.style.boxShadow = '0 0 20px rgba(255, 68, 102, 0.5)';
-            setTimeout(() => {
-              editorCard.style.borderColor = '#00e5ff';
-              editorCard.style.boxShadow = '0 0 15px rgba(0, 229, 255, 0.2)';
-            }, 1800);
-          }
-
-          appendConsoleLog(`<span class="text-danger">[TEST SUITE] Submission failed: ${passedCount}/${totalCount} tests passed. See Test Runner tab for diagnostics.</span><br>`);
-          addTelemetry(`Validation finished with ${failedCount} failing tests on challenge #${selectedChallenge.id}.`);
         }
       }
 
-      // Render Individual Test Cases Results List
       if (testCasesResultsList) {
         const results = data.testResults || [];
         testCasesResultsList.innerHTML = results.map(r => `
-          <div class="p-2 rounded font-monospace" style="background: ${r.passed ? 'rgba(0, 255, 102, 0.04)' : 'rgba(255, 68, 102, 0.06)'}; border: 1px solid ${r.passed ? '#1a4731' : '#5c1d24'};">
-            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge ${r.passed ? 'bg-success text-black' : 'bg-danger text-white'} fw-bold" style="font-size: 0.68rem;">
-                  ${r.passed ? '✔ PASS' : '✖ FAIL'}
-                </span>
-                <span class="text-light fw-bold" style="font-size: 0.8rem;">${escapeHtml(r.name)}</span>
-                <span class="badge bg-black border border-secondary text-info" style="font-size: 0.65rem;">${escapeHtml(r.type || 'Functional')}</span>
-              </div>
-              <span class="text-muted" style="font-size: 0.7rem;">${r.durationMs || 10}ms</span>
+          <div class="p-2 rounded font-monospace" style="background: ${r.passed ? 'rgba(46, 160, 67, 0.08)' : 'rgba(248, 81, 73, 0.08)'}; border: 1px solid ${r.passed ? '#2ea043' : '#f85149'};">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="fw-bold ${r.passed ? 'text-success' : 'text-danger'}">${r.passed ? '✔ PASS' : '✖ FAIL'}: ${escapeHtml(r.name)}</span>
+              <span class="text-muted small">${r.durationMs || 12}ms</span>
             </div>
-            <div class="row g-1 text-muted" style="font-size: 0.73rem;">
-              <div class="col-md-6 text-truncate">
-                <span class="text-info">Input:</span> <code>${escapeHtml(r.input)}</code>
-              </div>
-              <div class="col-md-6 text-truncate">
-                <span class="text-warning">Expected:</span> <span class="text-light">${escapeHtml(r.expected)}</span>
-              </div>
-            </div>
-            <div class="mt-1" style="font-size: 0.73rem;">
-              <span class="${r.passed ? 'text-success' : 'text-danger'}">Actual:</span> <span class="text-light">${escapeHtml(r.actual)}</span>
-            </div>
-            ${!r.passed && r.hint ? `
-              <div class="mt-2 p-2 rounded bg-black border border-warning text-warning" style="font-size: 0.72rem;">
-                💡 <strong>HINT:</strong> ${escapeHtml(r.hint)}
-              </div>
-            ` : ''}
+            <div class="small text-muted"><span class="text-info">Input:</span> <code>${escapeHtml(r.input)}</code></div>
+            <div class="small text-muted"><span class="text-warning">Expected:</span> ${escapeHtml(r.expected)}</div>
+            <div class="small ${r.passed ? 'text-success' : 'text-danger'}">Actual: ${escapeHtml(r.actual)}</div>
+            ${!r.passed && r.hint ? `<div class="mt-1 text-warning small">💡 Hint: ${escapeHtml(r.hint)}</div>` : ''}
           </div>
         `).join('');
       }
 
     } catch (err) {
-      console.error('Submission error:', err);
-      if (testRunnerLoadingState) testRunnerLoadingState.classList.add('d-none');
-      if (testRunnerResultsContainer) testRunnerResultsContainer.classList.remove('d-none');
-      if (testResultsSummaryHeader) {
-        testResultsSummaryHeader.innerHTML = `
-          <div class="p-2 rounded border border-danger bg-black text-danger font-monospace small">
-            ❌ <strong>EXECUTION ERROR:</strong> ${escapeHtml(err.message || 'Failed to communicate with test validator.')}
-          </div>
-        `;
-      }
-      appendConsoleLog(`<span class="text-danger">[ERROR] Test runner failure: ${escapeHtml(err.message)}</span><br>`);
-      addTelemetry(`Test runner error: ${err.message}`);
+      console.error(err);
     } finally {
       isSubmittingChallenge = false;
       if (submitMonacoChallengeBtn) {
-        if (timerExpired || timerSecondsRemaining <= 0) {
-          submitMonacoChallengeBtn.disabled = true;
-          submitMonacoChallengeBtn.innerHTML = '⏰ [ TIME EXPIRED - RESTART TIMER ]';
-        } else {
-          submitMonacoChallengeBtn.disabled = false;
-          submitMonacoChallengeBtn.innerHTML = `🚀 [ VALIDATE &amp; SUBMIT ]`;
-        }
+        submitMonacoChallengeBtn.disabled = false;
+        submitMonacoChallengeBtn.innerHTML = '<i class="codicon codicon-pass text-success"></i> <span>Test &amp; Submit</span>';
       }
     }
   }
 
-  // Bind Challenge, Timer, and Test Runner Event Listeners
+  // Event Listeners
   if (challengeSelect) {
-    challengeSelect.addEventListener('change', (e) => {
-      selectChallenge(e.target.value);
-    });
+    challengeSelect.addEventListener('change', (e) => selectChallenge(e.target.value));
   }
-
   if (toggleMissionBriefBtn) {
-    toggleMissionBriefBtn.addEventListener('click', () => {
-      if (missionBriefDrawer) {
-        missionBriefDrawer.classList.toggle('d-none');
-      }
-    });
+    toggleMissionBriefBtn.addEventListener('click', toggleMissionDrawer);
   }
-
   if (loadChallengeStarterBtn) {
-    loadChallengeStarterBtn.addEventListener('click', () => {
-      loadChallengeStarter();
-    });
+    loadChallengeStarterBtn.addEventListener('click', loadChallengeStarter);
   }
-
-  if (timerToggleBtn) {
-    timerToggleBtn.addEventListener('click', () => {
-      toggleCountdownTimer();
-    });
-  }
-
-  if (timerResetBtn) {
-    timerResetBtn.addEventListener('click', () => {
-      restartCountdownTimer(false, true);
-    });
-  }
-
-  if (timerSoundToggleBtn) {
-    timerSoundToggleBtn.addEventListener('click', () => {
-      timerSoundEnabled = !timerSoundEnabled;
-      localStorage.setItem('codequest_timer_sound', timerSoundEnabled ? 'true' : 'false');
-      timerSoundToggleBtn.innerText = timerSoundEnabled ? '🔊 SOUND: ON' : '🔇 SOUND: OFF';
-      timerSoundToggleBtn.classList.toggle('btn-outline-secondary', !timerSoundEnabled);
-      timerSoundToggleBtn.classList.toggle('btn-outline-info', timerSoundEnabled);
-      if (timerSoundEnabled) {
-        playUrgencyBeep('tick');
-      }
-    });
-    // Set initial sound button style
-    timerSoundToggleBtn.innerText = timerSoundEnabled ? '🔊 SOUND: ON' : '🔇 SOUND: OFF';
-    timerSoundToggleBtn.classList.toggle('btn-outline-secondary', !timerSoundEnabled);
-    timerSoundToggleBtn.classList.toggle('btn-outline-info', timerSoundEnabled);
-  }
-
-  if (tabContainerLogsBtn) {
-    tabContainerLogsBtn.addEventListener('click', () => {
-      switchConsoleTab('logs');
-    });
-  }
-
-  if (tabTestRunnerBtn) {
-    tabTestRunnerBtn.addEventListener('click', () => {
-      switchConsoleTab('testRunner');
-    });
-  }
-
   if (submitMonacoChallengeBtn) {
-    submitMonacoChallengeBtn.addEventListener('click', () => {
-      submitMonacoChallenge();
-    });
+    submitMonacoChallengeBtn.addEventListener('click', submitMonacoChallenge);
   }
 
-  // Initialize first challenge if available
+  // Initialize
   if (selectedChallenge) {
     renderMissionBrief(selectedChallenge);
   }
-
-  // Initialize countdown timer visuals for initial challenge
   updateTimerVisuals();
-
-  // Bootstrap Monaco Editor
   initMonacoEditor();
+
+  // Vue 3 SFC Interactive Workbench Toggle and Mount
+  window.toggleWorkbenchMode = function() {
+    const monacoLayout = document.querySelector('.vscode-main-layout');
+    const vueContainer = document.getElementById('vue-workbench-container');
+    const btn = document.getElementById('toggleWorkbenchModeBtn');
+    
+    if (!vueContainer) return;
+
+    if (vueContainer.style.display === 'none') {
+      if (monacoLayout) monacoLayout.style.display = 'none';
+      vueContainer.style.display = 'block';
+      if (btn) {
+        btn.innerHTML = '<i class="codicon codicon-vscode text-info"></i> <span>Monaco Mode</span>';
+      }
+      if (!window.__vueWorkbenchMounted && window.CodeQuestVue) {
+        window.CodeQuestVue.mount('vue-workbench-container', '/components/WorkspaceWorkbench.vue');
+        window.__vueWorkbenchMounted = true;
+      }
+    } else {
+      if (monacoLayout) monacoLayout.style.display = 'flex';
+      vueContainer.style.display = 'none';
+      if (btn) {
+        btn.innerHTML = '<i class="codicon codicon-symbol-class text-vue"></i> <span>Vue 3 SFC Mode</span>';
+      }
+    }
+  };
+
+  // Check URL parameters for explicit Vue workbench activation
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('mode') === 'vue' || urlParams.get('view') === 'vue') {
+    setTimeout(() => {
+      window.toggleWorkbenchMode();
+    }, 200);
+  }
 </script>
 
 <%- include('../partials/footer') %>

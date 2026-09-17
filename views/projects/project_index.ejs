@@ -1,206 +1,206 @@
-<%- include('../partials/header', { title: 'CTF Security Arena // Projects & Challenges' }) %>
+<%- include('../partials/header', { title: 'CodeQuest // CTF Raids & Challenges' }) %>
 <%- include('../partials/navbar', { activeNav: 'ctf' }) %>
 
 <div class="container my-4">
-  <!-- Hero Header / Game Mission Briefing -->
-  <div class="row mb-5 text-center">
-    <div class="col">
-      <div class="d-inline-block border border-info bg-black px-3 py-1 rounded-pill mb-3 shadow-sm">
-        <span class="text-info font-monospace small tracking-widest">// SECURE_OPERATIONS_COMMAND</span>
+  
+  <!-- Header / Breadcrumb -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <i class="codicon codicon-issues text-warning fs-4"></i>
+        <h1 class="h3 fw-bold text-light mb-0">CTF Security Raids &amp; Codebases</h1>
+        <span class="badge bg-black border border-secondary text-muted"><%= challenges ? challenges.length : 0 %> Raids Available</span>
       </div>
-      <h1 class="display-4 fw-bold text-light font-monospace" style="text-shadow: 0 0 25px rgba(13, 202, 240, 0.4);">
-        CTF SECURITY ARENA <span class="text-warning"></span>
-      </h1>
-      <p class="lead text-muted font-monospace mt-3 mx-auto" style="font-size: 0.95rem; max-width: 700px; line-height: 1.7;">
-        [MISSION BRIEFING]: Raid encrypted challenge dungeons, exploit vulnerable code architectures, decrypt telemetry data, and capture high-value flags.
+      <p class="text-muted small mb-0 font-monospace">
+        Audit vulnerable code architectures, resolve concurrency bugs in Go, remediate XSS in Vue 3, and capture flags.
       </p>
     </div>
+
+    <!-- Quick action to start workspace -->
+    <a href="/workspace/create/" class="btn btn-sm btn-gh-primary font-monospace d-flex align-items-center gap-1">
+      <i class="codicon codicon-plus"></i>
+      <span>New Codespace</span>
+    </a>
   </div>
 
-  <!-- Portfolio Projects Section -->
-  <div class="row align-items-center mb-4">
-    <div class="col">
-      <h2 class="h4 text-info border-bottom border-info pb-2 mb-0 font-monospace d-flex align-items-center gap-2" style="text-shadow: 0 0 10px rgba(13, 202, 240, 0.3);">
-        <span></span> ARCHIVE_VAULT // <span class="text-light small">Production Systems & Deployments</span>
-      </h2>
-    </div>
-  </div>
+  <!-- Filter & Search Controls (GitHub Issues Style) -->
+  <div class="p-3 rounded border mb-4" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+    <form method="GET" action="" class="row g-2 align-items-center">
+      <input type="hidden" name="sort" value="<%= current_sort %>">
 
-  <div class="row g-4 mb-4">
-    <% if (projects && projects.length > 0) { %>
-      <% projects.forEach(function(project) { %>
-        <div class="col-md-4">
-          <div class="card h-100 shadow-lg border-secondary bg-dark text-white hover-lift position-relative overflow-hidden" style="background-color: #12161f !important;">
-            <div class="position-absolute top-0 start-0 w-100 bg-info" style="height: 2px;"></div>
-            <% if (project.image && project.image.url) { %>
-              <div class="overflow-hidden border-bottom border-secondary position-relative" style="height: 180px;">
-                <img src="<%= project.image.url %>" class="card-img-top w-100 h-100 object-fit-cover opacity-75" alt="<%= project.title %>" style="transition: transform 0.4s ease;">
-                <div class="position-absolute bottom-0 start-0 bg-black bg-opacity-75 px-2 py-1 m-2 rounded font-monospace small text-info border border-secondary">
-                  SYSTEM_BUILD_<%= project.id %>
-                </div>
-              </div>
-            <% } %>
-            <div class="card-body d-flex flex-column justify-content-between p-4">
-              <div>
-                <h5 class="card-title text-info fw-bold font-monospace mb-2"><%= project.title %></h5>
-                <p class="card-text text-muted small font-monospace" style="line-height: 1.6;"><%= project.description.slice(0, 100) %>...</p>
-              </div>
-              <div class="mt-4 pt-3 border-top border-secondary">
-                <a href="/projects/project/<%= project.id %>/" class="btn btn-outline-info btn-sm w-100 font-monospace fw-bold">
-                  [ INSPECT_SYSTEM ] →
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      <% }); %>
-    <% } else { %>
-      <div class="col">
-        <div class="alert alert-dark border border-secondary text-center text-muted py-4 font-monospace bg-black">
-          // NO_PROJECTS_INITIALIZED: Systems offline. Deploy repositories from command center.
+      <!-- Search Input -->
+      <div class="col-md-5">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-dark border-secondary text-muted">
+            <i class="codicon codicon-search"></i>
+          </span>
+          <input type="text" name="q" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="Filter raids (e.g. go, vue, sql, race)..." value="<%= search_query %>">
         </div>
       </div>
-    <% } %>
-  </div>
 
-  <!-- Projects Pagination -->
-  <% if (projectTotalPages > 1) { %>
-    <nav class="my-4 font-monospace">
-      <ul class="pagination justify-content-center">
-        <% if (projectCurrentPage > 1) { %>
-          <li class="page-item"><a class="page-link bg-dark text-info border-secondary shadow" href="?project_page=<%= projectCurrentPage - 1 %>&filter=<%= current_filter %>&q=<%= search_query %>&sort=<%= current_sort %>">◀ PREV_VAULT</a></li>
-        <% } else { %>
-          <li class="page-item disabled"><span class="page-link bg-dark text-muted border-secondary">◀ PREV_VAULT</span></li>
-        <% } %>
-        <li class="page-item disabled"><span class="page-link bg-dark text-light border-secondary">SECTOR <%= projectCurrentPage %> / <%= projectTotalPages %></span></li>
-        <% if (projectCurrentPage < projectTotalPages) { %>
-          <li class="page-item"><a class="page-link bg-dark text-info border-secondary shadow" href="?project_page=<%= projectCurrentPage + 1 %>&filter=<%= current_filter %>&q=<%= search_query %>&sort=<%= current_sort %>">NEXT_VAULT ▶</a></li>
-        <% } else { %>
-          <li class="page-item disabled"><span class="page-link bg-dark text-muted border-secondary">NEXT_VAULT ▶</span></li>
-        <% } %>
-      </ul>
-    </nav>
-  <% } %>
-
-  <!-- CTF Security Challenges Section -->
-  <div class="row align-items-center mb-3 mt-5">
-    <div class="col-md-4">
-      <h2 class="h4 text-warning border-bottom border-warning pb-2 mb-0 font-monospace d-flex align-items-center gap-2" style="text-shadow: 0 0 10px rgba(255, 193, 7, 0.3);">
-        <span></span> TACTICAL_RAIDS // <span class="text-light small">Combat Security Zones</span>
-      </h2>
-    </div>
-
-    <!-- Search Bar & Controls -->
-    <div class="col-md-8 text-md-end mt-3 mt-md-0 font-monospace">
-      <form method="GET" action="" class="d-flex flex-wrap justify-content-md-end align-items-center gap-2">
-        <input type="hidden" name="filter" value="<%= current_filter %>">
-        <input type="hidden" name="sort" value="<%= current_sort %>">
-        
-        <!-- Search Input -->
-        <div class="input-group input-group-sm shadow-sm" style="max-width: 250px;">
-          <input type="text" name="q" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="Search target raid..." value="<%= search_query %>">
-          <button class="btn btn-outline-warning fw-bold" type="submit">🔍</button>
+      <!-- Language / Difficulty Filter Badges -->
+      <div class="col-md-5">
+        <div class="d-flex flex-wrap gap-1">
+          <a href="?filter=all&q=<%= search_query %>&sort=<%= current_sort %>" class="btn btn-sm <%= current_filter === 'all' || !current_filter ? 'btn-gh-primary' : 'btn-gh-secondary text-light' %> font-monospace py-0 px-2" style="font-size: 0.75rem;">
+            All
+          </a>
+          <a href="?filter=go&q=<%= search_query %>&sort=<%= current_sort %>" class="btn btn-sm <%= current_filter === 'go' ? 'btn-gh-primary' : 'btn-gh-secondary text-light' %> font-monospace py-0 px-2" style="font-size: 0.75rem;">
+            <i class="codicon codicon-file-code text-go"></i> Go (.go)
+          </a>
+          <a href="?filter=vue&q=<%= search_query %>&sort=<%= current_sort %>" class="btn btn-sm <%= current_filter === 'vue' ? 'btn-gh-primary' : 'btn-gh-secondary text-light' %> font-monospace py-0 px-2" style="font-size: 0.75rem;">
+            <i class="codicon codicon-symbol-class text-vue"></i> Vue (.vue)
+          </a>
+          <a href="?filter=easy&q=<%= search_query %>&sort=<%= current_sort %>" class="btn btn-sm <%= current_filter === 'easy' ? 'btn-gh-primary' : 'btn-gh-secondary text-light' %> font-monospace py-0 px-2" style="font-size: 0.75rem;">
+            Easy
+          </a>
+          <a href="?filter=medium&q=<%= search_query %>&sort=<%= current_sort %>" class="btn btn-sm <%= current_filter === 'medium' ? 'btn-gh-primary' : 'btn-gh-secondary text-light' %> font-monospace py-0 px-2" style="font-size: 0.75rem;">
+            Medium
+          </a>
+          <a href="?filter=hard&q=<%= search_query %>&sort=<%= current_sort %>" class="btn btn-sm <%= current_filter === 'hard' ? 'btn-gh-primary' : 'btn-gh-secondary text-light' %> font-monospace py-0 px-2" style="font-size: 0.75rem;">
+            Hard
+          </a>
         </div>
+      </div>
 
-        <!-- Sort Dropdown -->
-        <select name="sort" class="form-select form-select-sm bg-dark text-light border-secondary w-auto font-monospace shadow-sm" onchange="this.form.submit()">
-          <option value="default" <%= current_sort === 'default' ? 'selected' : '' %>>SORT: DEFAULT_GRID</option>
-          <option value="xp_high" <%= current_sort === 'xp_high' ? 'selected' : '' %>>XP: HIGH → LOW</option>
-          <option value="xp_low" <%= current_sort === 'xp_low' ? 'selected' : '' %>>XP: LOW → HIGH</option>
-          <option value="newest" <%= current_sort === 'newest' ? 'selected' : '' %>>TIMESTAMP: LATEST</option>
+      <!-- Sort Selection -->
+      <div class="col-md-2 text-md-end">
+        <select name="sort" class="form-select form-select-sm bg-dark text-light border-secondary font-monospace" onchange="this.form.submit()">
+          <option value="default" <%= current_sort === 'default' ? 'selected' : '' %>>Sort: Default</option>
+          <option value="xp_high" <%= current_sort === 'xp_high' ? 'selected' : '' %>>XP: High → Low</option>
+          <option value="xp_low" <%= current_sort === 'xp_low' ? 'selected' : '' %>>XP: Low → High</option>
+          <option value="newest" <%= current_sort === 'newest' ? 'selected' : '' %>>Newest First</option>
         </select>
-
-        <!-- Quick Difficulty Filter Tabs -->
-        <div class="btn-group btn-group-sm shadow-sm" role="group">
-          <a href="?filter=all&q=<%= search_query %>&sort=<%= current_sort %>" class="btn btn-outline-warning fw-bold <%= current_filter === 'all' || !current_filter ? 'active' : '' %>">ALL</a>
-          <a href="?filter=easy&q=<%= search_query %>&sort=<%= current_sort %>" class="btn btn-outline-info fw-bold <%= current_filter === 'easy' ? 'active' : '' %>">EASY</a>
-          <a href="?filter=medium&q=<%= search_query %>&sort=<%= current_sort %>" class="btn btn-outline-warning fw-bold <%= current_filter === 'medium' ? 'active' : '' %>">MEDIUM</a>
-          <a href="?filter=hard&q=<%= search_query %>&sort=<%= current_sort %>" class="btn btn-outline-danger fw-bold <%= current_filter === 'hard' ? 'active' : '' %>">HARD</a>
-        </div>
-      </form>
-    </div>
+      </div>
+    </form>
   </div>
 
-  <div class="row g-4 mb-4">
+  <!-- Challenge Cards Grid (GitHub Repo / Issue Style) -->
+  <div class="row g-3 mb-4">
     <% if (challenges && challenges.length > 0) { %>
       <% challenges.forEach(function(challenge) { 
+          var titleLower = (challenge.title || '').toLowerCase();
+          var isGo = titleLower.includes('golang') || titleLower.includes('go') || challenge.id === 7;
+          var isVue = titleLower.includes('vue') || challenge.id === 8;
           var diff = (challenge.difficulty || '').toLowerCase();
-          var isEasy = diff.includes('easy') || diff === 'e';
-          var isMed = diff.includes('med') || diff === 'm';
-          var borderClass = isEasy ? 'border-info' : (isMed ? 'border-warning' : 'border-danger');
-          var bgClass = isEasy ? 'bg-info' : (isMed ? 'bg-warning' : 'bg-danger');
-          var textClass = isEasy ? 'text-info' : (isMed ? 'text-warning' : 'text-danger');
-          var btnClass = isEasy ? 'btn-outline-info' : (isMed ? 'btn-outline-warning' : 'btn-outline-danger');
-          var glowColor = isEasy ? 'rgba(13, 202, 240, 0.12)' : (isMed ? 'rgba(255, 193, 7, 0.12)' : 'rgba(220, 53, 69, 0.12)');
+          var isEasy = diff.includes('easy');
+          var isMed = diff.includes('med');
       %>
-        <div class="col-md-4">
-          <div class="card h-100 shadow-lg bg-dark text-white position-relative overflow-hidden hover-lift <%= borderClass %>" 
-            style="background-color: #12161f !important; box-shadow: 0 0 15px <%= glowColor %>; border-width: <%= !isEasy && !isMed ? '2px !important' : '1px' %>;">
-            
-            <!-- Top neon tactical status line -->
-            <div class="position-absolute top-0 start-0 w-100 <%= bgClass %>" style="height: 3px;"></div>
-
-            <div class="card-body d-flex flex-column justify-content-between p-4">
-              <div>
-                <div class="d-flex justify-content-between align-items-center mb-3 font-monospace small">
-                  <span class="badge bg-black border <%= borderClass %> <%= textClass %> px-2 py-1 shadow-sm">
-                    ⚡ RAID_ACTIVE
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 rounded border p-3 font-monospace d-flex flex-column justify-content-between" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+            <div>
+              <!-- Top Card Meta -->
+              <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
+                <div class="d-flex align-items-center gap-1">
+                  <% if (isGo) { %>
+                    <span class="badge badge-go"><i class="codicon codicon-file-code"></i> .go</span>
+                  <% } else if (isVue) { %>
+                    <span class="badge badge-vue"><i class="codicon codicon-symbol-class"></i> .vue</span>
+                  <% } else { %>
+                    <span class="badge bg-black border border-secondary text-muted">#<%= challenge.id %></span>
+                  <% } %>
+                  
+                  <span class="badge <%= isEasy ? 'bg-success text-black' : (isMed ? 'bg-warning text-black' : 'bg-danger text-white') %> fw-bold" style="font-size: 0.65rem;">
+                    <%= challenge.difficulty %>
                   </span>
-                  <span class="badge bg-black border border-secondary text-warning fw-bold px-2 py-1 shadow-sm">+<%= challenge.xp_reward %> XP</span>
                 </div>
-                <h5 class="card-title text-light fw-bold font-monospace mb-2"><%= challenge.title %></h5>
-                <h6 class="card-subtitle mb-3 text-secondary font-monospace small">
-                  THREAT_LVL: <span class="text-uppercase fw-bold <%= textClass %>"><%= challenge.difficulty %></span>
-                </h6>
-                <p class="card-text text-muted small font-monospace" style="line-height: 1.6;"><%= challenge.description %></p>
+                <span class="badge bg-black border border-warning text-warning fw-bold">+<%= challenge.xp_reward %> XP</span>
               </div>
-              <div class="mt-4 pt-3 border-top border-secondary">
-                <a href="/projects/challenge/<%= challenge.id %>/" class="btn <%= btnClass %> btn-sm w-100 font-monospace fw-bold shadow-sm">
-                  [ INITIATE RAID ] →
+
+              <!-- Title & Category -->
+              <h5 class="text-light fw-bold mb-1" style="font-size: 0.95rem;">
+                <a href="/projects/challenge/<%= challenge.id %>/" class="text-light text-decoration-none hover-text-blue">
+                  <%= challenge.title %>
                 </a>
+              </h5>
+              <div class="text-muted small mb-2" style="font-size: 0.72rem;">
+                <i class="codicon codicon-tag"></i> <%= challenge.category || 'Security Defense' %>
+                <span class="mx-1">•</span>
+                <i class="codicon codicon-history"></i> <%= Math.floor((challenge.time_limit_seconds || 300) / 60) %>m limit
               </div>
+
+              <!-- Description -->
+              <p class="text-muted small mb-3" style="line-height: 1.5; font-size: 0.78rem;">
+                <%= challenge.description %>
+              </p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex gap-2 pt-2 border-top" style="border-color: var(--gh-border-default) !important;">
+              <a href="/projects/challenge/<%= challenge.id %>/" class="btn btn-sm btn-gh-secondary flex-grow-1 text-center font-monospace text-light">
+                <i class="codicon codicon-book"></i> Mission Intel
+              </a>
+              <a href="/workspace/1?lang=<%= isGo ? 'go' : (isVue ? 'vue' : 'python') %>" class="btn btn-sm btn-gh-primary font-monospace px-3" title="Open directly in VS Code Workbench">
+                <i class="codicon codicon-play"></i> Solve
+              </a>
             </div>
           </div>
         </div>
       <% }); %>
     <% } else { %>
-      <div class="col">
-        <div class="alert alert-dark border border-secondary text-center text-muted py-4 font-monospace bg-black shadow">
-          // NO_RAIDS_DETECTED: No combat vectors found matching current telemetry parameters.
+      <div class="col-12">
+        <div class="p-4 rounded border text-center font-monospace text-muted" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+          <i class="codicon codicon-info fs-3 mb-2 text-warning"></i>
+          <div>No CTF raids match your active filter or search terms.</div>
+          <a href="/projects/" class="btn btn-sm btn-gh-secondary mt-2">Reset Filters</a>
         </div>
       </div>
     <% } %>
   </div>
 
-  <!-- Challenges Pagination -->
+  <!-- Pagination -->
   <% if (challengeTotalPages > 1) { %>
     <nav class="my-4 font-monospace">
       <ul class="pagination justify-content-center">
         <% if (challengeCurrentPage > 1) { %>
-          <li class="page-item"><a class="page-link bg-dark text-warning border-secondary shadow" href="?challenge_page=<%= challengeCurrentPage - 1 %>&filter=<%= current_filter %>&q=<%= search_query %>&sort=<%= current_sort %>">◀ PREV_SECTOR</a></li>
-        <% } else { %>
-          <li class="page-item disabled"><span class="page-link bg-dark text-muted border-secondary">◀ PREV_SECTOR</span></li>
+          <li class="page-item">
+            <a class="page-link bg-dark text-info border-secondary" href="?challenge_page=<%= challengeCurrentPage - 1 %>&filter=<%= current_filter %>&q=<%= search_query %>&sort=<%= current_sort %>">← Previous</a>
+          </li>
         <% } %>
-        <li class="page-item disabled"><span class="page-link bg-dark text-light border-secondary">ZONE <%= challengeCurrentPage %> / <%= challengeTotalPages %></span></li>
+        <li class="page-item disabled">
+          <span class="page-link bg-dark text-muted border-secondary">Page <%= challengeCurrentPage %> of <%= challengeTotalPages %></span>
+        </li>
         <% if (challengeCurrentPage < challengeTotalPages) { %>
-          <li class="page-item"><a class="page-link bg-dark text-warning border-secondary shadow" href="?challenge_page=<%= challengeCurrentPage + 1 %>&filter=<%= current_filter %>&q=<%= search_query %>&sort=<%= current_sort %>">NEXT_SECTOR ▶</a></li>
-        <% } else { %>
-          <li class="page-item disabled"><span class="page-link bg-dark text-muted border-secondary">NEXT_SECTOR ▶</span></li>
+          <li class="page-item">
+            <a class="page-link bg-dark text-info border-secondary" href="?challenge_page=<%= challengeCurrentPage + 1 %>&filter=<%= current_filter %>&q=<%= search_query %>&sort=<%= current_sort %>">Next →</a>
+          </li>
         <% } %>
       </ul>
     </nav>
   <% } %>
 
-</div>
+  <!-- Production Deployments Vault -->
+  <div class="mt-5 pt-3 border-top" style="border-color: var(--gh-border-default) !important;">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <i class="codicon codicon-repo text-info fs-4"></i>
+      <h2 class="h4 fw-bold text-light mb-0">Production Repositories &amp; Deployments</h2>
+    </div>
 
-<style>
-  .hover-lift {
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease-in-out;
-  }
-  .hover-lift:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8) !important;
-  }
-</style>
+    <div class="row g-3">
+      <% if (projects && projects.length > 0) { %>
+        <% projects.forEach(function(project) { %>
+          <div class="col-md-4">
+            <div class="p-3 rounded border font-monospace h-100 d-flex flex-column justify-content-between" style="background: var(--gh-canvas-default); border-color: var(--gh-border-default) !important;">
+              <div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <i class="codicon codicon-repo text-muted"></i>
+                  <a href="/projects/project/<%= project.id %>/" class="text-info fw-bold text-decoration-none">
+                    <%= project.title %>
+                  </a>
+                </div>
+                <p class="text-muted small mb-3" style="line-height: 1.5; font-size: 0.78rem;">
+                  <%= (project.description || '').slice(0, 110) %>...
+                </p>
+              </div>
+              <a href="/projects/project/<%= project.id %>/" class="btn btn-sm btn-gh-secondary text-center text-light">
+                Inspect Repository →
+              </a>
+            </div>
+          </div>
+        <% }); %>
+      <% } %>
+    </div>
+  </div>
+
+</div>
 
 <%- include('../partials/footer') %>

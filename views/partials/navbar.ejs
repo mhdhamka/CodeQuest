@@ -1,122 +1,267 @@
-<!-- CodeQuest Cyberpunk Main Navigation Bar -->
-<nav class="navbar navbar-expand-lg navbar-dark mb-4 rounded border border-info shadow-lg px-3 py-2" id="cyberQuestNavbar" style="background: linear-gradient(180deg, #101722 0%, #080c10 100%) !important; box-shadow: 0 0 20px rgba(13, 202, 240, 0.15) !important;">
-  <div class="container-fluid px-0">
-    <!-- Brand / Terminal Link -->
-    <a class="navbar-brand font-monospace fw-bold text-info d-flex align-items-center gap-2 py-1 me-4" href="/" id="navBrandLink">
-      <span class="text-warning">⚡</span>
-      <span>CODEQUEST_ARENA</span>
-      <span class="badge bg-black border border-info text-info small py-1 px-2" style="font-size: 0.65rem;">v4.2</span>
-    </a>
-
-    <!-- Mobile Toggler -->
-    <button class="navbar-toggler border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#cqNavCollapse" aria-controls="cqNavCollapse" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="cqNavCollapse">
-      <!-- Main Navigation Hub -->
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0 font-monospace small gap-1">
-        <li class="nav-item">
-          <a class="nav-link text-light px-2 <%= typeof activeNav !== 'undefined' && activeNav === 'terminal' ? 'text-info fw-bold' : '' %>" href="/" id="navTerminalLink">
-            // TERMINAL
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-light px-2 <%= typeof activeNav !== 'undefined' && activeNav === 'ctf' ? 'text-info fw-bold' : '' %>" href="/projects/" id="navCtfLink">
-            // CTF_RAIDS
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-light px-2 <%= typeof activeNav !== 'undefined' && activeNav === 'workspace' ? 'text-info fw-bold' : '' %>" href="/workspace/" id="navWorkspacesLink">
-            // CODE_ROOMS
-          </a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link text-warning px-2 <%= typeof activeNav !== 'undefined' && activeNav === 'dossier' ? 'fw-bold' : '' %>" href="/projects/profile/" id="navDossierLink">
-            // PLAYER_DOSSIER
-          </a>
-        </li>
-      </ul>
-
-      <!-- Right Action / Operative HUD & GitHub Auth Widget -->
-      <div class="d-flex align-items-center gap-2 font-monospace small flex-wrap justify-content-end">
-        <!-- Clearance & XP Badges -->
-        <span class="badge bg-black border border-warning text-warning px-2 py-1 shadow-sm d-none d-sm-inline-block" id="hudLevelBadge">
-          LVL: <strong class="text-light"><%= userProfile ? userProfile.level : 2 %></strong>
+<!-- CodeQuest - GitHub + VS Code Hybrid Modern Header & Navbar -->
+<header class="border-bottom border-secondary mb-4 pb-0" style="border-color: var(--gh-border-default) !important; background-color: var(--gh-canvas-default);">
+  <!-- Top Bar (GitHub Repository & Global Actions) -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 py-2 px-1">
+    <!-- Brand / Repo Path -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <a href="/" class="d-flex align-items-center gap-2 text-decoration-none text-light" id="navBrandLink">
+        <!-- Octocat / VS Code hybrid logo -->
+        <span class="d-inline-flex align-items-center justify-content-center rounded p-1" style="background: #21262d; border: 1px solid var(--gh-border-default);">
+          <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor" class="text-light">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+          </svg>
         </span>
-        <span class="badge bg-black border border-info text-info px-2 py-1 shadow-sm d-none d-md-inline-block" id="hudXpBadge">
-          XP: <strong class="text-light"><%= userProfile ? userProfile.xp : 750 %></strong>
-        </span>
+        <span class="fs-6 fw-bold text-light">codequest</span>
+        <span class="text-muted">/</span>
+        <span class="fs-6 fw-bold text-info">arena</span>
+      </a>
 
-        <!-- Authentication Status Widget (Google & GitHub) -->
-        <% if (userProfile && (userProfile.googleLinked || userProfile.githubLinked)) { %>
-          <!-- State: Authenticated with Google or GitHub -->
-          <div class="dropdown d-inline-block" id="userAccountDropdown">
-            <button class="btn btn-sm <%= userProfile.googleLinked ? 'btn-outline-info' : 'btn-outline-warning' %> font-monospace d-flex align-items-center gap-2 py-1 px-2 dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="userMenuBtn" style="background: rgba(0, 0, 0, 0.4);">
-              <% if (userProfile.avatar) { %>
-                <img src="<%= userProfile.avatar %>" alt="Operative Avatar" class="rounded-circle border <%= userProfile.googleLinked ? 'border-info' : 'border-warning' %>" style="width: 22px; height: 22px; object-fit: cover;">
-              <% } else if (userProfile.googleLinked) { %>
-                <span>🌐</span>
-              <% } else { %>
-                <span>🐙</span>
-              <% } %>
-              <span class="text-light fw-bold">@<%= userProfile.username %></span>
-              <span class="badge <%= userProfile.googleLinked ? 'bg-info text-dark' : 'bg-warning text-dark' %> fw-bold" style="font-size: 0.6rem; padding: 2px 5px;">
-                <%= userProfile.googleLinked ? 'GOOGLE' : 'GITHUB' %>
-              </span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end font-monospace shadow-lg py-1" style="background-color: #0b0f17; border: 1px solid <%= userProfile.googleLinked ? '#00f0ff' : '#ffe600' %>; min-width: 230px;">
-              <li class="px-3 py-2 border-bottom border-secondary">
-                <div class="d-flex align-items-center gap-1 <%= userProfile.googleLinked ? 'text-info' : 'text-warning' %> mb-1" style="font-size: 0.65rem;">
-                  <span>●</span> <span><%= userProfile.googleLinked ? 'GOOGLE_OAUTH_AUTHENTICATED' : 'GITHUB_AUTHENTICATED' %></span>
-                </div>
-                <strong class="text-light d-block">@<%= userProfile.username %></strong>
-                <% if (userProfile.email) { %>
-                  <small class="text-muted d-block text-truncate" style="max-width: 200px;"><%= userProfile.email %></small>
-                <% } %>
-              </li>
-              <li>
-                <a class="dropdown-item small text-light py-2 d-flex align-items-center gap-2" href="/projects/profile/" id="dropdownDossierLink">
-                  <span>👤</span> <span>View Operative Dossier</span>
-                </a>
-              </li>
-              <li>
-                <button class="dropdown-item small text-warning py-2 d-flex align-items-center gap-2" onclick="syncFirebaseCloudProgress()" id="dropdownSyncBtn">
-                  <span>⚡</span> <span>Sync Cloud Progress</span>
-                </button>
-              </li>
-              <li><hr class="dropdown-divider border-secondary my-1"></li>
-              <li>
-                <button class="dropdown-item small text-danger py-2 d-flex align-items-center gap-2" type="button" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal" id="dropdownSignoutBtn">
-                  <span>🚪</span> <span>Disconnect Session</span>
-                </button>
-              </li>
-            </ul>
-          </div>
-        <% } else { %>
-          <!-- State: Guest Operative / Dual-Provider Sign In Cluster -->
-          <div class="d-flex align-items-center gap-2" id="navAuthBtnCluster">
-            <!-- Google Auth Button (OAuth Client ID) -->
-            <button class="btn btn-sm btn-outline-info font-monospace fw-bold py-1 px-2 d-flex align-items-center gap-1 shadow-sm" id="btnSignInGoogleNav" onclick="openAuthModal()" style="border-color: #4285F4; background: rgba(66, 133, 244, 0.15); color: #fff;">
-              <svg width="14" height="14" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
-                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24Z"/>
-                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15Z"/>
-                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"/>
-              </svg>
-              <span>GOOGLE</span>
-            </button>
+      <span class="gh-repo-pill d-none d-sm-inline-block">Public</span>
 
-            <!-- GitHub Auth Button -->
-            <button class="btn btn-sm btn-warning font-monospace fw-bold py-1 px-2 d-flex align-items-center gap-1 shadow-sm" id="btnSignInGithubNav" onclick="openAuthModal()" style="background-color: #ffe600; color: #000; border: none; box-shadow: 0 0 10px rgba(255, 230, 0, 0.35);">
-              <svg height="14" width="14" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-              </svg>
-              <span>GITHUB</span>
-            </button>
-          </div>
-        <% } %>
+      <!-- Active Branch pill -->
+      <div class="d-none d-md-flex align-items-center gap-1 px-2 py-1 rounded small font-monospace" style="background: #161b22; border: 1px solid var(--gh-border-default); font-size: 0.75rem;">
+        <i class="codicon codicon-git-branch text-muted"></i>
+        <span class="text-light fw-semibold">main</span>
       </div>
+
+      <!-- Language Badges: .go & .vue -->
+      <a href="/projects/?filter=go" class="badge badge-go text-decoration-none d-none d-lg-inline-flex align-items-center gap-1 py-1 px-2" title="Go language support active">
+        <span style="font-weight: 700;">GO</span>
+        <span class="small font-monospace">.go</span>
+      </a>
+      <a href="/projects/?filter=vue" class="badge badge-vue text-decoration-none d-none d-lg-inline-flex align-items-center gap-1 py-1 px-2" title="Vue 3 SFC support active">
+        <span style="font-weight: 700;">VUE</span>
+        <span class="small font-monospace">.vue</span>
+      </a>
+    </div>
+
+    <!-- Center/Search: Quick Command Palette Trigger (Cmd+K / Ctrl+K) -->
+    <div class="d-flex align-items-center flex-grow-1 justify-content-center mx-2" style="max-width: 380px;">
+      <button class="btn btn-dark w-100 d-flex align-items-center justify-content-between px-3 py-1 text-muted font-monospace small" onclick="openCommandPalette()" style="background: #161b22 !important; border: 1px solid var(--gh-border-default) !important; border-radius: 6px;" id="globalCommandPaletteBtn">
+        <span class="d-flex align-items-center gap-2">
+          <i class="codicon codicon-search"></i>
+          <span>Type <kbd style="background: #21262d; border: 1px solid #30363d; color: #c9d1d9; font-size: 0.7rem;">⌘K</kbd> to search...</span>
+        </span>
+        <span class="badge bg-black text-muted border border-secondary d-none d-sm-inline-block" style="font-size: 0.65rem;">VS CODE PALETTE</span>
+      </button>
+    </div>
+
+    <!-- Right Controls: GitHub Repo Stats & User Profile / Login -->
+    <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+      <!-- GitHub Star Counter Pill -->
+      <div class="d-none d-xl-flex align-items-center rounded overflow-hidden small" style="border: 1px solid var(--gh-border-default);">
+        <button class="btn btn-sm btn-dark py-1 px-2 d-flex align-items-center gap-1 border-0" style="background: #21262d !important; font-size: 0.75rem;" onclick="toggleStar(this)">
+          <i class="codicon codicon-star text-warning"></i>
+          <span>Star</span>
+        </button>
+        <span class="px-2 py-1 font-monospace text-light" style="background: #161b22; font-size: 0.75rem;" id="repoStarCount">1,420</span>
+      </div>
+
+      <!-- Operative Level & XP Badges -->
+      <span class="badge bg-black border border-warning text-warning px-2 py-1 d-none d-sm-inline-block font-monospace" id="hudLevelBadge" style="font-size: 0.72rem;">
+        LVL: <strong class="text-light"><%= userProfile ? userProfile.level : 2 %></strong>
+      </span>
+      <span class="badge bg-black border border-info text-info px-2 py-1 d-none d-md-inline-block font-monospace" id="hudXpBadge" style="font-size: 0.72rem;">
+        XP: <strong class="text-light"><%= userProfile ? userProfile.xp : 750 %></strong>
+      </span>
+
+      <!-- Auth Dropdown or Dual Auth Buttons -->
+      <% if (userProfile && (userProfile.googleLinked || userProfile.githubLinked)) { %>
+        <!-- Authenticated State -->
+        <div class="dropdown d-inline-block" id="userAccountDropdown">
+          <button class="btn btn-sm btn-outline-secondary font-monospace d-flex align-items-center gap-2 py-1 px-2 dropdown-toggle text-light" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="userMenuBtn" style="background: #21262d; border-color: var(--gh-border-default);">
+            <% if (userProfile.avatar) { %>
+              <img src="<%= userProfile.avatar %>" alt="Avatar" class="rounded-circle border border-secondary" style="width: 20px; height: 20px; object-fit: cover;">
+            <% } else if (userProfile.googleLinked) { %>
+              <span>🌐</span>
+            <% } else { %>
+              <i class="codicon codicon-github"></i>
+            <% } %>
+            <span class="fw-semibold">@<%= userProfile.username %></span>
+            <span class="badge <%= userProfile.googleLinked ? 'bg-info text-dark' : 'bg-warning text-dark' %>" style="font-size: 0.58rem; padding: 2px 4px;">
+              <%= userProfile.googleLinked ? 'GOOGLE' : 'GITHUB' %>
+            </span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow-lg py-1" style="background-color: #161b22; border: 1px solid var(--gh-border-default); min-width: 230px;">
+            <li class="px-3 py-2 border-bottom border-secondary" style="border-color: var(--gh-border-default) !important;">
+              <div class="d-flex align-items-center gap-1 text-success mb-1 small font-monospace">
+                <span>●</span> <span><%= userProfile.googleLinked ? 'GOOGLE_OAUTH_ACTIVE' : 'GITHUB_AUTHENTICATED' %></span>
+              </div>
+              <strong class="text-light d-block">@<%= userProfile.username %></strong>
+              <% if (userProfile.email) { %>
+                <small class="text-muted d-block text-truncate" style="max-width: 200px;"><%= userProfile.email %></small>
+              <% } %>
+            </li>
+            <li>
+              <a class="dropdown-item small py-2 d-flex align-items-center gap-2" href="/projects/profile/" id="dropdownDossierLink">
+                <i class="codicon codicon-account"></i> <span>Developer Profile & Dossier</span>
+              </a>
+            </li>
+            <li>
+              <button class="dropdown-item small py-2 d-flex align-items-center gap-2 text-warning" onclick="syncFirebaseCloudProgress()" id="dropdownSyncBtn">
+                <i class="codicon codicon-cloud-upload"></i> <span>Sync Cloud Progress</span>
+              </button>
+            </li>
+            <li><hr class="dropdown-divider my-1" style="border-color: var(--gh-border-default);"></li>
+            <li>
+              <button class="dropdown-item small py-2 d-flex align-items-center gap-2 text-danger" type="button" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal" id="dropdownSignoutBtn">
+                <i class="codicon codicon-sign-out"></i> <span>Sign Out</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      <% } else { %>
+        <!-- Guest State -->
+        <div class="d-flex align-items-center gap-1" id="navAuthBtnCluster">
+          <button class="btn btn-sm btn-outline-info font-monospace py-1 px-2 d-flex align-items-center gap-1" id="btnSignInGoogleNav" onclick="openAuthModal()">
+            <svg width="13" height="13" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24Z"/>
+              <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15Z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"/>
+            </svg>
+            <span class="d-none d-sm-inline">Google</span>
+          </button>
+          <button class="btn btn-sm btn-gh-secondary font-monospace py-1 px-2 d-flex align-items-center gap-1" id="btnSignInGithubNav" onclick="openAuthModal()">
+            <svg height="13" width="13" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+            </svg>
+            <span class="d-none d-sm-inline">GitHub</span>
+          </button>
+        </div>
+      <% } %>
     </div>
   </div>
-</nav>
+
+  <!-- Bottom Bar: GitHub Repository Subnav Tabs -->
+  <nav class="gh-nav-tabs mt-1" aria-label="Repository Navigation">
+    <a href="/" class="gh-nav-tab <%= typeof activeNav !== 'undefined' && activeNav === 'terminal' ? 'active' : '' %>" id="navTerminalLink">
+      <i class="codicon codicon-code"></i>
+      <span>Code</span>
+    </a>
+    <a href="/projects/" class="gh-nav-tab <%= typeof activeNav !== 'undefined' && activeNav === 'ctf' ? 'active' : '' %>" id="navCtfLink">
+      <i class="codicon codicon-issues"></i>
+      <span>CTF Raids</span>
+      <span class="gh-counter-badge">8</span>
+    </a>
+    <a href="/workspace/" class="gh-nav-tab <%= typeof activeNav !== 'undefined' && activeNav === 'workspace' ? 'active' : '' %>" id="navWorkspacesLink">
+      <i class="codicon codicon-terminal-tmux"></i>
+      <span>VS Code Rooms</span>
+      <span class="badge badge-go" style="font-size: 0.65rem; padding: 1px 5px;">.go</span>
+      <span class="badge badge-vue" style="font-size: 0.65rem; padding: 1px 5px;">.vue</span>
+    </a>
+    <a href="/projects/profile/" class="gh-nav-tab <%= typeof activeNav !== 'undefined' && activeNav === 'dossier' ? 'active' : '' %>" id="navDossierLink">
+      <i class="codicon codicon-graph"></i>
+      <span>Insights & Dossier</span>
+    </a>
+  </nav>
+</header>
+
+<!-- VS Code Quick Open / Command Palette Modal -->
+<div class="vscode-quick-open" id="vscodeQuickOpenModal">
+  <input type="text" class="vscode-quick-input" id="quickOpenInput" placeholder="> Type a command or search files (.go, .vue, .ts, .py)..." autocomplete="off" spellcheck="false">
+  <div class="vscode-quick-list" id="quickOpenList">
+    <div class="vscode-quick-item" onclick="quickNav('/workspace/1?lang=go')">
+      <span><i class="codicon codicon-file-code text-go me-2"></i><strong>Go Concurrency Arena:</strong> main.go</span>
+      <span class="badge badge-go">.go</span>
+    </div>
+    <div class="vscode-quick-item" onclick="quickNav('/workspace/1?lang=vue')">
+      <span><i class="codicon codicon-symbol-class text-vue me-2"></i><strong>Vue 3 Component Arena:</strong> App.vue</span>
+      <span class="badge badge-vue">.vue</span>
+    </div>
+    <div class="vscode-quick-item" onclick="quickNav('/projects/challenge/7')">
+      <span><i class="codicon codicon-bug text-warning me-2"></i><strong>CTF Raid #7:</strong> Golang Goroutine Race Condition</span>
+      <span class="badge bg-black border border-warning text-warning">MED</span>
+    </div>
+    <div class="vscode-quick-item" onclick="quickNav('/projects/challenge/8')">
+      <span><i class="codicon codicon-shield text-info me-2"></i><strong>CTF Raid #8:</strong> Vue 3 Reactive DOM XSS Sanitization</span>
+      <span class="badge bg-black border border-info text-info">EASY</span>
+    </div>
+    <div class="vscode-quick-item" onclick="quickNav('/workspace/')">
+      <span><i class="codicon codicon-live-share text-success me-2"></i><strong>Codespaces:</strong> Live Collaborative Rooms</span>
+      <span class="text-muted small">Collaborate</span>
+    </div>
+    <div class="vscode-quick-item" onclick="quickNav('/projects/profile/')">
+      <span><i class="codicon codicon-graph text-muted me-2"></i><strong>Insights:</strong> Contribution Heatmap & Dossier</span>
+      <span class="text-muted small">Profile</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openCommandPalette() {
+    const modal = document.getElementById('vscodeQuickOpenModal');
+    const input = document.getElementById('quickOpenInput');
+    if (modal) {
+      modal.style.display = 'block';
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+    }
+  }
+
+  function closeCommandPalette() {
+    const modal = document.getElementById('vscodeQuickOpenModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function quickNav(url) {
+    closeCommandPalette();
+    window.location.href = url;
+  }
+
+  function toggleStar(btn) {
+    const countEl = document.getElementById('repoStarCount');
+    if (!countEl) return;
+    let count = parseInt(countEl.textContent.replace(/,/g, ''), 10) || 1420;
+    if (btn.classList.contains('starred')) {
+      btn.classList.remove('starred');
+      btn.querySelector('span').textContent = 'Star';
+      countEl.textContent = (count - 1).toLocaleString();
+    } else {
+      btn.classList.add('starred');
+      btn.querySelector('span').textContent = 'Starred';
+      countEl.textContent = (count + 1).toLocaleString();
+    }
+  }
+
+  // Keyboard shortcut listener: Cmd+K / Ctrl+K or Cmd+P / Ctrl+P
+  window.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'p')) {
+      e.preventDefault();
+      const modal = document.getElementById('vscodeQuickOpenModal');
+      if (modal && modal.style.display === 'block') {
+        closeCommandPalette();
+      } else {
+        openCommandPalette();
+      }
+    } else if (e.key === 'Escape') {
+      closeCommandPalette();
+    }
+  });
+
+  // Close palette on backdrop click
+  document.addEventListener('click', function(e) {
+    const modal = document.getElementById('vscodeQuickOpenModal');
+    const btn = document.getElementById('globalCommandPaletteBtn');
+    if (modal && modal.style.display === 'block') {
+      if (!modal.contains(e.target) && !btn.contains(e.target)) {
+        closeCommandPalette();
+      }
+    }
+  });
+
+  // Filter command palette items
+  const qInput = document.getElementById('quickOpenInput');
+  if (qInput) {
+    qInput.addEventListener('input', function(e) {
+      const q = e.target.value.toLowerCase().trim();
+      const items = document.querySelectorAll('#quickOpenList .vscode-quick-item');
+      items.forEach(item => {
+        const txt = item.textContent.toLowerCase();
+        item.style.display = txt.includes(q) ? 'flex' : 'none';
+      });
+    });
+  }
+</script>
