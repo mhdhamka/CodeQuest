@@ -1,7 +1,8 @@
 <div align="center">
 
 # CodeQuest Arena (WIP)
-### Modernized GitHub & VS Code Codespace Platform
+
+> Modernized GitHub & VS Code Codespace Platform
 
 **An interactive multi-language developer arena combining GitHub repository intelligence, VS Code Codespaces editing, Go 1.22 (`.go`) concurrency microservices, Vue 3 Single-File Components (`.vue`), and gamified CTF security raids.**
 
@@ -10,7 +11,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Go 1.22](https://img.shields.io/badge/Go-1.22.3-00ADD8?logo=go&logoColor=white)](https://golang.org)
 [![Vue 3](https://img.shields.io/badge/Vue-3.5%20SFC-42B883?logo=vuedotjs&logoColor=white)](https://vuejs.org)
-[![Node.js](https://img.shields.io/badge/Node.js-22.x-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![Express](https://img.shields.io/badge/Express-5.x-000000?logo=express&logoColor=white)](https://expressjs.com)
 [![Firebase](https://img.shields.io/badge/Firebase-Firestore%20Sync-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
 [![VS Code Theme](https://img.shields.io/badge/UI-GitHub%20%26%20VS%20Code-007ACC?logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com)

@@ -1,0 +1,38 @@
+name: CodeQuest CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+
+      - name: Set up Go 1.22
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Build Go Microservice Engine
+        run: |
+          mkdir -p bin
+          cd engine
+          go build -o ../bin/go-engine main.go
+
+      - name: Run Linter / Sanity Check
+        run: npm run lint
