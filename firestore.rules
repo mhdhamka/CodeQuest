@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Public collaborative rooms access for real-time multiplayer coding
+    match /rooms/{roomId} {
+      allow read, write: if true;
+    }
+
+    // Authenticated operative profiles and progression tracking
+    match /users/{userId} {
+      // Anyone can view operative profile stats (leaderboards, dossier)
+      allow read: if true;
+      // Users can write/update their own profile
+      allow write: if (request.auth != null && request.auth.uid == userId) || (request.auth == null && userId.size() > 0);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

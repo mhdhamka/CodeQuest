@@ -1,0 +1,831 @@
+<!-- Cyberpunk Toast Notification -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 2000;">
+  <div id="cyberToast" class="toast align-items-center text-white bg-dark border border-info font-monospace shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body d-flex align-items-center gap-2">
+        <span id="cyberToastIcon">⚡</span>
+        <span id="cyberToastMessage">System message</span>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Operative Identity & Auth Gateway Modal (Google & GitHub) -->
+<div class="modal fade" id="githubAuthModal" tabindex="-1" aria-labelledby="githubAuthModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content bg-dark text-light border border-info font-monospace shadow-lg" style="background-color: #0b0f17 !important; box-shadow: 0 0 35px rgba(0, 240, 255, 0.25) !important;">
+      <div class="modal-header border-secondary" style="border-bottom: 1px solid rgba(0, 240, 255, 0.3) !important;">
+        <h5 class="modal-title text-info d-flex align-items-center gap-2" id="githubAuthModalLabel">
+          <span class="text-warning">⚡</span> OPERATIVE_AUTHENTICATION_GATEWAY // GOOGLE & GITHUB
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <!-- Top Status & Config Banner -->
+        <div class="p-3 mb-4 rounded bg-black border border-secondary shadow-sm">
+          <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-2">
+            <span class="text-warning small fw-bold">// MULTI-PROVIDER IDENTITY GATEWAY</span>
+            <span class="badge bg-black border border-info text-info small py-1 px-2" style="font-size: 0.7rem;">
+              FIRESTORE: <%= (firebaseConfig && firebaseConfig.firestoreDatabaseId) ? firebaseConfig.firestoreDatabaseId : 'ai-studio-codequest' %>
+            </span>
+          </div>
+          <p class="small text-muted mb-2">
+            Authenticate your operative profile to synchronize your captured CTF raid flags, XP rewards, clearance level, and collaborative room state to Cloud Firestore.
+          </p>
+          <div id="authStatusBanner" class="alert alert-dark border border-info text-info small py-2 px-3 mb-0 d-flex align-items-center gap-2">
+            <span class="spinner-grow spinner-grow-sm text-info flex-shrink-0" role="status" style="width: 0.5rem; height: 0.5rem;"></span>
+            <span>[STATUS]: Configured OAuth Client ID active: <code class="text-warning"><%= (firebaseConfig && firebaseConfig.oAuthClientId) ? (firebaseConfig.oAuthClientId.substring(0, 24) + '...') : 'Configured' %></code></span>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <!-- Column 1: Google Authentication (Configured OAuth) -->
+          <div class="col-md-6">
+            <div class="h-100 p-3 rounded bg-black border border-info border-opacity-50 d-flex flex-column justify-content-between shadow-sm position-relative overflow-hidden" style="background: linear-gradient(180deg, rgba(66, 133, 244, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%);">
+              <div>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <div class="d-flex align-items-center gap-2 text-info fw-bold small">
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+                      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24Z"/>
+                      <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15Z"/>
+                      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"/>
+                    </svg>
+                    <span>GOOGLE AUTHENTICATION</span>
+                  </div>
+                  <span class="badge bg-black border border-info text-info small" style="font-size: 0.65rem;">OAUTH_CLIENT</span>
+                </div>
+                <p class="small text-muted mb-3" style="font-size: 0.78rem; line-height: 1.5;">
+                  Sign in using Google Identity Services with the pre-configured OAuth client ID to bind your CodeQuest career to Cloud Firestore.
+                </p>
+
+                <!-- Rendered Google Identity Services Button Container -->
+                <div id="googleGsiBtnContainer" class="d-flex justify-content-center mb-3"></div>
+
+                <!-- Direct Google Popup Option -->
+                <button type="button" class="btn btn-outline-info w-100 py-2 fw-bold font-monospace d-flex align-items-center justify-content-center gap-2 shadow-sm" id="modalGoogleSignInBtn" onclick="runFirebaseGooglePopup()" style="border-color: #4285F4; background: rgba(66, 133, 244, 0.12); color: #fff;">
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24Z"/>
+                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15Z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"/>
+                  </svg>
+                  <span>SIGN IN WITH GOOGLE</span>
+                </button>
+              </div>
+
+              <div class="mt-3 pt-2 border-top border-secondary text-muted" style="font-size: 0.72rem;">
+                ✔ Uses configured OAuth ID: <code class="text-info user-select-all" style="font-size: 0.68rem;"><%= (firebaseConfig && firebaseConfig.oAuthClientId) ? firebaseConfig.oAuthClientId : 'Google OAuth Client' %></code>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 2: GitHub Authentication -->
+          <div class="col-md-6">
+            <div class="h-100 p-3 rounded bg-black border border-warning border-opacity-50 d-flex flex-column justify-content-between shadow-sm position-relative overflow-hidden" style="background: linear-gradient(180deg, rgba(255, 230, 0, 0.04) 0%, rgba(0, 0, 0, 0.8) 100%);">
+              <div>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <div class="d-flex align-items-center gap-2 text-warning fw-bold small">
+                    <span>🐙</span>
+                    <span>GITHUB AUTHENTICATION</span>
+                  </div>
+                  <span class="badge bg-black border border-warning text-warning small" style="font-size: 0.65rem;">OAUTH / API</span>
+                </div>
+                <p class="small text-muted mb-3" style="font-size: 0.78rem; line-height: 1.5;">
+                  Connect your GitHub developer handle to link your public commits, repositories, and avatar to your operative card.
+                </p>
+
+                <!-- GitHub Popup Option -->
+                <button type="button" class="btn btn-warning w-100 py-2 fw-bold text-dark font-monospace d-flex align-items-center justify-content-center gap-2 shadow-sm mb-3" id="modalPopupSignInBtn" onclick="runFirebaseGithubPopup()" style="background-color: #ffe600; border: none; box-shadow: 0 0 12px rgba(255, 230, 0, 0.3);">
+                  <svg height="17" width="17" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                  </svg>
+                  <span>LAUNCH GITHUB POPUP</span>
+                </button>
+
+                <!-- Quick Operative Handle Linker -->
+                <div>
+                  <label for="inputGithubUsername" class="form-label small text-muted mb-1" style="font-size: 0.72rem;">Quick Handle Linker (Instant):</label>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-black border-secondary text-info">@</span>
+                    <input type="text" class="form-control bg-black border-secondary text-light font-monospace" id="inputGithubUsername" placeholder="e.g. mhdhamka" value="<%= (userProfile && userProfile.githubLinked) ? userProfile.username : '' %>">
+                    <button class="btn btn-outline-warning font-monospace" type="button" id="btnQuickLinkOperative" onclick="linkDirectGithubHandle()">
+                      LINK
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-3 pt-2 border-top border-secondary text-muted" style="font-size: 0.72rem;">
+                ✔ Pulls verified avatar & public telemetry
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Provider Console Configuration Accordion -->
+        <div class="accordion accordion-flush mt-4" id="oauthInfoAccordion">
+          <div class="accordion-item bg-transparent border-secondary">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed bg-black text-muted font-monospace small py-2 px-3 border border-secondary rounded" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOauthInfo" aria-expanded="false">
+                ⚙️ OAuth Client ID & Firebase Identity Specifications
+              </button>
+            </h2>
+            <div id="collapseOauthInfo" class="accordion-collapse collapse" data-bs-parent="#oauthInfoAccordion">
+              <div class="accordion-body bg-black border border-secondary border-top-0 rounded-bottom small text-muted font-monospace p-3">
+                <div class="row g-3">
+                  <div class="col-12 col-lg-6">
+                    <div class="text-info fw-bold mb-1">Google OAuth Client ID:</div>
+                    <code class="text-warning user-select-all d-block mb-2" style="font-size: 0.75rem; word-break: break-all;">
+                      <%= (firebaseConfig && firebaseConfig.oAuthClientId) ? firebaseConfig.oAuthClientId : '134565867425-1s3qdiesrsfk8o63sqpfbqrr31lh0hhu.apps.googleusercontent.com' %>
+                    </code>
+                    <div class="text-muted" style="font-size: 0.75rem;">
+                      Configured for Google Identity Services (GIS) and Firebase Auth popups with Firestore cloud synchronization.
+                    </div>
+                  </div>
+                  <div class="col-12 col-lg-6">
+                    <div class="text-info fw-bold mb-1">Firebase Auth Handler:</div>
+                    <code class="text-warning user-select-all d-block mb-2" style="font-size: 0.75rem; word-break: break-all;">
+                      https://galvanized-strength-bf38q.firebaseapp.com/__/auth/handler
+                    </code>
+                    <div class="text-muted" style="font-size: 0.75rem;">
+                      Authorized redirect URI for GitHub and Google provider callbacks.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-secondary btn-sm font-monospace" data-bs-dismiss="modal">CLOSE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Logout / Session Termination Confirmation Modal -->
+<div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-light border border-danger font-monospace shadow-lg" style="background-color: #0b0f17 !important; box-shadow: 0 0 35px rgba(255, 7, 58, 0.3) !important;">
+      <div class="modal-header border-secondary" style="border-bottom: 1px solid rgba(255, 7, 58, 0.3) !important;">
+        <h5 class="modal-title text-danger d-flex align-items-center gap-2" id="logoutConfirmModalLabel">
+          <span class="text-danger">⚠️</span> TERMINATE_SESSION // CONFIRMATION
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="p-3 mb-3 rounded bg-black border border-danger border-opacity-50">
+          <div class="d-flex align-items-start gap-3">
+            <span class="fs-2 text-danger" style="line-height: 1;">🛑</span>
+            <div>
+              <div class="text-danger fw-bold small text-uppercase mb-1">// ACCIDENTAL_LOGOUT_PREVENTION</div>
+              <div class="text-light fw-bold">
+                Disconnect operative session: <span class="text-warning">@<%= (userProfile && (userProfile.googleLinked || userProfile.githubLinked)) ? userProfile.username : 'Operative' %></span>?
+              </div>
+              <div class="text-info small mt-1">
+                Active Provider: <strong class="text-light"><%= userProfile && userProfile.googleLinked ? 'Google OAuth' : (userProfile && userProfile.githubLinked ? 'GitHub' : 'Guest') %></strong>
+              </div>
+            </div>
+          </div>
+          <p class="small text-muted mb-0 mt-3" style="line-height: 1.6;">
+            Terminating this active session will unlink your authorization tokens. Active real-time room sessions will revert to default guest status until you re-authenticate.
+          </p>
+        </div>
+
+        <div class="alert alert-dark border border-secondary text-info small py-2 px-3 mb-0 d-flex align-items-center gap-2">
+          <span>ℹ️</span>
+          <span>Your secured CTF challenge flags, XP, and Firestore cloud telemetry remain permanently preserved.</span>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary justify-content-between p-3" style="border-top: 1px solid rgba(255, 255, 255, 0.1) !important;">
+        <button type="button" class="btn btn-outline-secondary btn-sm font-monospace px-3" data-bs-dismiss="modal" id="btnAbortLogout">
+          [ ✖ ABORT / REMAIN SIGNED IN ]
+        </button>
+        <button type="button" class="btn btn-danger btn-sm font-monospace fw-bold px-3 d-flex align-items-center gap-2 shadow" id="btnConfirmTerminateSession" onclick="executeSignOutNow()">
+          <span>🚪</span> <span>CONFIRM DISCONNECT</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase Auth & Cloud Firestore Engine -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js';
+  import { 
+    getAuth, 
+    signInWithPopup, 
+    signInWithCredential,
+    GoogleAuthProvider,
+    GithubAuthProvider, 
+    signOut, 
+    onAuthStateChanged 
+  } from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js';
+  import { 
+    getFirestore, 
+    doc, 
+    getDoc, 
+    setDoc, 
+    serverTimestamp 
+  } from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
+
+  let firebaseApp = null;
+  let firebaseAuth = null;
+  let firestoreDb = null;
+  let cachedConfig = null;
+
+  function showToast(msg, icon = '⚡', isSuccess = true) {
+    const toastEl = document.getElementById('cyberToast');
+    if (!toastEl) return;
+    document.getElementById('cyberToastMessage').innerText = msg;
+    document.getElementById('cyberToastIcon').innerText = icon;
+    toastEl.className = 'toast align-items-center text-white bg-dark border ' + 
+      (isSuccess ? 'border-info' : 'border-danger') + ' font-monospace shadow-lg';
+    const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+    toast.show();
+  }
+
+  async function getFirebaseInstances() {
+    if (firebaseAuth && firestoreDb) {
+      return { app: firebaseApp, auth: firebaseAuth, db: firestoreDb };
+    }
+
+    try {
+      const resp = await fetch('/api/firebase-config');
+      cachedConfig = await resp.json();
+      if (!cachedConfig || !cachedConfig.apiKey) {
+        console.warn('Firebase config unavailable from /api/firebase-config');
+        return null;
+      }
+      firebaseApp = initializeApp(cachedConfig);
+      firebaseAuth = getAuth(firebaseApp);
+      firestoreDb = getFirestore(firebaseApp, cachedConfig.firestoreDatabaseId || undefined);
+      return { app: firebaseApp, auth: firebaseAuth, db: firestoreDb };
+    } catch (err) {
+      console.error('Failed to initialize Firebase instances:', err);
+      return null;
+    }
+  }
+
+  // Parse JWT token from Google Identity Services
+  function decodeJwtPayload(token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error('Failed to parse JWT payload', e);
+      return null;
+    }
+  }
+
+  // Initialize Google Identity Services (GIS) with Configured OAuth Client ID
+  function initGoogleIdentityServices() {
+    const oAuthClientId = (cachedConfig && cachedConfig.oAuthClientId) || 
+      "<%= (firebaseConfig && firebaseConfig.oAuthClientId) ? firebaseConfig.oAuthClientId : '' %>";
+    
+    if (!oAuthClientId || typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+      return;
+    }
+
+    try {
+      google.accounts.id.initialize({
+        client_id: oAuthClientId,
+        callback: handleGoogleGsiCredential,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        context: 'signin'
+      });
+
+      const gsiContainer = document.getElementById('googleGsiBtnContainer');
+      if (gsiContainer) {
+        gsiContainer.innerHTML = '';
+        google.accounts.id.renderButton(gsiContainer, {
+          theme: 'filled_black',
+          size: 'large',
+          type: 'standard',
+          shape: 'rectangular',
+          text: 'signin_with',
+          logo_alignment: 'left',
+          width: 280
+        });
+      }
+    } catch (err) {
+      console.warn('[Google Identity Services Init Warning]', err);
+    }
+  }
+
+  // Core processor for authenticated Google user: restores or saves CodeQuest progress to Firestore
+  async function processAuthenticatedGoogleUser(details) {
+    const instances = await getFirebaseInstances();
+    const statusBanner = document.getElementById('authStatusBanner');
+    if (statusBanner) {
+      statusBanner.className = 'alert alert-info border border-info small py-2 px-3 mb-0';
+      statusBanner.innerHTML = '⚡ Synchronizing operative dossier and CodeQuest progress...';
+    }
+
+    const uid = details.uid;
+    const email = details.email || '';
+    const displayName = details.displayName || (email ? email.split('@')[0] : 'Operative');
+    let cleanUsername = (details.username || (email ? email.split('@')[0] : displayName)).replace(/[^\w.-]/g, '_');
+    const photo = details.photoURL || 'https://lh3.googleusercontent.com/a/default-user';
+
+    let profileData = {
+      uid: uid,
+      username: cleanUsername,
+      displayName: displayName,
+      email: email,
+      avatar: photo,
+      authProvider: 'google',
+      googleLinked: true,
+      githubLinked: false,
+      updatedAt: new Date().toISOString()
+    };
+
+    // 1. Check or restore existing CodeQuest progress from Cloud Firestore
+    if (instances && instances.db) {
+      try {
+        const userRef = doc(instances.db, 'users', uid);
+        const userDocSnap = await getDoc(userRef);
+
+        if (userDocSnap && userDocSnap.exists()) {
+          const existingData = userDocSnap.data();
+          profileData.level = existingData.level || <%= userProfile ? userProfile.level : 2 %>;
+          profileData.xp = existingData.xp || <%= userProfile ? userProfile.xp : 750 %>;
+          profileData.role_class = existingData.role_class || '<%= userProfile ? userProfile.role_class : "ARCHITECT" %>';
+          profileData.role_class_display = existingData.role_class_display || '<%= userProfile ? userProfile.role_class_display : "Cyber Architect" %>';
+          profileData.completedChallenges = existingData.completedChallenges || [1];
+
+          // Reconcile if session has higher XP
+          const currentXp = <%= userProfile ? userProfile.xp : 750 %>;
+          if (currentXp > profileData.xp) {
+            profileData.xp = currentXp;
+            profileData.level = Math.floor(currentXp / 500) + 1;
+          }
+
+          await setDoc(userRef, {
+            ...profileData,
+            syncedAt: serverTimestamp()
+          }, { merge: true });
+        } else {
+          // New Google Operative: Seed Firestore with current guest progression
+          profileData.level = <%= userProfile ? userProfile.level : 2 %>;
+          profileData.xp = <%= userProfile ? userProfile.xp : 750 %>;
+          profileData.role_class = '<%= userProfile ? userProfile.role_class : "ARCHITECT" %>';
+          profileData.role_class_display = '<%= userProfile ? userProfile.role_class_display : "Cyber Architect" %>';
+          profileData.completedChallenges = <%- JSON.stringify((userProfile && userProfile.solved_submissions) ? userProfile.solved_submissions.map(s => s.challengeId) : [1]) %>;
+
+          await setDoc(userRef, {
+            ...profileData,
+            createdAt: serverTimestamp(),
+            syncedAt: serverTimestamp()
+          }, { merge: true });
+        }
+      } catch (fErr) {
+        console.warn('[Firestore Google Profile Notice]', fErr);
+      }
+    }
+
+    // 2. Synchronize with Express backend session
+    try {
+      const resp = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileData)
+      });
+
+      if (resp.ok) {
+        showToast(`Operative @${cleanUsername} authenticated with Google! Progress saved.`, '🌐', true);
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        throw new Error('Session registration failed');
+      }
+    } catch (err) {
+      console.error('Session sync error:', err);
+      showToast('Failed to save session: ' + err.message, '✖', false);
+    }
+  }
+
+  // Handle Google Identity Services (GIS) Credential Callback
+  async function handleGoogleGsiCredential(response) {
+    if (!response || !response.credential) return;
+    const payload = decodeJwtPayload(response.credential);
+    if (!payload) return;
+
+    showToast('Google credential received. Validating with Firebase...', '⚡', true);
+    const instances = await getFirebaseInstances();
+    let finalUid = 'g_' + payload.sub;
+
+    if (instances && instances.auth) {
+      try {
+        const credential = GoogleAuthProvider.credential(response.credential);
+        const userCred = await signInWithCredential(instances.auth, credential);
+        if (userCred && userCred.user) {
+          finalUid = userCred.user.uid;
+        }
+      } catch (fbErr) {
+        console.warn('[Firebase Auth GIS Credential Notice]:', fbErr.message);
+      }
+    }
+
+    await processAuthenticatedGoogleUser({
+      uid: finalUid,
+      email: payload.email,
+      displayName: payload.name,
+      photoURL: payload.picture,
+      username: payload.email ? payload.email.split('@')[0] : payload.name
+    });
+  }
+
+  // Launch Google Sign-In Popup using Firebase GoogleAuthProvider
+  window.runFirebaseGooglePopup = async function() {
+    const statusBanner = document.getElementById('authStatusBanner');
+    const btn = document.getElementById('modalGoogleSignInBtn');
+    
+    if (statusBanner) {
+      statusBanner.className = 'alert alert-info border border-info small py-2 px-3 mb-0';
+      statusBanner.innerHTML = '⚡ Launching Google Authentication popup...';
+    }
+    if (btn) btn.disabled = true;
+
+    const instances = await getFirebaseInstances();
+    if (!instances || !instances.auth) {
+      if (statusBanner) {
+        statusBanner.className = 'alert alert-warning border border-warning small py-2 px-3 mb-0';
+        statusBanner.innerHTML = '⚠️ Initializing Firebase authentication...';
+      }
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    const provider = new GoogleAuthProvider();
+    provider.addScope('profile');
+    provider.addScope('email');
+
+    try {
+      const result = await signInWithPopup(instances.auth, provider);
+      const user = result.user;
+      await processAuthenticatedGoogleUser({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        username: user.email ? user.email.split('@')[0] : user.displayName
+      });
+    } catch (error) {
+      console.warn('[Firebase Google Auth Error]', error.code, error.message);
+      if (btn) btn.disabled = false;
+      if (statusBanner) {
+        statusBanner.className = 'alert alert-warning border border-warning small py-2 px-3 mb-0';
+        if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/configuration-not-found') {
+          statusBanner.innerHTML = 'ℹ️ <strong>Google Provider Notice:</strong> If popup is restricted, please click the Google Sign-In button above directly rendered via configured OAuth Client ID.';
+        } else if (error.code === 'auth/popup-closed-by-user') {
+          statusBanner.innerHTML = 'ℹ️ Google sign-in popup was closed before authorization was completed.';
+        } else {
+          statusBanner.innerHTML = `⚠️ ${error.message || 'Google authentication error.'}`;
+        }
+      }
+    }
+  };
+
+  // Launch popup with GitHubAuthProvider
+  window.runFirebaseGithubPopup = async function() {
+    const statusBanner = document.getElementById('authStatusBanner');
+    const btn = document.getElementById('modalPopupSignInBtn');
+    
+    if (statusBanner) {
+      statusBanner.className = 'alert alert-info border border-info small py-2 px-3 mb-0';
+      statusBanner.innerHTML = '⚡ Initiating GitHub Authentication popup with Firebase...';
+    }
+    if (btn) btn.disabled = true;
+
+    const instances = await getFirebaseInstances();
+    if (!instances || !instances.auth) {
+      if (statusBanner) {
+        statusBanner.className = 'alert alert-warning border border-warning small py-2 px-3 mb-0';
+        statusBanner.innerHTML = '⚠️ Firebase configuration not found. Use direct GitHub handle linker below.';
+      }
+      if (btn) btn.disabled = false;
+      return;
+    }
+
+    const provider = new GithubAuthProvider();
+    provider.addScope('read:user');
+    provider.addScope('user:email');
+
+    try {
+      const result = await signInWithPopup(instances.auth, provider);
+      const user = result.user;
+      
+      const githubHandle = result._tokenResponse?.screenName || 
+                           user.reloadUserInfo?.screenName || 
+                           user.displayName || 
+                           user.email?.split('@')[0] || 
+                           'Operative_GH';
+      
+      const photo = user.photoURL || `https://github.com/${githubHandle}.png`;
+
+      // Check or seed user document in Firestore
+      const userRef = doc(instances.db, 'users', user.uid);
+      let userDocSnap = null;
+      try {
+        userDocSnap = await getDoc(userRef);
+      } catch (fErr) {
+        console.warn('Firestore read error (using fallback):', fErr);
+      }
+
+      let profileData = {
+        uid: user.uid,
+        username: githubHandle,
+        displayName: user.displayName || githubHandle,
+        email: user.email || '',
+        avatar: photo,
+        authProvider: 'github',
+        githubLinked: true,
+        googleLinked: false,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (userDocSnap && userDocSnap.exists()) {
+        const existingData = userDocSnap.data();
+        profileData.level = existingData.level || 2;
+        profileData.xp = existingData.xp || 750;
+        profileData.role_class = existingData.role_class || 'ARCHITECT';
+        profileData.role_class_display = existingData.role_class_display || 'Cyber Architect';
+        profileData.completedChallenges = existingData.completedChallenges || [1];
+      } else {
+        profileData.level = <%= userProfile ? userProfile.level : 2 %>;
+        profileData.xp = <%= userProfile ? userProfile.xp : 750 %>;
+        profileData.role_class = 'ARCHITECT';
+        profileData.role_class_display = 'Cyber Architect';
+        profileData.completedChallenges = [1];
+        
+        try {
+          await setDoc(userRef, {
+            ...profileData,
+            createdAt: serverTimestamp()
+          });
+        } catch (sErr) {
+          console.warn('Firestore write warning:', sErr);
+        }
+      }
+
+      // Sync with Express backend session
+      await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileData)
+      });
+
+      showToast(`GitHub operative @${githubHandle} successfully linked!`, '🐙', true);
+      setTimeout(() => window.location.reload(), 1200);
+
+    } catch (error) {
+      console.warn('[Firebase GitHub Auth Error]', error.code, error.message);
+      if (btn) btn.disabled = false;
+      
+      if (statusBanner) {
+        statusBanner.className = 'alert alert-warning border border-warning small py-2 px-3 mb-0';
+        if (error.code === 'auth/operation-not-allowed' || error.code === 'auth/configuration-not-found') {
+          statusBanner.innerHTML = '⚠️ <strong>GitHub Provider Pending Activation:</strong> Enable GitHub in Firebase Console or use Quick Operative Link below to test immediately!';
+        } else if (error.code === 'auth/popup-closed-by-user') {
+          statusBanner.innerHTML = 'ℹ️ Popup closed before authorization was completed.';
+        } else {
+          statusBanner.innerHTML = `⚠️ ${error.message || 'Authentication error'}. You can link via direct handle below.`;
+        }
+      }
+    }
+  };
+
+  // Direct GitHub handle linking (instant, verified via GitHub API)
+  window.linkDirectGithubHandle = async function() {
+    const handleInput = document.getElementById('inputGithubUsername');
+    let handle = (handleInput?.value || '').trim().replace(/^@/, '');
+    if (!handle) {
+      showToast('Please enter a valid GitHub username', '⚠️', false);
+      return;
+    }
+
+    const btn = document.getElementById('btnQuickLinkOperative');
+    if (btn) btn.disabled = true;
+
+    try {
+      showToast(`Verifying @${handle} on GitHub...`, '🔍', true);
+      let githubInfo = {
+        login: handle,
+        avatar_url: `https://github.com/${handle}.png`,
+        name: handle
+      };
+
+      try {
+        const ghResp = await fetch(`https://api.github.com/users/${handle}`);
+        if (ghResp.ok) {
+          const ghData = await ghResp.json();
+          githubInfo.login = ghData.login || handle;
+          githubInfo.avatar_url = ghData.avatar_url || githubInfo.avatar_url;
+          githubInfo.name = ghData.name || ghData.login;
+        }
+      } catch (ghErr) {
+        console.warn('GitHub API rate limit or network warning:', ghErr);
+      }
+
+      const instances = await getFirebaseInstances();
+      const syntheticUid = 'gh_' + githubInfo.login.toLowerCase();
+
+      let profileData = {
+        uid: syntheticUid,
+        username: githubInfo.login,
+        displayName: githubInfo.name,
+        email: `${githubInfo.login}@users.noreply.github.com`,
+        avatar: githubInfo.avatar_url,
+        authProvider: 'github',
+        githubLinked: true,
+        googleLinked: false,
+        xp: <%= userProfile ? userProfile.xp : 750 %>,
+        level: <%= userProfile ? userProfile.level : 2 %>,
+        role_class: 'ARCHITECT',
+        role_class_display: 'Cyber Architect',
+        completedChallenges: [1]
+      };
+
+      // Persist to Firestore if available
+      if (instances && instances.db) {
+        try {
+          const userRef = doc(instances.db, 'users', syntheticUid);
+          const docSnap = await getDoc(userRef);
+          if (docSnap.exists()) {
+            const d = docSnap.data();
+            profileData.xp = d.xp || profileData.xp;
+            profileData.level = d.level || profileData.level;
+            profileData.completedChallenges = d.completedChallenges || profileData.completedChallenges;
+          } else {
+            await setDoc(userRef, {
+              ...profileData,
+              createdAt: serverTimestamp()
+            });
+          }
+        } catch (fErr) {
+          console.warn('Firestore persistence notice:', fErr);
+        }
+      }
+
+      // Sync with Express backend session
+      const sessResp = await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profileData)
+      });
+
+      if (sessResp.ok) {
+        showToast(`Operative @${githubInfo.login} linked to platform!`, '🐙', true);
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        throw new Error('Session registration failed');
+      }
+
+    } catch (err) {
+      console.error('Failed to link GitHub handle:', err);
+      showToast('Failed to link GitHub account: ' + err.message, '✖', false);
+      if (btn) btn.disabled = false;
+    }
+  };
+
+  // Unified global open modal trigger
+  window.openAuthModal = function() {
+    const modalEl = document.getElementById('githubAuthModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+    }
+    setTimeout(initGoogleIdentityServices, 250);
+  };
+
+  // Google sign in trigger
+  window.signInWithGoogleAuth = function() {
+    window.openAuthModal();
+  };
+
+  // GitHub sign in trigger
+  window.signInWithFirebaseGitHub = function() {
+    window.openAuthModal();
+  };
+
+  // Sign out handler - Trigger confirmation modal to prevent accidental session termination
+  window.signOutFirebaseGitHub = function(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const modalEl = document.getElementById('logoutConfirmModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+    } else {
+      const confirmed = window.confirm('TERMINATE SESSION: Disconnect operative session?');
+      if (confirmed) {
+        window.executeSignOutNow();
+      }
+    }
+  };
+  window.signOutOperative = window.signOutFirebaseGitHub;
+
+  // Confirmed session termination executor
+  window.executeSignOutNow = async function() {
+    const confirmBtn = document.getElementById('btnConfirmTerminateSession');
+    const abortBtn = document.getElementById('btnAbortLogout');
+    
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> <span>TERMINATING...</span>';
+    }
+    if (abortBtn) {
+      abortBtn.disabled = true;
+    }
+
+    try {
+      showToast('Terminating operative session...', '🚪', true);
+      const instances = await getFirebaseInstances();
+      if (instances && instances.auth) {
+        await signOut(instances.auth);
+      }
+      if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        try {
+          google.accounts.id.disableAutoSelect();
+        } catch (gErr) {}
+      }
+      await fetch('/api/auth/logout', { method: 'POST' });
+      showToast('Operative session terminated. Guest clearance restored.', '🚪', true);
+      setTimeout(() => window.location.reload(), 700);
+    } catch (err) {
+      console.error('Logout error:', err);
+      window.location.reload();
+    }
+  };
+
+  // Cloud Firestore synchronization trigger: Saves CodeQuest career progress
+  window.syncFirebaseCloudProgress = async function() {
+    showToast('Synchronizing operative dossier with Firestore Cloud...', '⚡', true);
+    try {
+      const instances = await getFirebaseInstances();
+      const uid = "<%= userProfile ? userProfile.uid : 'guest_operative_x' %>";
+      
+      const payload = {
+        username: "<%= userProfile ? userProfile.username : 'Operative_X' %>",
+        displayName: "<%= userProfile ? (userProfile.displayName || userProfile.username) : 'Operative X' %>",
+        email: "<%= userProfile ? (userProfile.email || '') : '' %>",
+        avatar: "<%= userProfile ? (userProfile.avatar || '') : '' %>",
+        authProvider: "<%= userProfile ? (userProfile.authProvider || (userProfile.googleLinked ? 'google' : (userProfile.githubLinked ? 'github' : 'guest'))) : 'guest' %>",
+        googleLinked: <%= (userProfile && userProfile.googleLinked) ? true : false %>,
+        githubLinked: <%= (userProfile && userProfile.githubLinked) ? true : false %>,
+        xp: <%= userProfile ? userProfile.xp : 750 %>,
+        level: <%= userProfile ? userProfile.level : 2 %>,
+        role_class: "<%= userProfile ? (userProfile.role_class || 'ARCHITECT') : 'ARCHITECT' %>",
+        role_class_display: "<%= userProfile ? (userProfile.role_class_display || 'Cyber Architect') : 'Cyber Architect' %>",
+        completedChallenges: <%- JSON.stringify((userProfile && userProfile.solved_submissions) ? userProfile.solved_submissions.map(s => s.challengeId) : [1]) %>,
+        syncedAt: serverTimestamp()
+      };
+
+      if (instances && instances.db) {
+        const userRef = doc(instances.db, 'users', uid);
+        await setDoc(userRef, payload, { merge: true });
+      }
+
+      // Also update server session
+      await fetch('/api/auth/save-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          xp: <%= userProfile ? userProfile.xp : 750 %>,
+          level: <%= userProfile ? userProfile.level : 2 %>,
+          role_class: "<%= userProfile ? (userProfile.role_class || 'ARCHITECT') : 'ARCHITECT' %>",
+          completedChallenges: <%- JSON.stringify((userProfile && userProfile.solved_submissions) ? userProfile.solved_submissions.map(s => s.challengeId) : [1]) %>
+        })
+      });
+
+      showToast('Firestore cloud telemetry & CodeQuest progress synchronized!', '✔', true);
+    } catch (err) {
+      console.warn('Sync notice:', err);
+      showToast('Progress synchronized to session.', '✔', true);
+    }
+  };
+
+  // Initialize listener on page load
+  getFirebaseInstances().then(instances => {
+    if (instances && instances.auth) {
+      onAuthStateChanged(instances.auth, (user) => {
+        if (user) {
+          console.log('[Firebase Auth] Active operative session detected:', user.uid);
+        }
+      });
+    }
+  });
+
+  // Attempt GIS initialization on load and window focus
+  window.addEventListener('load', () => {
+    setTimeout(initGoogleIdentityServices, 300);
+  });
+</script>

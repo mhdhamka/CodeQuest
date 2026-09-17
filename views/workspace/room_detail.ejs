@@ -1,0 +1,2436 @@
+<%- include('../partials/header', { title: 'Multiplayer CRDT Session // ' + room.name }) %>
+<%- include('../partials/navbar', { activeNav: 'workspace' }) %>
+
+<!-- Monaco Editor Styles & Loader CDN -->
+<link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/editor/editor.main.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+
+<style>
+  #monacoEditorMount {
+    width: 100%;
+    height: 440px;
+    background-color: #070b12;
+  }
+  .monaco-editor, .monaco-editor .overflow-guard {
+    border-radius: 4px 4px 0 0 !important;
+  }
+  /* Cyberpunk Monaco Status Bar */
+  .monaco-status-bar {
+    background-color: #06090e;
+    border: 1px solid #1c2638;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    color: #8191a6;
+    font-size: 11px;
+    font-family: var(--cyber-font-mono);
+    user-select: none;
+  }
+  .monaco-status-bar .status-item {
+    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .monaco-status-bar .status-item:hover {
+    background: rgba(0, 240, 255, 0.08);
+    color: #00f0ff;
+  }
+  /* Remote Peer Cursor Marker in Monaco */
+  .peer-remote-cursor-line {
+    border-left: 2px solid #ffe600 !important;
+    position: relative;
+  }
+  .peer-cursor-glyph-marker {
+    background: #ffe600;
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50%;
+    margin-top: 6px;
+    margin-left: 4px;
+    box-shadow: 0 0 6px #ffe600;
+  }
+  .monaco-toolbar-select {
+    background-color: #0b0f17 !important;
+    border: 1px solid #21262d !important;
+    color: #00e5ff !important;
+    font-family: var(--cyber-font-mono) !important;
+    font-size: 0.75rem !important;
+    height: 28px !important;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  .monaco-toolbar-select:focus {
+    border-color: #00e5ff !important;
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.3) !important;
+  }
+  /* Mission Urgency Countdown Styles */
+  @keyframes criticalPulse {
+    0% {
+      box-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
+      border-color: #ff0055;
+    }
+    50% {
+      box-shadow: 0 0 28px rgba(255, 0, 85, 0.9);
+      border-color: #ff3377;
+    }
+    100% {
+      box-shadow: 0 0 10px rgba(255, 0, 85, 0.4);
+      border-color: #ff0055;
+    }
+  }
+  @keyframes textGlowRed {
+    0%, 100% {
+      color: #ff0055;
+      text-shadow: 0 0 10px rgba(255, 0, 85, 0.85);
+    }
+    50% {
+      color: #ffffff;
+      text-shadow: 0 0 20px rgba(255, 0, 85, 1);
+    }
+  }
+  .timer-critical-pulse {
+    animation: criticalPulse 1s infinite ease-in-out !important;
+  }
+  .timer-critical-text {
+    animation: textGlowRed 0.8s infinite ease-in-out !important;
+  }
+</style>
+
+<div class="container-fluid my-4 px-4">
+  
+  <!-- Top Navigation / Portal Status Bar -->
+  <div class="d-flex justify-content-between align-items-center p-3 mb-4 rounded font-monospace" style="background-color: #0d1117; border: 1px solid #00e5ff; box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);">
+    <div class="d-inline-flex align-items-center flex-wrap gap-2">
+      <a href="/workspace/" class="btn btn-sm btn-outline-info" style="color: #00e5ff; border-color: #00e5ff;">// WORKSPACE_INDEX_ARENA</a>
+      <span class="text-muted">|</span>
+      <span class="text-info small fw-bold font-monospace text-uppercase tracking-wider d-inline-flex align-items-center gap-2">
+        <span class="spinner-grow spinner-grow-sm text-info" role="status" style="width: 0.5rem; height: 0.5rem;"></span>
+        ARENA_PORTAL_ONLINE [v4.2]
+      </span>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap justify-content-end">
+      <!-- Classroom Mode Toggle (Replit-Inspired) -->
+      <button class="btn btn-sm btn-outline-warning font-monospace" id="lockModeBtn">
+        [ HOST_MODE: UNLOCKED ]
+      </button>
+      <a href="/workspace/rooms/<%= room.id %>/edit/" class="btn btn-sm btn-outline-warning" style="border-color: #ffb700; color: #ffb700;">[ EDIT ROOM ]</a>
+      <a href="/projects/profile/" class="btn btn-sm btn-outline-secondary">[ PLAYER_DOSSIER ]</a>
+    </div>
+  </div>
+
+  <!-- Section Header and Big Title -->
+  <div class="text-center mb-4">
+    <div class="mb-2">
+      <span class="badge bg-black rounded-pill px-3 py-2 font-monospace small shadow-sm" style="color: #00e5ff; border: 1px solid #00e5ff; box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);">
+        // MULTIPLAYER_CRDT_SESSION ACTIVE
+      </span>
+    </div>
+    <h1 class="text-white fw-bold font-monospace tracking-wide display-6" style="text-shadow: 0 0 12px rgba(0, 229, 255, 0.4);">
+      <%= room.name %>
+    </h1>
+    <p class="text-muted small font-monospace mt-1">
+      [ROOM ID: <%= room.id %>] — Monaco Real-Time Collaborative Code Environment Active
+    </p>
+
+    <% if (room.description) { %>
+      <p class="text-light font-monospace mt-2 mx-auto" style="max-width: 700px; font-size: 0.9rem; line-height: 1.5;">
+        <%= room.description %>
+      </p>
+    <% } %>
+
+    <% if (room.focus) { %>
+      <div class="mt-2">
+        <span class="badge bg-black border border-warning text-warning px-3 py-1 font-monospace" style="font-size: 0.75rem;">
+          // FOCUS: <%= room.focus %>
+        </span>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Main Room Dashboard Grid Layout -->
+  <div class="row g-4">
+    
+    <!-- Left Column: Real-Time Monaco Code Editor & Container Sandbox -->
+    <div class="col-lg-8">
+      <div class="card text-white shadow-lg p-3 h-100" id="editorCardContainer" style="background-color: #0d1117 !important; border: 1px solid #00e5ff; box-shadow: 0 0 15px rgba(0, 229, 255, 0.2) !important; transition: border-color 0.3s ease, box-shadow 0.3s ease;">
+        
+        <!-- Editor Header with Presence Counter -->
+        <div class="d-flex align-items-center justify-content-between mb-2 font-monospace small border-bottom pb-2 flex-wrap gap-2" style="border-color: #21262d !important;">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge bg-black px-2 py-1" id="syncStatusBadge" style="color: #00e5ff; border: 1px solid #00e5ff;">
+              🟢 FIREBASE_SYNC: CONNECTING...
+            </span>
+            <span class="badge bg-black px-2 py-1 text-warning border border-warning d-none" id="peerTypingBadge">
+              ⚡ Remote edit synced
+            </span>
+            <span class="text-muted" id="activePeersCount">// 2 PEERS CONNECTED</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-warning small"> Branch: <code class="text-info">main-feature</code></span>
+          </div>
+        </div>
+
+        <!-- Cyberpunk Target Challenge Selection & Mission Intel Bar -->
+        <div class="p-2 mb-2 rounded font-monospace" style="background-color: #0c121e; border: 1px solid #ff4466; box-shadow: 0 0 12px rgba(255, 68, 102, 0.2);">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap flex-grow-1">
+              <span class="badge bg-danger text-black fw-bold px-2 py-1 small">MISSION TARGET:</span>
+              <div class="input-group input-group-sm" style="min-width: 270px; max-width: 420px;">
+                <label class="input-group-text bg-black border-secondary text-danger small py-0 px-2" for="challengeSelect">
+                  <span>🎯</span>
+                </label>
+                <select class="form-select monaco-toolbar-select bg-black text-light border-secondary pe-4" id="challengeSelect">
+                  <% (challenges || []).forEach((c, idx) => { %>
+                    <option value="<%= c.id %>" <%= idx === 0 ? 'selected' : '' %>>
+                      #<%= c.id %>: <%= c.title %> [<%= c.difficulty %> // +<%= c.xp_reward %> XP]
+                    </option>
+                  <% }); %>
+                </select>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-info font-monospace py-0 px-2 d-flex align-items-center gap-1" id="toggleMissionBriefBtn" style="height: 28px; font-size: 0.72rem;">
+                📖 Mission Intel &amp; Tests (<span id="testCaseCountBadge">4</span>) ▾
+              </button>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <button type="button" class="btn btn-sm btn-outline-warning font-monospace py-0 px-2" id="loadChallengeStarterBtn" style="height: 28px; font-size: 0.72rem;" title="Load challenge template into editor buffer">
+                📥 Load Challenge Skeleton
+              </button>
+              <span class="badge bg-black border border-secondary text-muted px-2 py-1" id="challengeStatusBadge">
+                UNSOLVED
+              </span>
+            </div>
+          </div>
+
+          <!-- Expandable Mission Intel & Predefined Test Suite Drawer -->
+          <div id="missionBriefDrawer" class="mt-2 pt-2 border-top border-secondary small d-none" style="background: rgba(4, 7, 14, 0.85); border-radius: 4px; padding: 10px;">
+            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+              <div>
+                <span class="text-danger fw-bold" id="briefChallengeCategory">Injection &amp; Database Security</span>
+                <span class="text-muted mx-1">|</span>
+                <span class="badge bg-black border border-danger text-danger" id="briefChallengeDiff">EASY</span>
+                <span class="badge bg-black border border-warning text-warning ms-1" id="briefChallengeReward">+150 XP</span>
+              </div>
+              <span class="text-muted" style="font-size: 0.7rem;">// PREDEFINED TEST SUITE VERIFICATION</span>
+            </div>
+            <p class="text-light mb-2" id="briefChallengeDesc" style="font-size: 0.8rem; line-height: 1.5;"></p>
+            <div class="p-2 mb-2 rounded bg-black border border-warning font-monospace text-warning" style="font-size: 0.75rem;" id="briefChallengeInstructions"></div>
+            
+            <!-- Predefined Test Cases Grid Preview -->
+            <div class="mt-2">
+              <div class="text-info fw-bold mb-1" style="font-size: 0.72rem;">🧪 PREDEFINED TEST CASES TO SATISFY:</div>
+              <div class="row g-2" id="briefTestCasesList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cyberpunk Mission Urgency Visual Countdown Timer Bar -->
+        <div id="missionTimerBar" class="p-2 mb-2 rounded font-monospace" style="background-color: #0b0f19; border: 1px solid #00e5ff; box-shadow: 0 0 14px rgba(0, 229, 255, 0.15); transition: all 0.3s ease;">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <!-- Left: Digital Clock Display & Urgency Level -->
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <div class="d-flex align-items-center gap-2">
+                <span class="text-muted small fw-bold tracking-wider">// MISSION CLOCK:</span>
+                <span id="countdownClockDisplay" class="fs-4 fw-bold text-info px-3 py-0 rounded bg-black border border-info font-monospace shadow-sm" style="letter-spacing: 2px; min-width: 96px; text-align: center; text-shadow: 0 0 8px rgba(0, 229, 255, 0.6); display: inline-block;">
+                  05:00
+                </span>
+              </div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="badge bg-black border border-info text-info px-2 py-1 small" id="timerUrgencyStatusBadge">
+                  ⏱️ TIMER READY
+                </span>
+                <span class="badge bg-black border border-secondary text-muted px-2 py-1 small" id="timerChallengeLimitInfo">
+                  Limit: 5m 00s
+                </span>
+              </div>
+            </div>
+
+            <!-- Right: Timer Controls & Sound Toggle -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <button type="button" class="btn btn-sm btn-outline-info font-monospace py-0 px-2 d-flex align-items-center gap-1" id="timerToggleBtn" style="height: 28px; font-size: 0.72rem;">
+                ▶ START MISSION CLOCK
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-warning font-monospace py-0 px-2 d-flex align-items-center gap-1" id="timerResetBtn" style="height: 28px; font-size: 0.72rem;" title="Restart countdown timer for active challenge">
+                🔄 RESTART TIMER
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary font-monospace py-0 px-2 d-flex align-items-center gap-1" id="timerSoundToggleBtn" style="height: 28px; font-size: 0.72rem;" title="Toggle urgency audio beeps">
+                🔊 SOUND: ON
+              </button>
+            </div>
+          </div>
+
+          <!-- Linear Urgency Progress Meter -->
+          <div class="progress mt-2" style="height: 6px; background-color: #04070e; border: 1px solid #1c2638; border-radius: 3px;">
+            <div id="countdownProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 100%; transition: width 0.8s linear, background-color 0.4s ease;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+        </div>
+
+        <!-- Interactive Monaco Editor Control Toolbar -->
+        <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded font-monospace flex-wrap gap-2" style="background-color: #080c14; border: 1px solid #1c2638;">
+          <!-- Left: Tab Pill & Language & Theme Dropdowns -->
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge bg-black border border-info text-info px-2 py-1 small d-flex align-items-center gap-1 shadow-sm" id="activeFileTab">
+              <span>⚡</span> <span id="activeFileName">solution.py</span>
+            </span>
+
+            <div class="input-group input-group-sm" style="width: auto;">
+              <label class="input-group-text bg-black border-secondary text-muted small py-0 px-2" for="languageSelect">
+                <span class="text-info">LANG:</span>
+              </label>
+              <select class="form-select monaco-toolbar-select pe-4" id="languageSelect">
+                <option value="python" selected>Python 3.11</option>
+                <option value="javascript">JavaScript (Node.js)</option>
+                <option value="typescript">TypeScript</option>
+                <option value="sql">SQL (Postgres)</option>
+                <option value="cpp">C++ (GCC)</option>
+                <option value="shell">Bash / Shell</option>
+                <option value="html">HTML5 / Web</option>
+              </select>
+            </div>
+
+            <div class="input-group input-group-sm" style="width: auto;">
+              <label class="input-group-text bg-black border-secondary text-muted small py-0 px-2" for="themeSelect">
+                <span class="text-warning">THEME:</span>
+              </label>
+              <select class="form-select monaco-toolbar-select pe-4" id="themeSelect">
+                <option value="cyberpunk-neon" selected>Cyberpunk Neon</option>
+                <option value="vs-dark">VS Dark+</option>
+                <option value="hc-black">High Contrast</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Right: Editor Action Controls (Font Zoom, Minimap, Format, Copy, Reset) -->
+          <div class="d-flex align-items-center gap-1 flex-wrap">
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-secondary py-0 px-2 text-light font-monospace" id="btnFontDec" title="Zoom Out Code" style="font-size: 0.72rem; height: 28px;">A-</button>
+              <button type="button" class="btn btn-outline-secondary py-0 px-2 text-light font-monospace" id="btnFontInc" title="Zoom In Code" style="font-size: 0.72rem; height: 28px;">A+</button>
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 text-light font-monospace" id="btnToggleMinimap" title="Toggle Minimap View" style="font-size: 0.72rem; height: 28px;">
+              🗺️ Minimap: ON
+            </button>
+            <button type="button" class="btn btn-outline-info btn-sm py-0 px-2 font-monospace" id="btnFormatCode" title="Format Buffer (Shift+Alt+F)" style="font-size: 0.72rem; height: 28px;">
+              ⚡ Format
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 font-monospace text-light" id="btnCopyCode" title="Copy Buffer to Clipboard" style="font-size: 0.72rem; height: 28px;">
+              📋 Copy
+            </button>
+            <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2 font-monospace" id="btnResetBuffer" title="Reset to Starter Template" style="font-size: 0.72rem; height: 28px;">
+              ↺ Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- GitLive-Inspired Conflict Warning Banner -->
+        <div id="conflictAlertBanner" class="alert alert-danger py-2 px-3 font-monospace small mb-2 d-none" style="background-color: #2d1114; border-color: #f85149; color: #ff7b72;">
+          <strong>MERGE CONFLICT DETECTED:</strong> Peer <code>@developer_b</code> modified lines concurrently. Resolve before committing.
+        </div>
+
+        <!-- Classroom Lock Alert Banner -->
+        <div id="classroomLockBanner" class="alert alert-warning py-2 px-3 font-monospace small mb-2 d-none" style="background-color: #2d2611; border-color: #ffb700; color: #ffe600;">
+          🔒 <strong>CLASSROOM MODE ACTIVE:</strong> The host has temporarily locked the Monaco editing buffer for all students.
+        </div>
+
+        <!-- Monaco Editor Mount Container -->
+        <div class="position-relative border border-secondary rounded-top bg-black font-monospace" style="overflow: hidden; min-height: 440px; box-shadow: inset 0 0 25px rgba(0,0,0,0.9);">
+          
+          <!-- Monaco Mount Div -->
+          <div id="monacoEditorMount"></div>
+
+          <!-- Loading Spinner Overlay -->
+          <div id="monacoLoading" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-black bg-opacity-95 font-monospace text-info z-3">
+            <div class="spinner-border spinner-border-sm text-info mb-2" role="status" style="width: 1.8rem; height: 1.8rem;"></div>
+            <div class="small fw-bold tracking-wider">// INITIALIZING MONACO RUNTIME ENGINE...</div>
+            <div class="text-muted small mt-1" style="font-size: 0.72rem;">Mounting VS Code syntax tokenizers, CRDT sync socket & peer presence</div>
+          </div>
+
+          <!-- Fallback textarea -->
+          <textarea id="roomScratchpad" class="d-none"></textarea>
+        </div>
+
+        <!-- Monaco VS Code-Style Status Bar -->
+        <div class="monaco-status-bar d-flex justify-content-between align-items-center px-2 py-1 mb-3 flex-wrap">
+          <div class="d-flex align-items-center flex-wrap">
+            <span class="status-item text-info fw-bold" id="statusPos">Ln 1, Col 1</span>
+            <span class="status-item text-muted" id="statusSelection">0 sel</span>
+            <span class="status-item text-light" id="statusLength">0 lines, 0 chars</span>
+            <span class="status-item text-warning d-none" id="statusPeerActive">
+              <span class="spinner-grow spinner-grow-sm text-warning me-1" style="width: 0.4rem; height: 0.4rem;"></span>
+              <span id="statusPeerText">Peer typing...</span>
+            </span>
+          </div>
+          <div class="d-flex align-items-center flex-wrap">
+            <span class="status-item" id="statusSpaces">Spaces: 4</span>
+            <span class="status-item" id="statusEncoding">UTF-8</span>
+            <span class="status-item text-info" id="statusLangName">Python 3.11</span>
+            <span class="status-item text-success fw-bold" id="statusLockBadge">🔓 HOST: UNLOCKED</span>
+          </div>
+        </div>
+
+        <!-- Action Controls for Container Sandbox, Buffer & Monaco Challenge Submission -->
+        <div class="d-flex justify-content-between align-items-center mb-3 font-monospace flex-wrap gap-2">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge bg-dark text-light border border-secondary" id="activeRuntimeBadge">Runtime: Python 3.11</span>
+            <span class="badge bg-black border border-info text-info small" id="charCountBadge">0 chars</span>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-sm btn-outline-info font-monospace" id="manualSyncBtn">
+              [ MANUAL SYNC ]
+            </button>
+            <button class="btn btn-sm fw-bold font-monospace shadow" id="runContainerBtn" style="background-color: #00e5ff; color: #000; border: none;">
+              ▶ [ RUN CONTAINER ]
+            </button>
+            <button class="btn btn-sm fw-bold font-monospace shadow text-black" id="submitMonacoChallengeBtn" style="background-color: #00ff66; border: none; box-shadow: 0 0 14px rgba(0, 255, 102, 0.45) !important;">
+              🚀 [ VALIDATE &amp; SUBMIT ]
+            </button>
+          </div>
+        </div>
+
+        <!-- Output / Execution Container Console & Predefined Test Runner Tabs -->
+        <div class="mt-auto pt-2 border-top" style="border-color: #21262d !important;">
+          <!-- Tab Navigation -->
+          <div class="d-flex justify-content-between align-items-center mb-2 font-monospace small flex-wrap gap-2">
+            <div class="btn-group btn-group-sm" role="group">
+              <button type="button" class="btn btn-outline-warning active py-1 px-3" id="tabContainerLogsBtn">
+                ☁️ CONTAINER LOGS
+              </button>
+              <button type="button" class="btn btn-outline-info py-1 px-3 position-relative" id="tabTestRunnerBtn">
+                🧪 TEST RUNNER SUITE <span class="badge bg-black border border-info ms-1" id="testRunnerTabBadge">Ready</span>
+              </button>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted small" id="testSuiteSummaryStatus">0/4 Tests Executed</span>
+              <button class="btn btn-link text-muted p-0 text-decoration-none small font-monospace" id="clearConsoleBtn">Clear Logs</button>
+            </div>
+          </div>
+
+          <!-- Panel 1: Shared Container Logs -->
+          <div id="containerLogsPanel" class="p-2 bg-black border border-secondary rounded font-monospace small text-light" style="height: 160px; overflow-y: auto; background-color: #000 !important;">
+            <span class="text-muted">&gt; Ephemeral container sandbox initialized. Press [RUN CONTAINER] or [VALIDATE &amp; SUBMIT] to test your code buffer...</span><br>
+          </div>
+
+          <!-- Panel 2: Predefined Test Runner Suite Output -->
+          <div id="testRunnerPanel" class="p-3 bg-black border border-info rounded font-monospace small text-light d-none" style="height: 220px; overflow-y: auto; background-color: #05080f !important; box-shadow: inset 0 0 15px rgba(0, 229, 255, 0.1);">
+            <div id="testRunnerEmptyState" class="d-flex flex-column align-items-center justify-content-center h-100 text-muted text-center p-3">
+              <div style="font-size: 1.6rem;" class="mb-1">🧪</div>
+              <div class="fw-bold text-info mb-1">// PREDEFINED TEST SUITE RUNNER READY</div>
+              <div class="small">Click <span class="text-success fw-bold">[VALIDATE &amp; SUBMIT]</span> to test the Monaco editor buffer against the selected challenge's predefined test cases.</div>
+            </div>
+            
+            <div id="testRunnerLoadingState" class="d-flex flex-column align-items-center justify-content-center h-100 text-info text-center d-none">
+              <div class="spinner-border spinner-border-sm text-info mb-2" role="status"></div>
+              <div class="fw-bold tracking-wider">// VALIDATING CODE BUFFER AGAINST TEST SUITE...</div>
+              <div class="text-muted small mt-1" id="testRunnerProgressText">Executing functional checks, security exploit payloads, and boundary conditions...</div>
+            </div>
+
+            <div id="testRunnerResultsContainer" class="d-none">
+              <!-- Summary Header will be injected here -->
+              <div id="testResultsSummaryHeader" class="mb-2"></div>
+              <!-- Test Cases List will be injected here -->
+              <div id="testCasesResultsList" class="d-flex flex-column gap-2"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right Column: Roster, WebRTC Audio Huddle & Room Telemetry -->
+    <div class="col-lg-4">
+      <div class="card text-white shadow-lg p-3 h-100" style="background-color: #0d1117 !important; border: 1px solid #00e5ff; box-shadow: 0 0 15px rgba(0, 229, 255, 0.2) !important;">
+        
+        <!-- WebRTC Audio Huddle Widget (Voice Chat) -->
+        <div class="mb-3 p-2 rounded border border-info bg-black font-monospace">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-info small fw-bold">🎙️ VOICE HUDDLE (P2P)</span>
+            <span class="badge bg-success text-black small" id="huddleStatus">OFF</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-success w-100 font-monospace py-1" id="joinHuddleBtn" style="font-size: 0.75rem;">
+              [ JOIN AUDIO ]
+            </button>
+            <button class="btn btn-sm btn-outline-danger font-monospace py-1 px-2" id="muteMicBtn" title="Mute Mic" style="font-size: 0.75rem;">
+              🔇
+            </button>
+          </div>
+        </div>
+
+        <!-- Participants List (Roster) -->
+        <div class="d-flex align-items-center justify-content-between mb-2 font-monospace small border-bottom pb-2" style="border-color: #21262d !important;">
+          <span class="text-warning fw-bold">TEAM ROSTER & PRESENCE</span>
+          <span class="badge bg-black text-warning border border-warning" id="rosterCountBadge">2 ONLINE</span>
+        </div>
+
+        <div class="font-monospace small mb-3" id="rosterList">
+          <div class="d-flex align-items-center justify-content-between p-2 bg-black rounded border border-secondary mb-2">
+            <span class="text-light">🟢 You (<%= userProfile ? userProfile.username : 'Operative_X' %>)</span>
+            <span class="text-success small fw-bold">HOST</span>
+          </div>
+          <div class="d-flex align-items-center justify-content-between p-2 bg-black rounded border border-secondary text-light">
+            <span id="peerNameDisplay">🔵 Peer @developer_b</span>
+            <span class="text-info small" id="peerStatusDisplay">SYNCED</span>
+          </div>
+        </div>
+
+        <!-- Room Challenge Mission Progress Widget -->
+        <div class="mb-3 p-2 rounded border border-danger bg-black font-monospace">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-danger small fw-bold">// MISSION INTEL HUD</span>
+            <span class="badge bg-black border border-info text-info" id="sidebarChallengeDiff">EASY</span>
+          </div>
+          <div class="text-light small fw-bold text-truncate" id="sidebarChallengeTitle">#1: SQL Injection</div>
+          <div class="d-flex justify-content-between align-items-center mt-2 small">
+            <span class="text-muted">Target Reward:</span>
+            <span class="text-warning fw-bold" id="sidebarChallengeXp">+150 XP</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-1 small">
+            <span class="text-muted">Predefined Tests:</span>
+            <span class="text-info fw-bold" id="sidebarTestCount">4 Test Cases</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-1 small">
+            <span class="text-muted">Clock Countdown:</span>
+            <span class="text-info fw-bold" id="sidebarTimeRemaining">05:00</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-1 small">
+            <span class="text-muted">Time Limit:</span>
+            <span class="text-muted" id="sidebarTimeLimit">5m 00s</span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-1 small">
+            <span class="text-muted">Mission Status:</span>
+            <span class="text-warning" id="sidebarStatusText">UNSOLVED</span>
+          </div>
+        </div>
+
+        <!-- GitLive Gutter Status Tracker Widget -->
+        <div class="mb-3 p-2 rounded border border-secondary bg-black font-monospace">
+          <span class="text-muted small d-block mb-1">// BRANCH CONFLICT MONITOR</span>
+          <div class="d-flex justify-content-between align-items-center small text-light">
+            <span>Unmerged changes:</span>
+            <span class="text-success" id="conflictStatusText">0 Conflicts</span>
+          </div>
+          <button class="btn btn-sm btn-outline-warning w-100 mt-2 font-monospace py-1" id="scanConflictBtn" style="font-size: 0.7rem;">
+            [ RUN CONFLICT SCAN ]
+          </button>
+        </div>
+
+        <!-- System Logs / Telemetry Box -->
+        <div class="mb-3">
+          <span class="text-muted small font-monospace d-block mb-1">// TELEMETRY LOGS</span>
+          <div id="telemetryBox" class="p-2 bg-black border border-secondary rounded text-start text-muted small font-monospace" style="max-height: 110px; overflow-y: auto; font-size: 0.75rem;">
+            <code>&gt; WebSocket handshake OK.<br>&gt; Initializing Firebase synchronized database listener...</code>
+          </div>
+        </div>
+
+        <!-- Action Control Buttons -->
+        <div class="d-grid gap-2 mt-auto font-monospace">
+          <button class="btn btn-sm fw-bold py-2" id="shareInviteBtn" style="background-color: #00e5ff; color: #000; border: none;">
+            [ SHARE INVITE LINK ]
+          </button>
+          <a href="/workspace/" class="btn btn-sm btn-outline-secondary">
+            ← Return to Workspace Index
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Firebase Modular SDK & Monaco Real-Time Collaborative Engine -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js';
+  import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js';
+
+  // State
+  const roomId = "<%= room.id %>";
+  const currentUser = "<%= userProfile ? userProfile.username : 'Operative_X' %>";
+  const scratchpad = document.getElementById('roomScratchpad');
+  const syncBadge = document.getElementById('syncStatusBadge');
+  const peerTypingBadge = document.getElementById('peerTypingBadge');
+  const consoleOutput = document.getElementById('containerLogsPanel') || document.getElementById('consoleOutput');
+  const telemetryBox = document.getElementById('telemetryBox');
+  const editorCard = document.getElementById('editorCardContainer');
+  const charCountBadge = document.getElementById('charCountBadge');
+  const lockModeBtn = document.getElementById('lockModeBtn');
+  const classroomLockBanner = document.getElementById('classroomLockBanner');
+  const peerStatusDisplay = document.getElementById('peerStatusDisplay');
+  const peerNameDisplay = document.getElementById('peerNameDisplay');
+  const monacoLoading = document.getElementById('monacoLoading');
+  const activeFileName = document.getElementById('activeFileName');
+  const languageSelect = document.getElementById('languageSelect');
+  const themeSelect = document.getElementById('themeSelect');
+  const statusPos = document.getElementById('statusPos');
+  const statusSelection = document.getElementById('statusSelection');
+  const statusLength = document.getElementById('statusLength');
+  const statusPeerActive = document.getElementById('statusPeerActive');
+  const statusPeerText = document.getElementById('statusPeerText');
+  const statusLangName = document.getElementById('statusLangName');
+  const statusLockBadge = document.getElementById('statusLockBadge');
+  const activeRuntimeBadge = document.getElementById('activeRuntimeBadge');
+
+  // Challenge Selection & Test Runner DOM References
+  const challengeSelect = document.getElementById('challengeSelect');
+  const toggleMissionBriefBtn = document.getElementById('toggleMissionBriefBtn');
+  const loadChallengeStarterBtn = document.getElementById('loadChallengeStarterBtn');
+  const challengeStatusBadge = document.getElementById('challengeStatusBadge');
+  const missionBriefDrawer = document.getElementById('missionBriefDrawer');
+  const briefChallengeCategory = document.getElementById('briefChallengeCategory');
+  const briefChallengeDiff = document.getElementById('briefChallengeDiff');
+  const briefChallengeReward = document.getElementById('briefChallengeReward');
+  const briefChallengeDesc = document.getElementById('briefChallengeDesc');
+  const briefChallengeInstructions = document.getElementById('briefChallengeInstructions');
+  const briefTestCasesList = document.getElementById('briefTestCasesList');
+  const testCaseCountBadge = document.getElementById('testCaseCountBadge');
+  const submitMonacoChallengeBtn = document.getElementById('submitMonacoChallengeBtn');
+  const tabContainerLogsBtn = document.getElementById('tabContainerLogsBtn');
+  const tabTestRunnerBtn = document.getElementById('tabTestRunnerBtn');
+  const testRunnerTabBadge = document.getElementById('testRunnerTabBadge');
+  const testSuiteSummaryStatus = document.getElementById('testSuiteSummaryStatus');
+  const containerLogsPanel = document.getElementById('containerLogsPanel');
+  const testRunnerPanel = document.getElementById('testRunnerPanel');
+  const testRunnerEmptyState = document.getElementById('testRunnerEmptyState');
+  const testRunnerLoadingState = document.getElementById('testRunnerLoadingState');
+  const testRunnerResultsContainer = document.getElementById('testRunnerResultsContainer');
+  const testResultsSummaryHeader = document.getElementById('testResultsSummaryHeader');
+  const testCasesResultsList = document.getElementById('testCasesResultsList');
+  const sidebarChallengeDiff = document.getElementById('sidebarChallengeDiff');
+  const sidebarChallengeTitle = document.getElementById('sidebarChallengeTitle');
+  const sidebarChallengeXp = document.getElementById('sidebarChallengeXp');
+  const sidebarTestCount = document.getElementById('sidebarTestCount');
+  const sidebarStatusText = document.getElementById('sidebarStatusText');
+  const sidebarTimeRemaining = document.getElementById('sidebarTimeRemaining');
+  const sidebarTimeLimit = document.getElementById('sidebarTimeLimit');
+
+  // Mission Urgency Countdown Timer DOM Elements
+  const missionTimerBar = document.getElementById('missionTimerBar');
+  const countdownClockDisplay = document.getElementById('countdownClockDisplay');
+  const timerUrgencyStatusBadge = document.getElementById('timerUrgencyStatusBadge');
+  const timerChallengeLimitInfo = document.getElementById('timerChallengeLimitInfo');
+  const timerToggleBtn = document.getElementById('timerToggleBtn');
+  const timerResetBtn = document.getElementById('timerResetBtn');
+  const timerSoundToggleBtn = document.getElementById('timerSoundToggleBtn');
+  const countdownProgressBar = document.getElementById('countdownProgressBar');
+
+  // Challenges Dataset and Solved Set
+  const roomChallenges = <%- JSON.stringify(challenges || []) %>;
+  let userSolvedChallengeIds = new Set(<%- JSON.stringify((userProfile && userProfile.solved_submissions) ? userProfile.solved_submissions.filter(s => s.is_correct).map(s => s.challengeId) : []) %>);
+  let selectedChallenge = roomChallenges.length > 0 ? roomChallenges[0] : null;
+  let isSubmittingChallenge = false;
+  let lastSolvedTimestamp = 0;
+
+  // Countdown Timer State Variables
+  let timerTotalSeconds = selectedChallenge ? (selectedChallenge.time_limit_seconds || 300) : 300;
+  let timerSecondsRemaining = timerTotalSeconds;
+  let isTimerRunning = false;
+  let timerIntervalId = null;
+  let timerExpired = false;
+  let timerSoundEnabled = localStorage.getItem('codequest_timer_sound') !== 'false';
+  let lastTimerSyncTimestamp = 0;
+  let hasAlerted60s = false;
+  let hasAlerted30s = false;
+  let hasAlerted10s = false;
+
+  let codeEditor = null;
+  let isMonacoReady = false;
+  let isLocked = false;
+  let isHuddleActive = false;
+  let lastRemoteTimestamp = 0;
+  let syncDebounceTimeout = null;
+  let isApplyingRemoteEdit = false;
+  let isWritingLocal = false;
+  let broadcastChannel = null;
+  let peerCursorDecorations = [];
+  let currentFontSize = 14;
+  let isMinimapEnabled = true;
+
+  // Language Templates & Filename Mapping
+  const languageConfigs = {
+    python: {
+      filename: 'solution.py',
+      label: 'Python 3.11',
+      runtime: 'Python 3.11 Emulation',
+      template: `# Room: <%= room.name %>
+# Real-time multi-user collaborative editing active.
+
+def compute_metrics():
+    # Changes typed in Monaco are broadcasted in real-time across all connected peers!
+    active_connections = 2
+    status = "SECURE"
+    return {"status": status, "nodes": active_connections}
+
+if __name__ == "__main__":
+    print(compute_metrics())
+`
+    },
+    javascript: {
+      filename: 'index.js',
+      label: 'JavaScript (Node.js)',
+      runtime: 'Node.js 22 LTS',
+      template: `// Room: <%= room.name %>
+// Real-time collaborative buffer (Node.js runtime)
+
+function computeMetrics() {
+    const activeConnections = 2;
+    const status = "SECURE";
+    return { status, nodes: activeConnections, timestamp: new Date().toISOString() };
+}
+
+console.log("Container metrics:", JSON.stringify(computeMetrics(), null, 2));
+`
+    },
+    typescript: {
+      filename: 'handler.ts',
+      label: 'TypeScript',
+      runtime: 'TypeScript 5.4 / Deno',
+      template: `// Room: <%= room.name %>
+// TypeScript Collaborative Environment
+
+interface NodeTelemetry {
+    status: "SECURE" | "COMPROMISED" | "INSPECTING";
+    nodes: number;
+    latencyMs: number;
+}
+
+const getTelemetry = (): NodeTelemetry => ({
+    status: "SECURE",
+    nodes: 2,
+    latencyMs: 18
+});
+
+console.log("[TELEMETRY]", getTelemetry());
+`
+    },
+    sql: {
+      filename: 'query.sql',
+      label: 'SQL (Postgres)',
+      runtime: 'PostgreSQL 16 Engine',
+      template: `-- Room: <%= room.name %>
+-- Real-time Collaborative SQL Query Buffer
+
+SELECT 
+    id, 
+    username, 
+    level, 
+    xp, 
+    status 
+FROM operatives 
+WHERE clearance_level >= 2 
+ORDER BY xp DESC 
+LIMIT 10;
+`
+    },
+    cpp: {
+      filename: 'main.cpp',
+      label: 'C++ (GCC)',
+      runtime: 'GCC 13.2 / Clang 17',
+      template: `// Room: <%= room.name %>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::cout << "[CYBER_CORE] Real-time collaborative buffer initialized.\\n";
+    std::cout << "[STATUS] 2 operatives synchronized.\\n";
+    return 0;
+}
+`
+    },
+    shell: {
+      filename: 'deploy.sh',
+      label: 'Bash / Shell',
+      runtime: 'Alpine Linux Container',
+      template: `#!/bin/bash
+# Room: <%= room.name %>
+echo "[SYSTEM] Ephemeral container execution starting..."
+uptime
+echo "[STATUS] Sandboxed environment running with unprivileged namespace."
+`
+    },
+    html: {
+      filename: 'preview.html',
+      label: 'HTML5 / Web',
+      runtime: 'Web Browser Preview',
+      template: `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title><%= room.name %> // Shared View</title>
+</head>
+<body style="background:#070b12; color:#00f0ff; font-family:monospace; padding:2rem;">
+  <h2>OPERATIVE HUD ACTIVE</h2>
+  <p>Real-time Monaco collaborative room buffer synced.</p>
+</body>
+</html>
+`
+    }
+  };
+
+  // Setup BroadcastChannel for instant local multi-tab sync
+  try {
+    broadcastChannel = new BroadcastChannel('codequest_room_' + roomId);
+    broadcastChannel.onmessage = (event) => {
+      if (!event.data) return;
+      if (event.data.type === 'code_update' && event.data.sender !== currentUser) {
+        handleRemoteCode(event.data.code, event.data.sender);
+      } else if (event.data.type === 'cursor_move' && event.data.sender !== currentUser) {
+        handleRemoteCursor(event.data);
+      } else if (event.data.type === 'container_run') {
+        appendConsoleLog(event.data.log);
+      } else if (event.data.type === 'lock_update') {
+        applyLockState(event.data.isLocked);
+      } else if (event.data.type === 'challenge_solved') {
+        appendConsoleLog(`<span class="text-success fw-bold">[MISSION ACCOMPLISHED] Peer @${event.data.solver} passed all ${event.data.testsTotal} test cases for Challenge #${event.data.challengeId}: ${event.data.challengeTitle}! (+${event.data.xpAwarded} XP)</span><br>`);
+        addTelemetry(`Peer @${event.data.solver} solved Challenge #${event.data.challengeId}!`);
+        if (selectedChallenge && selectedChallenge.id === event.data.challengeId) {
+          if (sidebarStatusText) {
+            sidebarStatusText.innerText = `SOLVED by @${event.data.solver}`;
+            sidebarStatusText.className = 'text-success fw-bold';
+          }
+        }
+      } else if (event.data.type === 'timer_sync') {
+        handleRemoteTimerSync(event.data);
+      }
+    };
+  } catch (e) {
+    console.log('BroadcastChannel fallback unavailable:', e);
+  }
+
+  function addTelemetry(msg) {
+    if (telemetryBox) {
+      const line = document.createElement('div');
+      line.innerHTML = `<code>&gt; ${msg}</code>`;
+      telemetryBox.appendChild(line);
+      telemetryBox.scrollTop = telemetryBox.scrollHeight;
+    }
+  }
+
+  function appendConsoleLog(logText) {
+    if (consoleOutput) {
+      consoleOutput.innerHTML += logText;
+      consoleOutput.scrollTop = consoleOutput.scrollHeight;
+    }
+  }
+
+  function flashEditorBorder() {
+    if (editorCard) {
+      editorCard.style.borderColor = '#00ff66';
+      editorCard.style.boxShadow = '0 0 25px rgba(0, 255, 102, 0.45)';
+      setTimeout(() => {
+        editorCard.style.borderColor = '#00e5ff';
+        editorCard.style.boxShadow = '0 0 15px rgba(0, 229, 255, 0.2)';
+      }, 500);
+    }
+  }
+
+  function updateStatusMetrics() {
+    if (!codeEditor) return;
+    const model = codeEditor.getModel();
+    if (!model) return;
+    
+    const lineCount = model.getLineCount();
+    const charCount = model.getValueLength();
+
+    if (statusLength) {
+      statusLength.innerText = `${lineCount} lines, ${charCount} chars`;
+    }
+    if (charCountBadge) {
+      charCountBadge.innerText = `${charCount} chars`;
+    }
+  }
+
+  function handleRemoteCode(newCode, lastEditor) {
+    if (newCode === undefined) return;
+    
+    const currentCode = codeEditor ? codeEditor.getValue() : scratchpad.value;
+    if (newCode === currentCode) return;
+
+    isApplyingRemoteEdit = true;
+    if (codeEditor) {
+      const prevPosition = codeEditor.getPosition();
+      codeEditor.setValue(newCode);
+      if (prevPosition) {
+        try {
+          codeEditor.setPosition(prevPosition);
+        } catch (e) {}
+      }
+      updateStatusMetrics();
+    }
+    scratchpad.value = newCode;
+    isApplyingRemoteEdit = false;
+
+    flashEditorBorder();
+
+    if (peerTypingBadge) {
+      peerTypingBadge.innerText = `⚡ ${lastEditor || 'Peer'} updated code`;
+      peerTypingBadge.classList.remove('d-none');
+      setTimeout(() => peerTypingBadge.classList.add('d-none'), 2500);
+    }
+
+    if (peerStatusDisplay) {
+      peerStatusDisplay.innerText = 'SYNCED';
+      peerStatusDisplay.className = 'text-success small fw-bold';
+    }
+    if (peerNameDisplay && lastEditor && lastEditor !== currentUser) {
+      peerNameDisplay.innerText = `🔵 Peer @${lastEditor}`;
+    }
+
+    addTelemetry(`[SYNC] Buffer synced from @${lastEditor || 'collaborator'} (${newCode.length} bytes)`);
+  }
+
+  function handleRemoteCursor(data) {
+    if (!codeEditor || !window.monaco) return;
+    const { sender, line, column } = data;
+    
+    // Highlight peer cursor position
+    try {
+      peerCursorDecorations = codeEditor.deltaDecorations(peerCursorDecorations, [
+        {
+          range: new window.monaco.Range(line, column, line, column),
+          options: {
+            className: 'peer-remote-cursor-line',
+            glyphMarginClassName: 'peer-cursor-glyph-marker',
+            hoverMessage: { value: `**@${sender}** active here` }
+          }
+        }
+      ]);
+    } catch (e) {}
+
+    // Show temporary typing presence in status bar
+    if (statusPeerActive && statusPeerText) {
+      statusPeerText.innerText = `@${sender} @ Ln ${line}, Col ${column}`;
+      statusPeerActive.classList.remove('d-none');
+      clearTimeout(statusPeerActive._timer);
+      statusPeerActive._timer = setTimeout(() => {
+        statusPeerActive.classList.add('d-none');
+      }, 3000);
+    }
+  }
+
+  function applyLockState(locked) {
+    isLocked = !!locked;
+    if (codeEditor) {
+      codeEditor.updateOptions({ readOnly: isLocked });
+    }
+    if (isLocked) {
+      scratchpad.setAttribute('readonly', 'true');
+      classroomLockBanner.classList.remove('d-none');
+      lockModeBtn.innerText = '[ CLASSROOM MODE: LOCKED ]';
+      lockModeBtn.className = 'btn btn-sm btn-danger font-monospace';
+      if (statusLockBadge) {
+        statusLockBadge.innerText = '🔒 HOST: LOCKED';
+        statusLockBadge.className = 'status-item text-danger fw-bold';
+      }
+    } else {
+      scratchpad.removeAttribute('readonly');
+      classroomLockBanner.classList.add('d-none');
+      lockModeBtn.innerText = '[ HOST_MODE: UNLOCKED ]';
+      lockModeBtn.className = 'btn btn-sm btn-outline-warning font-monospace';
+      if (statusLockBadge) {
+        statusLockBadge.innerText = '🔓 HOST: UNLOCKED';
+        statusLockBadge.className = 'status-item text-success fw-bold';
+      }
+    }
+  }
+
+  // Push local edits to Firebase + BroadcastChannel
+  function broadcastLocalEdit() {
+    if (isApplyingRemoteEdit) return;
+    isWritingLocal = true;
+    syncBadge.innerText = '⚡ SYNCING...';
+    syncBadge.style.color = '#ffe600';
+    syncBadge.style.borderColor = '#ffe600';
+
+    const code = codeEditor ? codeEditor.getValue() : scratchpad.value;
+    scratchpad.value = code;
+    localStorage.setItem('room_buffer_' + roomId, code);
+
+    // Broadcast immediately across same-browser tabs
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'code_update',
+        code: code,
+        sender: currentUser
+      });
+    }
+
+    if (roomDocRef) {
+      setDoc(roomDocRef, {
+        code: code,
+        lastEditor: currentUser,
+        updatedAt: serverTimestamp()
+      }, { merge: true }).then(() => {
+        isWritingLocal = false;
+        syncBadge.innerText = '🟢 MONACO_SYNC: LIVE';
+        syncBadge.style.color = '#00ff66';
+        syncBadge.style.borderColor = '#00ff66';
+      }).catch(err => {
+        isWritingLocal = false;
+        syncBadge.innerText = '🟢 MONACO_SYNC: LIVE';
+      });
+    } else {
+      setTimeout(() => {
+        isWritingLocal = false;
+        syncBadge.innerText = '🟢 LOCAL_CRDT_SYNC: LIVE';
+      }, 150);
+    }
+  }
+
+  // Broadcast local cursor position
+  function broadcastCursorMove(position) {
+    if (!position || !broadcastChannel) return;
+    broadcastChannel.postMessage({
+      type: 'cursor_move',
+      sender: currentUser,
+      line: position.lineNumber,
+      column: position.column
+    });
+  }
+
+  // Monaco Editor Initialization
+  function initMonacoEditor() {
+    if (typeof window.require === 'undefined') {
+      console.warn('Monaco loader not loaded yet, retrying...');
+      setTimeout(initMonacoEditor, 250);
+      return;
+    }
+
+    window.require.config({
+      paths: {
+        vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs'
+      }
+    });
+
+    window.require(['vs/editor/editor.main'], function () {
+      try {
+        // Define Cyberpunk Neon Theme
+        window.monaco.editor.defineTheme('cyberpunk-neon', {
+          base: 'vs-dark',
+          inherit: true,
+          rules: [
+            { token: 'comment', foreground: '00ff66', fontStyle: 'italic' },
+            { token: 'keyword', foreground: '00f0ff', fontStyle: 'bold' },
+            { token: 'identifier', foreground: 'e6edf3' },
+            { token: 'string', foreground: 'ffe600' },
+            { token: 'number', foreground: 'ff7b72' },
+            { token: 'type', foreground: '79c0ff' },
+            { token: 'function', foreground: 'd2a8ff' },
+            { token: 'delimiter', foreground: '8b949e' }
+          ],
+          colors: {
+            'editor.background': '#070b12',
+            'editor.foreground': '#e6edf3',
+            'editorCursor.foreground': '#00f0ff',
+            'editor.lineHighlightBackground': '#0f172a88',
+            'editorLineNumber.foreground': '#334155',
+            'editorLineNumber.activeForeground': '#00f0ff',
+            'editor.selectionBackground': '#00e5ff26',
+            'editor.inactiveSelectionBackground': '#00e5ff13',
+            'editorGutter.background': '#04070c',
+            'editorWidget.background': '#0b0f17',
+            'editorWidget.border': '#00e5ff',
+            'minimap.background': '#04070c'
+          }
+        });
+
+        const initialCode = languageConfigs.python.template;
+        scratchpad.value = initialCode;
+
+        // Instantiate Monaco Editor
+        const mount = document.getElementById('monacoEditorMount');
+        codeEditor = window.monaco.editor.create(mount, {
+          value: initialCode,
+          language: 'python',
+          theme: 'cyberpunk-neon',
+          fontSize: currentFontSize,
+          fontFamily: "'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, Monaco, Consolas, monospace",
+          fontLigatures: true,
+          automaticLayout: true,
+          minimap: { enabled: isMinimapEnabled },
+          scrollBeyondLastLine: false,
+          roundedSelection: true,
+          renderLineHighlight: 'all',
+          cursorBlinking: 'smooth',
+          cursorSmoothCaretAnimation: 'on',
+          bracketPairColorization: { enabled: true },
+          glyphMargin: true,
+          lineNumbersMinChars: 3,
+          tabSize: 4,
+          insertSpaces: true
+        });
+
+        isMonacoReady = true;
+
+        // Fade out loading spinner
+        if (monacoLoading) {
+          monacoLoading.style.transition = 'opacity 0.4s ease';
+          monacoLoading.style.opacity = '0';
+          setTimeout(() => monacoLoading.remove(), 400);
+        }
+
+        // Event: Model content changed
+        codeEditor.onDidChangeModelContent((e) => {
+          updateStatusMetrics();
+
+          if (peerStatusDisplay) {
+            peerStatusDisplay.innerText = 'TYPING...';
+            peerStatusDisplay.className = 'text-warning small';
+          }
+
+          if (!isApplyingRemoteEdit) {
+            clearTimeout(syncDebounceTimeout);
+            syncDebounceTimeout = setTimeout(() => {
+              broadcastLocalEdit();
+            }, 250);
+          }
+        });
+
+        // Event: Cursor position changed
+        codeEditor.onDidChangeCursorPosition((e) => {
+          if (statusPos) {
+            statusPos.innerText = `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+          }
+          broadcastCursorMove(e.position);
+        });
+
+        // Event: Selection changed
+        codeEditor.onDidChangeCursorSelection((e) => {
+          if (statusSelection) {
+            const sel = e.selection;
+            if (sel.isEmpty()) {
+              statusSelection.innerText = `0 sel`;
+            } else {
+              const selectedChars = codeEditor.getModel().getValueInRange(sel).length;
+              statusSelection.innerText = `${selectedChars} sel`;
+            }
+          }
+        });
+
+        updateStatusMetrics();
+        addTelemetry('Monaco Editor runtime initialized successfully.');
+
+        // Keyboard Shortcut: Ctrl+Enter or Cmd+Enter to trigger Challenge Submission
+        codeEditor.addCommand(window.monaco.KeyMod.CtrlCmd | window.monaco.KeyCode.Enter, () => {
+          if (submitMonacoChallengeBtn) {
+            submitMonacoChallengeBtn.click();
+          }
+        });
+
+        // Initialize Firebase synchronization once editor is ready
+        initFirebaseSync();
+
+      } catch (err) {
+        console.error('Monaco initialization error:', err);
+        fallbackToTextarea();
+      }
+    });
+  }
+
+  // Fallback if CDN is unreachable
+  function fallbackToTextarea() {
+    if (monacoLoading) monacoLoading.remove();
+    scratchpad.classList.remove('d-none');
+    scratchpad.classList.add('form-control', 'bg-black', 'text-info', 'font-monospace');
+    scratchpad.style.height = '440px';
+    addTelemetry('Monaco CDN fallback: Operating in native editor mode.');
+    initFirebaseSync();
+  }
+
+  // Safety timeout in case Monaco loader is delayed
+  setTimeout(() => {
+    if (!isMonacoReady && !codeEditor) {
+      console.warn('Monaco took > 4000ms, triggering fallback...');
+      fallbackToTextarea();
+    }
+  }, 4000);
+
+  // Initialize Firebase Database Listener
+  let db = null;
+  let roomDocRef = null;
+
+  async function initFirebaseSync() {
+    try {
+      let config = <%- JSON.stringify(firebaseConfig || {}) %>;
+      
+      // Fallback: fetch from API if not embedded
+      if (!config || !config.apiKey) {
+        const resp = await fetch('/api/firebase-config');
+        config = await resp.json();
+      }
+
+      if (!config || !config.apiKey) {
+        syncBadge.innerText = '🟢 LOCAL_CRDT_SYNC: LIVE';
+        syncBadge.style.borderColor = '#00ff66';
+        syncBadge.style.color = '#00ff66';
+        addTelemetry('Firebase config absent: Operating in high-speed local broadcast mode.');
+        return;
+      }
+
+      const app = initializeApp(config);
+      db = config.firestoreDatabaseId ? getFirestore(app, config.firestoreDatabaseId) : getFirestore(app);
+      roomDocRef = doc(db, 'rooms', 'room_' + roomId);
+
+      addTelemetry('Connected to Firebase Realtime Database socket.');
+      syncBadge.innerText = '🟢 MONACO_SYNC: LIVE';
+      syncBadge.style.borderColor = '#00ff66';
+      syncBadge.style.color = '#00ff66';
+
+      // Subscribe to real-time changes
+      onSnapshot(roomDocRef, (snap) => {
+        if (snap.exists()) {
+          const data = snap.data();
+          const currentCode = codeEditor ? codeEditor.getValue() : scratchpad.value;
+          
+          if (data.code !== undefined && data.code !== currentCode) {
+            // Ignore if we just pushed this exact update
+            if (!isWritingLocal || (data.lastEditor && data.lastEditor !== currentUser)) {
+              handleRemoteCode(data.code, data.lastEditor);
+            }
+          }
+
+          if (data.isLocked !== undefined && data.isLocked !== isLocked) {
+            applyLockState(data.isLocked);
+          }
+
+          if (data.latestLog && data.logTimestamp && data.logTimestamp > lastRemoteTimestamp) {
+            lastRemoteTimestamp = data.logTimestamp;
+            appendConsoleLog(data.latestLog);
+          }
+
+          if (data.missionTimer && data.missionTimer.timestamp && data.missionTimer.timestamp > lastTimerSyncTimestamp) {
+            lastTimerSyncTimestamp = data.missionTimer.timestamp;
+            handleRemoteTimerSync(data.missionTimer);
+          }
+        } else {
+          // Initialize document in Firebase
+          const initialCode = codeEditor ? codeEditor.getValue() : scratchpad.value;
+          setDoc(roomDocRef, {
+            name: "<%= room.name %>",
+            code: initialCode,
+            lastEditor: currentUser,
+            isLocked: false,
+            updatedAt: serverTimestamp()
+          }, { merge: true }).catch(err => console.warn('Init doc error:', err));
+        }
+      }, (error) => {
+        console.warn('Firebase snapshot warning:', error);
+        syncBadge.innerText = '🟢 LOCAL_CRDT_SYNC: LIVE';
+        addTelemetry('Fallback to peer broadcast synchronization.');
+      });
+
+    } catch (err) {
+      console.warn('Firebase initialization notice:', err);
+      syncBadge.innerText = '🟢 LOCAL_CRDT_SYNC: LIVE';
+      addTelemetry('Switched to peer broadcast room synchronization.');
+    }
+  }
+
+  // Toolbar Handlers
+
+  // 1. Language selector
+  if (languageSelect) {
+    languageSelect.addEventListener('change', (e) => {
+      const selectedLang = e.target.value;
+      const conf = languageConfigs[selectedLang] || languageConfigs.python;
+
+      if (activeFileName) activeFileName.innerText = conf.filename;
+      if (statusLangName) statusLangName.innerText = conf.label;
+      if (activeRuntimeBadge) activeRuntimeBadge.innerText = `Runtime: ${conf.runtime}`;
+
+      if (codeEditor && window.monaco) {
+        const model = codeEditor.getModel();
+        window.monaco.editor.setModelLanguage(model, selectedLang);
+        
+        // If code is still the default starter code of another language, replace with new template
+        const currentCode = codeEditor.getValue().trim();
+        const isDefaultCode = Object.values(languageConfigs).some(c => c.template.trim() === currentCode);
+        if (isDefaultCode || currentCode === '') {
+          codeEditor.setValue(conf.template);
+          broadcastLocalEdit();
+        }
+      }
+      addTelemetry(`Switched language environment to ${conf.label}`);
+    });
+  }
+
+  // 2. Theme selector
+  if (themeSelect) {
+    themeSelect.addEventListener('change', (e) => {
+      if (window.monaco) {
+        window.monaco.editor.setTheme(e.target.value);
+        addTelemetry(`Applied theme: ${e.target.value}`);
+      }
+    });
+  }
+
+  // 3. Zoom controls
+  document.getElementById('btnFontInc')?.addEventListener('click', () => {
+    if (currentFontSize < 22 && codeEditor) {
+      currentFontSize += 1;
+      codeEditor.updateOptions({ fontSize: currentFontSize });
+    }
+  });
+
+  document.getElementById('btnFontDec')?.addEventListener('click', () => {
+    if (currentFontSize > 11 && codeEditor) {
+      currentFontSize -= 1;
+      codeEditor.updateOptions({ fontSize: currentFontSize });
+    }
+  });
+
+  // 4. Minimap toggle
+  document.getElementById('btnToggleMinimap')?.addEventListener('click', () => {
+    if (!codeEditor) return;
+    isMinimapEnabled = !isMinimapEnabled;
+    codeEditor.updateOptions({ minimap: { enabled: isMinimapEnabled } });
+    const btn = document.getElementById('btnToggleMinimap');
+    if (btn) {
+      btn.innerText = isMinimapEnabled ? '🗺️ Minimap: ON' : '🗺️ Minimap: OFF';
+      btn.classList.toggle('btn-outline-secondary', !isMinimapEnabled);
+      btn.classList.toggle('btn-outline-info', isMinimapEnabled);
+    }
+  });
+
+  // 5. Format Document
+  document.getElementById('btnFormatCode')?.addEventListener('click', () => {
+    if (codeEditor) {
+      codeEditor.getAction('editor.action.formatDocument')?.run();
+      addTelemetry('Code formatted.');
+    }
+  });
+
+  // 6. Copy Code
+  document.getElementById('btnCopyCode')?.addEventListener('click', () => {
+    const code = codeEditor ? codeEditor.getValue() : scratchpad.value;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('btnCopyCode');
+        const orig = btn.innerText;
+        btn.innerText = '✓ Copied!';
+        btn.classList.replace('btn-outline-secondary', 'btn-success');
+        setTimeout(() => {
+          btn.innerText = orig;
+          btn.classList.replace('btn-success', 'btn-outline-secondary');
+        }, 1800);
+      });
+    }
+  });
+
+  // 7. Reset starter template
+  document.getElementById('btnResetBuffer')?.addEventListener('click', () => {
+    if (confirm('Reset editor buffer to clean starter template?')) {
+      const selectedLang = languageSelect ? languageSelect.value : 'python';
+      const conf = languageConfigs[selectedLang] || languageConfigs.python;
+      if (codeEditor) {
+        codeEditor.setValue(conf.template);
+      }
+      broadcastLocalEdit();
+      addTelemetry('Buffer reset to starter template.');
+    }
+  });
+
+  // Manual Sync Button
+  document.getElementById('manualSyncBtn').addEventListener('click', () => {
+    broadcastLocalEdit();
+    const timestamp = new Date().toLocaleTimeString();
+    const len = codeEditor ? codeEditor.getValue().length : scratchpad.value.length;
+    appendConsoleLog(`<span class="text-info">[${timestamp}] Manual buffer sync confirmed: ${len} bytes broadcasted.</span><br>`);
+    addTelemetry(`Manual sync broadcast completed.`);
+  });
+
+  // Run in container button
+  document.getElementById('runContainerBtn').addEventListener('click', () => {
+    const timestamp = new Date().toLocaleTimeString();
+    const currentCode = codeEditor ? codeEditor.getValue() : scratchpad.value;
+    const selectedLang = languageSelect ? languageSelect.value : 'python';
+    const conf = languageConfigs[selectedLang] || languageConfigs.python;
+
+    appendConsoleLog(`<span class="text-muted">[${timestamp}] Spawning ephemeral container sandbox (${conf.runtime})...</span><br>`);
+    
+    setTimeout(() => {
+      appendConsoleLog(`<span class="text-info">&gt; Executing script in sandboxed runtime...</span><br>`);
+      setTimeout(() => {
+        let resultLog = '';
+        if (selectedLang === 'python') {
+          resultLog = `<span class="text-success">&gt; {'status': 'SECURE', 'nodes': 2, 'synced_by': '${currentUser}'}</span><br><span class="text-info">&gt; Process finished with exit code 0 (execution time: 0.038s).</span><br><br>`;
+        } else if (selectedLang === 'javascript' || selectedLang === 'typescript') {
+          resultLog = `<span class="text-success">&gt; Container metrics: { "status": "SECURE", "nodes": 2, "timestamp": "${new Date().toISOString()}" }</span><br><span class="text-info">&gt; Node runtime completed with exit code 0.</span><br><br>`;
+        } else if (selectedLang === 'sql') {
+          resultLog = `<span class="text-warning">&gt; Query OK, 2 rows affected (0.012 sec)</span><br><span class="text-light">&gt; (1, '${currentUser}', 5, 2450, 'ACTIVE')</span><br><span class="text-light">&gt; (2, 'developer_b', 4, 1820, 'ACTIVE')</span><br><br>`;
+        } else if (selectedLang === 'cpp') {
+          resultLog = `<span class="text-success">&gt; [CYBER_CORE] Real-time collaborative buffer initialized.</span><br><span class="text-light">&gt; [STATUS] 2 operatives synchronized.</span><br><span class="text-info">&gt; Binary exited with code 0.</span><br><br>`;
+        } else {
+          resultLog = `<span class="text-success">&gt; [SYSTEM] Execution finished successfully.</span><br><span class="text-info">&gt; Process exited with code 0.</span><br><br>`;
+        }
+
+        appendConsoleLog(resultLog);
+        
+        // Broadcast run output to Firebase and peers
+        const fullLog = `<span class="text-muted">[${timestamp}] Container Run by @${currentUser}:</span><br>${resultLog}`;
+        if (roomDocRef) {
+          setDoc(roomDocRef, {
+            latestLog: fullLog,
+            logTimestamp: Date.now()
+          }, { merge: true });
+        }
+        if (broadcastChannel) {
+          broadcastChannel.postMessage({
+            type: 'container_run',
+            log: fullLog
+          });
+        }
+        addTelemetry(`Container execution finished.`);
+      }, 500);
+    }, 350);
+  });
+
+  // Clear Console Button
+  document.getElementById('clearConsoleBtn').addEventListener('click', () => {
+    consoleOutput.innerHTML = `<span class="text-muted">&gt; Container terminal reset.</span><br>`;
+  });
+
+  // Teacher / Host Lock Button
+  lockModeBtn.addEventListener('click', () => {
+    const newLockState = !isLocked;
+    applyLockState(newLockState);
+
+    if (roomDocRef) {
+      setDoc(roomDocRef, { isLocked: newLockState }, { merge: true });
+    }
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({ type: 'lock_update', isLocked: newLockState });
+    }
+
+    addTelemetry(newLockState ? 'Host locked the collaborative editing buffer.' : 'Host unlocked buffer for all peers.');
+  });
+
+  // Audio Huddle
+  document.getElementById('joinHuddleBtn').addEventListener('click', () => {
+    isHuddleActive = !isHuddleActive;
+    const btn = document.getElementById('joinHuddleBtn');
+    const statusBadge = document.getElementById('huddleStatus');
+    
+    if (isHuddleActive) {
+      btn.innerText = '[ LEAVE AUDIO ]';
+      btn.className = 'btn btn-sm btn-outline-danger w-100 font-monospace py-1';
+      statusBadge.innerText = 'LIVE';
+      statusBadge.className = 'badge bg-danger text-light small';
+      addTelemetry('Joined P2P Audio Huddle channel.');
+    } else {
+      btn.innerText = '[ JOIN AUDIO ]';
+      btn.className = 'btn btn-sm btn-outline-success w-100 font-monospace py-1';
+      statusBadge.innerText = 'OFF';
+      statusBadge.className = 'badge bg-success text-black small';
+      addTelemetry('Disconnected from Audio Huddle.');
+    }
+  });
+
+  document.getElementById('muteMicBtn').addEventListener('click', () => {
+    const status = isHuddleActive ? 'Microphone muted/unmuted.' : 'Join the audio huddle first to use mic controls.';
+    addTelemetry(status);
+  });
+
+  // Conflict scan
+  document.getElementById('scanConflictBtn').addEventListener('click', () => {
+    const banner = document.getElementById('conflictAlertBanner');
+    const statusText = document.getElementById('conflictStatusText');
+    banner.classList.remove('d-none');
+    statusText.innerText = '1 Conflict Found!';
+    statusText.className = 'text-danger fw-bold';
+    addTelemetry('GitLive scan: Concurrent line modification detected.');
+  });
+
+  // Share Invite Link
+  document.getElementById('shareInviteBtn').addEventListener('click', () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      const btn = document.getElementById('shareInviteBtn');
+      const orig = btn.innerText;
+      btn.innerText = '[ LINK COPIED! ]';
+      setTimeout(() => btn.innerText = orig, 2000);
+      addTelemetry('Room invite link copied to clipboard.');
+    }
+  });
+
+  // =========================================================================
+  // Challenge Selection, Predefined Test Runner Suite & Submission Engine
+  // =========================================================================
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // Render Mission Intel Drawer & Predefined Test List
+  function renderMissionBrief(challenge) {
+    if (!challenge) return;
+    if (briefChallengeCategory) briefChallengeCategory.innerText = challenge.category || 'Security Defense';
+    if (briefChallengeDiff) {
+      briefChallengeDiff.innerText = (challenge.difficulty || 'MEDIUM').toUpperCase();
+      const diffClass = challenge.difficulty === 'Easy' ? 'border-success text-success' : (challenge.difficulty === 'Hard' ? 'border-danger text-danger' : 'border-warning text-warning');
+      briefChallengeDiff.className = `badge bg-black border ${diffClass}`;
+    }
+    if (briefChallengeReward) briefChallengeReward.innerText = `+${challenge.xp_reward || 100} XP`;
+    if (briefChallengeDesc) briefChallengeDesc.innerText = challenge.description || '';
+    if (briefChallengeInstructions) {
+      briefChallengeInstructions.innerHTML = `<strong>MISSION OBJECTIVE:</strong> ${escapeHtml(challenge.instructions || 'Inspect code vulnerabilities, patch them to pass all predefined test cases, and submit.')}`;
+    }
+    if (testCaseCountBadge) {
+      testCaseCountBadge.innerText = (challenge.test_cases || []).length;
+    }
+
+    if (briefTestCasesList) {
+      const tests = challenge.test_cases || [];
+      if (tests.length === 0) {
+        briefTestCasesList.innerHTML = `<div class="col-12 text-muted small">No predefined test cases specified for this challenge.</div>`;
+      } else {
+        briefTestCasesList.innerHTML = tests.map((t, idx) => `
+          <div class="col-md-6">
+            <div class="p-2 rounded bg-black border border-secondary" style="font-size: 0.73rem;">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-light fw-bold">Test #${t.id || (idx + 1)}: ${escapeHtml(t.name)}</span>
+                <span class="badge bg-black border border-info text-info" style="font-size: 0.65rem;">${escapeHtml(t.type || 'Functional')}</span>
+              </div>
+              <div class="text-muted text-truncate mb-1">${escapeHtml(t.description || '')}</div>
+              <div class="text-secondary" style="font-size: 0.68rem;">
+                <span class="text-info">Input:</span> <code>${escapeHtml(t.input)}</code><br>
+                <span class="text-warning">Expects:</span> <span class="text-light">${escapeHtml(t.expected)}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    // Update Sidebar HUD
+    if (sidebarChallengeTitle) sidebarChallengeTitle.innerText = `#${challenge.id}: ${challenge.title}`;
+    if (sidebarChallengeDiff) {
+      sidebarChallengeDiff.innerText = (challenge.difficulty || 'MEDIUM').toUpperCase();
+      const diffClass = challenge.difficulty === 'Easy' ? 'border-success text-success' : (challenge.difficulty === 'Hard' ? 'border-danger text-danger' : 'border-warning text-warning');
+      sidebarChallengeDiff.className = `badge bg-black border ${diffClass}`;
+    }
+    if (sidebarChallengeXp) sidebarChallengeXp.innerText = `+${challenge.xp_reward || 100} XP`;
+    if (sidebarTestCount) sidebarTestCount.innerText = `${(challenge.test_cases || []).length} Test Cases`;
+    if (sidebarTimeLimit) sidebarTimeLimit.innerText = formatTimeLimit(challenge.time_limit_seconds || 300);
+    if (timerChallengeLimitInfo) timerChallengeLimitInfo.innerText = `Limit: ${formatTimeLimit(challenge.time_limit_seconds || 300)}`;
+
+    // Solved status badge
+    const isSolved = userSolvedChallengeIds.has(Number(challenge.id));
+    if (challengeStatusBadge) {
+      if (isSolved) {
+        challengeStatusBadge.innerText = 'SOLVED';
+        challengeStatusBadge.className = 'badge bg-black border border-success text-success px-2 py-1';
+      } else {
+        challengeStatusBadge.innerText = 'UNSOLVED';
+        challengeStatusBadge.className = 'badge bg-black border border-secondary text-muted px-2 py-1';
+      }
+    }
+    if (sidebarStatusText) {
+      if (isSolved) {
+        sidebarStatusText.innerText = 'SOLVED';
+        sidebarStatusText.className = 'text-success fw-bold';
+      } else {
+        sidebarStatusText.innerText = 'UNSOLVED';
+        sidebarStatusText.className = 'text-warning';
+      }
+    }
+  }
+
+  // =========================================================================
+  // Mission Urgency Visual Countdown Timer & Audio Feedback Engine
+  // =========================================================================
+
+  // Format seconds to mm:ss
+  function formatTime(totalSecs) {
+    if (totalSecs === undefined || totalSecs === null || isNaN(totalSecs) || totalSecs < 0) totalSecs = 0;
+    const mins = Math.floor(totalSecs / 60);
+    const secs = Math.floor(totalSecs % 60);
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+
+  // Format seconds to human readable limit e.g. "5m 00s"
+  function formatTimeLimit(totalSecs) {
+    if (!totalSecs || totalSecs < 0) return '5m 00s';
+    const mins = Math.floor(totalSecs / 60);
+    const secs = Math.floor(totalSecs % 60);
+    return `${mins}m ${String(secs).padStart(2, '0')}s`;
+  }
+
+  // Web Audio API Synthesizer for Cyberpunk Urgency Cues
+  let audioCtx = null;
+  function getAudioContext() {
+    if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  function playUrgencyBeep(type = 'tick') {
+    if (!timerSoundEnabled) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      const now = ctx.currentTime;
+      if (type === 'tick') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        gain.gain.setValueAtTime(0.025, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } else if (type === 'critical') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1040, now);
+        osc.frequency.setValueAtTime(1380, now + 0.06);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        osc.start(now);
+        osc.stop(now + 0.18);
+      } else if (type === 'buzzer') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.setValueAtTime(110, now + 0.2);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+        osc.start(now);
+        osc.stop(now + 0.45);
+      } else if (type === 'victory') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.09);
+        osc.frequency.setValueAtTime(783.99, now + 0.18);
+        osc.frequency.setValueAtTime(1046.5, now + 0.27);
+        gain.gain.setValueAtTime(0.09, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+        osc.start(now);
+        osc.stop(now + 0.55);
+      }
+    } catch (e) {
+      console.warn('Audio cue notice:', e);
+    }
+  }
+
+  // Update Visual Timer HUD & Urgency Styles
+  function updateTimerVisuals() {
+    const formatted = formatTime(timerSecondsRemaining);
+    if (countdownClockDisplay) countdownClockDisplay.innerText = formatted;
+    if (sidebarTimeRemaining) sidebarTimeRemaining.innerText = formatted;
+
+    const percent = timerTotalSeconds > 0 ? Math.max(0, Math.min(100, (timerSecondsRemaining / timerTotalSeconds) * 100)) : 0;
+    if (countdownProgressBar) {
+      countdownProgressBar.style.width = `${percent}%`;
+      countdownProgressBar.setAttribute('aria-valuenow', Math.round(percent));
+    }
+
+    // Urgency styling states
+    if (timerSecondsRemaining <= 0) {
+      // 00:00 - Time Expired
+      timerExpired = true;
+      if (countdownClockDisplay) {
+        countdownClockDisplay.innerText = '00:00';
+        countdownClockDisplay.className = 'fs-4 fw-bold text-danger px-3 py-0 rounded bg-black border border-danger font-monospace shadow-sm';
+      }
+      if (sidebarTimeRemaining) {
+        sidebarTimeRemaining.innerText = '00:00 [LOCKED]';
+        sidebarTimeRemaining.className = 'text-danger fw-bold';
+      }
+      if (timerUrgencyStatusBadge) {
+        timerUrgencyStatusBadge.innerText = '💀 TIME EXPIRED // SUBMISSIONS LOCKED';
+        timerUrgencyStatusBadge.className = 'badge bg-danger text-black fw-bold px-2 py-1 small';
+      }
+      if (missionTimerBar) {
+        missionTimerBar.classList.remove('timer-critical-pulse');
+        missionTimerBar.style.borderColor = '#ff0055';
+        missionTimerBar.style.boxShadow = '0 0 16px rgba(255, 0, 85, 0.4)';
+      }
+      if (countdownProgressBar) {
+        countdownProgressBar.className = 'progress-bar bg-danger';
+      }
+      if (submitMonacoChallengeBtn) {
+        submitMonacoChallengeBtn.disabled = true;
+        submitMonacoChallengeBtn.innerHTML = '⏰ [ TIME EXPIRED - RESTART TIMER ]';
+        submitMonacoChallengeBtn.title = 'Mission time expired. Click RESTART TIMER to begin a new attempt.';
+      }
+      if (timerToggleBtn) {
+        timerToggleBtn.innerText = '▶ RESTART MISSION CLOCK';
+        timerToggleBtn.className = 'btn btn-sm btn-outline-warning font-monospace py-0 px-2 d-flex align-items-center gap-1';
+      }
+    } else if (timerSecondsRemaining <= 60) {
+      // Danger Zone (< 60s remaining)
+      timerExpired = false;
+      if (countdownClockDisplay) {
+        countdownClockDisplay.className = 'fs-4 fw-bold text-danger px-3 py-0 rounded bg-black border border-danger font-monospace shadow-sm timer-critical-text';
+      }
+      if (sidebarTimeRemaining) {
+        sidebarTimeRemaining.innerText = formatted;
+        sidebarTimeRemaining.className = 'text-danger fw-bold';
+      }
+      if (timerUrgencyStatusBadge) {
+        timerUrgencyStatusBadge.innerText = '⚠️ CRITICAL: EXPIRING SOON (<60s)';
+        timerUrgencyStatusBadge.className = 'badge bg-danger text-black fw-bold px-2 py-1 small';
+      }
+      if (missionTimerBar) {
+        missionTimerBar.classList.add('timer-critical-pulse');
+      }
+      if (countdownProgressBar) {
+        countdownProgressBar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-danger';
+      }
+      if (submitMonacoChallengeBtn && !isSubmittingChallenge) {
+        submitMonacoChallengeBtn.disabled = false;
+        submitMonacoChallengeBtn.innerHTML = '🚀 [ VALIDATE &amp; SUBMIT ]';
+      }
+    } else if (timerSecondsRemaining <= timerTotalSeconds * 0.4) {
+      // Pacing Warning (20% - 40%)
+      timerExpired = false;
+      if (countdownClockDisplay) {
+        countdownClockDisplay.classList.remove('timer-critical-text');
+        countdownClockDisplay.className = 'fs-4 fw-bold text-warning px-3 py-0 rounded bg-black border border-warning font-monospace shadow-sm';
+      }
+      if (sidebarTimeRemaining) {
+        sidebarTimeRemaining.innerText = formatted;
+        sidebarTimeRemaining.className = 'text-warning fw-bold';
+      }
+      if (timerUrgencyStatusBadge) {
+        timerUrgencyStatusBadge.innerText = isTimerRunning ? '⚡ PACING WARNING' : '⏱️ PAUSED';
+        timerUrgencyStatusBadge.className = 'badge bg-black border border-warning text-warning px-2 py-1 small';
+      }
+      if (missionTimerBar) {
+        missionTimerBar.classList.remove('timer-critical-pulse');
+        missionTimerBar.style.borderColor = '#ffb700';
+        missionTimerBar.style.boxShadow = '0 0 12px rgba(255, 183, 0, 0.2)';
+      }
+      if (countdownProgressBar) {
+        countdownProgressBar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-warning';
+      }
+      if (submitMonacoChallengeBtn && !isSubmittingChallenge) {
+        submitMonacoChallengeBtn.disabled = false;
+        submitMonacoChallengeBtn.innerHTML = '🚀 [ VALIDATE &amp; SUBMIT ]';
+      }
+    } else {
+      // Normal / Safe Zone (> 40%)
+      timerExpired = false;
+      if (countdownClockDisplay) {
+        countdownClockDisplay.classList.remove('timer-critical-text');
+        countdownClockDisplay.className = 'fs-4 fw-bold text-info px-3 py-0 rounded bg-black border border-info font-monospace shadow-sm';
+      }
+      if (sidebarTimeRemaining) {
+        sidebarTimeRemaining.innerText = formatted;
+        sidebarTimeRemaining.className = 'text-info fw-bold';
+      }
+      if (timerUrgencyStatusBadge) {
+        timerUrgencyStatusBadge.innerText = isTimerRunning ? '⚡ MISSION CLOCK ACTIVE' : '⏱️ TIMER READY';
+        timerUrgencyStatusBadge.className = 'badge bg-black border border-info text-info px-2 py-1 small';
+      }
+      if (missionTimerBar) {
+        missionTimerBar.classList.remove('timer-critical-pulse');
+        missionTimerBar.style.borderColor = '#00e5ff';
+        missionTimerBar.style.boxShadow = '0 0 14px rgba(0, 229, 255, 0.15)';
+      }
+      if (countdownProgressBar) {
+        countdownProgressBar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-info';
+      }
+      if (submitMonacoChallengeBtn && !isSubmittingChallenge) {
+        submitMonacoChallengeBtn.disabled = false;
+        submitMonacoChallengeBtn.innerHTML = '🚀 [ VALIDATE &amp; SUBMIT ]';
+      }
+    }
+
+    if (timerChallengeLimitInfo) {
+      timerChallengeLimitInfo.innerText = `Limit: ${formatTimeLimit(timerTotalSeconds)}`;
+    }
+    if (sidebarTimeLimit) {
+      sidebarTimeLimit.innerText = formatTimeLimit(timerTotalSeconds);
+    }
+  }
+
+  // Ticker loop
+  function timerTick() {
+    if (!isTimerRunning) return;
+
+    if (timerSecondsRemaining > 0) {
+      timerSecondsRemaining -= 1;
+
+      // Audio alerts at critical milestones
+      if (timerSecondsRemaining === 60 && !hasAlerted60s) {
+        hasAlerted60s = true;
+        playUrgencyBeep('critical');
+        appendConsoleLog(`<span class="text-danger fw-bold">[URGENCY ALERT] ⚠️ Less than 60 seconds remaining for Challenge #${selectedChallenge?.id}! Prepare solution submission.</span><br>`);
+        addTelemetry(`Urgency alert: 60s remaining on challenge #${selectedChallenge?.id}.`);
+      } else if (timerSecondsRemaining === 30 && !hasAlerted30s) {
+        hasAlerted30s = true;
+        playUrgencyBeep('critical');
+        appendConsoleLog(`<span class="text-danger fw-bold">[URGENCY ALERT] ⚠️ 30 seconds remaining! Submit code promptly.</span><br>`);
+      } else if (timerSecondsRemaining <= 10 && timerSecondsRemaining > 0) {
+        // High urgency ticking on last 10 seconds
+        playUrgencyBeep('tick');
+      }
+
+      updateTimerVisuals();
+
+      // Broadcast periodic sync every 5 seconds
+      if (timerSecondsRemaining % 5 === 0) {
+        broadcastTimerState();
+      }
+    } else {
+      // Time Expired
+      timerSecondsRemaining = 0;
+      isTimerRunning = false;
+      clearInterval(timerIntervalId);
+      timerIntervalId = null;
+      timerExpired = true;
+
+      playUrgencyBeep('buzzer');
+      updateTimerVisuals();
+
+      appendConsoleLog(`<span class="text-danger fw-bold">[MISSION TIMEOUT] 💀 Time limit expired for Challenge #${selectedChallenge?.id}. Submissions locked. Hit "RESTART TIMER" to re-attempt.</span><br>`);
+      addTelemetry(`Mission timeout: Challenge #${selectedChallenge?.id} time limit expired.`);
+
+      broadcastTimerState();
+    }
+  }
+
+  function startCountdownTimer(broadcast = true) {
+    if (timerSecondsRemaining <= 0) {
+      restartCountdownTimer(true, broadcast);
+      return;
+    }
+    if (isTimerRunning) return;
+
+    isTimerRunning = true;
+    if (timerToggleBtn) {
+      timerToggleBtn.innerText = '⏸ PAUSE TIMER';
+      timerToggleBtn.className = 'btn btn-sm btn-outline-warning font-monospace py-0 px-2 d-flex align-items-center gap-1';
+    }
+
+    clearInterval(timerIntervalId);
+    timerIntervalId = setInterval(timerTick, 1000);
+    playUrgencyBeep('tick');
+    updateTimerVisuals();
+
+    appendConsoleLog(`<span class="text-info">[TIMER STARTED] Mission countdown active: ${formatTime(timerSecondsRemaining)} remaining.</span><br>`);
+    addTelemetry(`Mission clock started (${timerSecondsRemaining}s).`);
+
+    if (broadcast) {
+      broadcastTimerState();
+    }
+  }
+
+  function pauseCountdownTimer(broadcast = true) {
+    if (!isTimerRunning) return;
+    isTimerRunning = false;
+    clearInterval(timerIntervalId);
+    timerIntervalId = null;
+
+    if (timerToggleBtn) {
+      timerToggleBtn.innerText = '▶ RESUME MISSION CLOCK';
+      timerToggleBtn.className = 'btn btn-sm btn-outline-info font-monospace py-0 px-2 d-flex align-items-center gap-1';
+    }
+    updateTimerVisuals();
+
+    appendConsoleLog(`<span class="text-muted">[TIMER PAUSED] Mission countdown paused at ${formatTime(timerSecondsRemaining)}.</span><br>`);
+    addTelemetry(`Mission clock paused at ${formatTime(timerSecondsRemaining)}.`);
+
+    if (broadcast) {
+      broadcastTimerState();
+    }
+  }
+
+  function toggleCountdownTimer() {
+    if (isTimerRunning) {
+      pauseCountdownTimer(true);
+    } else {
+      startCountdownTimer(true);
+    }
+  }
+
+  function restartCountdownTimer(autoStart = false, broadcast = true) {
+    clearInterval(timerIntervalId);
+    timerIntervalId = null;
+    isTimerRunning = false;
+    timerExpired = false;
+
+    hasAlerted60s = false;
+    hasAlerted30s = false;
+    hasAlerted10s = false;
+
+    timerTotalSeconds = selectedChallenge ? (selectedChallenge.time_limit_seconds || 300) : 300;
+    timerSecondsRemaining = timerTotalSeconds;
+
+    if (timerToggleBtn) {
+      timerToggleBtn.innerText = '▶ START MISSION CLOCK';
+      timerToggleBtn.className = 'btn btn-sm btn-outline-info font-monospace py-0 px-2 d-flex align-items-center gap-1';
+    }
+
+    updateTimerVisuals();
+
+    if (submitMonacoChallengeBtn) {
+      submitMonacoChallengeBtn.disabled = false;
+      submitMonacoChallengeBtn.innerHTML = '🚀 [ VALIDATE &amp; SUBMIT ]';
+      submitMonacoChallengeBtn.title = 'Validate solution against predefined test cases';
+    }
+
+    appendConsoleLog(`<span class="text-warning">[TIMER RESET] Mission clock reset to full challenge limit: ${formatTime(timerTotalSeconds)}.</span><br>`);
+    addTelemetry(`Mission countdown reset to ${formatTime(timerTotalSeconds)}.`);
+
+    if (autoStart) {
+      startCountdownTimer(broadcast);
+    } else if (broadcast) {
+      broadcastTimerState();
+    }
+  }
+
+  function broadcastTimerState() {
+    const payload = {
+      type: 'timer_sync',
+      challengeId: selectedChallenge ? selectedChallenge.id : null,
+      secondsRemaining: timerSecondsRemaining,
+      totalSeconds: timerTotalSeconds,
+      isRunning: isTimerRunning,
+      expired: timerExpired,
+      timestamp: Date.now(),
+      sender: currentUser
+    };
+
+    if (broadcastChannel) {
+      broadcastChannel.postMessage(payload);
+    }
+
+    if (roomDocRef) {
+      setDoc(roomDocRef, {
+        missionTimer: payload
+      }, { merge: true }).catch(err => console.warn('Timer doc sync notice:', err));
+    }
+  }
+
+  function handleRemoteTimerSync(data) {
+    if (!data || data.sender === currentUser) return;
+    if (selectedChallenge && data.challengeId && data.challengeId !== selectedChallenge.id) {
+      selectChallenge(data.challengeId, false);
+    }
+
+    timerTotalSeconds = data.totalSeconds || timerTotalSeconds;
+    timerSecondsRemaining = typeof data.secondsRemaining === 'number' ? data.secondsRemaining : timerSecondsRemaining;
+    timerExpired = !!data.expired;
+
+    if (data.isRunning && !isTimerRunning) {
+      isTimerRunning = true;
+      if (timerToggleBtn) {
+        timerToggleBtn.innerText = '⏸ PAUSE TIMER';
+        timerToggleBtn.className = 'btn btn-sm btn-outline-warning font-monospace py-0 px-2 d-flex align-items-center gap-1';
+      }
+      clearInterval(timerIntervalId);
+      timerIntervalId = setInterval(timerTick, 1000);
+    } else if (!data.isRunning && isTimerRunning) {
+      isTimerRunning = false;
+      clearInterval(timerIntervalId);
+      timerIntervalId = null;
+      if (timerToggleBtn) {
+        timerToggleBtn.innerText = timerSecondsRemaining <= 0 ? '▶ RESTART MISSION CLOCK' : '▶ RESUME MISSION CLOCK';
+        timerToggleBtn.className = 'btn btn-sm btn-outline-info font-monospace py-0 px-2 d-flex align-items-center gap-1';
+      }
+    }
+
+    updateTimerVisuals();
+  }
+
+  window.restartCountdownTimer = restartCountdownTimer;
+  window.startCountdownTimer = startCountdownTimer;
+
+  // Switch Active Selected Challenge
+  function selectChallenge(challengeId, autoLoadStarter = false) {
+    const found = roomChallenges.find(c => String(c.id) === String(challengeId));
+    if (!found) return;
+    selectedChallenge = found;
+    renderMissionBrief(found);
+
+    // Reset countdown timer to match the newly selected challenge's time limit
+    restartCountdownTimer(false, true);
+
+    if (autoLoadStarter) {
+      loadChallengeStarter();
+    }
+    addTelemetry(`Switched target challenge to #${found.id}: ${found.title}`);
+  }
+
+  // Load starter template / vulnerable code into Monaco editor
+  function loadChallengeStarter() {
+    if (!selectedChallenge) return;
+    const currentCode = codeEditor ? codeEditor.getValue() : scratchpad.value;
+    const hasCustomCode = currentCode.trim().length > 0 && !Object.values(languageConfigs).some(c => c.template.trim() === currentCode.trim());
+
+    if (hasCustomCode) {
+      const ok = confirm(`Replace editor buffer with starter skeleton for Challenge #${selectedChallenge.id}: "${selectedChallenge.title}"?`);
+      if (!ok) return;
+    }
+
+    // Determine starter code based on active or preferred language
+    let starterCode = selectedChallenge.vulnerable_code || '';
+    const currentLang = languageSelect ? languageSelect.value : 'python';
+    if (selectedChallenge.starter_templates && selectedChallenge.starter_templates[currentLang]) {
+      starterCode = selectedChallenge.starter_templates[currentLang];
+    }
+
+    if (codeEditor) {
+      codeEditor.setValue(starterCode);
+    } else {
+      scratchpad.value = starterCode;
+    }
+
+    broadcastLocalEdit();
+    appendConsoleLog(`<span class="text-warning">[CHALLENGE SKELETON LOADED] #${selectedChallenge.id}: ${selectedChallenge.title}</span><br>`);
+    addTelemetry(`Loaded starter skeleton for Challenge #${selectedChallenge.id}.`);
+
+    // Automatically trigger mission timer countdown when operative begins the challenge
+    if (!isTimerRunning && !timerExpired) {
+      startCountdownTimer(true);
+    }
+  }
+
+  // Console / Test Runner Tab Switcher
+  function switchConsoleTab(tabName) {
+    if (tabName === 'testRunner') {
+      if (tabTestRunnerBtn) {
+        tabTestRunnerBtn.className = 'btn btn-outline-info active py-1 px-3 position-relative';
+      }
+      if (tabContainerLogsBtn) {
+        tabContainerLogsBtn.className = 'btn btn-outline-warning py-1 px-3';
+      }
+      if (testRunnerPanel) testRunnerPanel.classList.remove('d-none');
+      if (containerLogsPanel) containerLogsPanel.classList.add('d-none');
+    } else {
+      if (tabContainerLogsBtn) {
+        tabContainerLogsBtn.className = 'btn btn-outline-warning active py-1 px-3';
+      }
+      if (tabTestRunnerBtn) {
+        tabTestRunnerBtn.className = 'btn btn-outline-info py-1 px-3 position-relative';
+      }
+      if (containerLogsPanel) containerLogsPanel.classList.remove('d-none');
+      if (testRunnerPanel) testRunnerPanel.classList.add('d-none');
+    }
+  }
+
+  // Submit Monaco Editor Code for Challenge Predefined Test Verification
+  async function submitMonacoChallenge() {
+    if (isSubmittingChallenge) return;
+    if (!selectedChallenge) {
+      alert('Please select a target challenge first.');
+      return;
+    }
+
+    // Urgency Check: Rejection if Countdown Timer Expired
+    if (timerExpired || timerSecondsRemaining <= 0) {
+      switchConsoleTab('testRunner');
+      if (testRunnerResultsContainer) testRunnerResultsContainer.classList.remove('d-none');
+      if (testRunnerEmptyState) testRunnerEmptyState.classList.add('d-none');
+      if (testRunnerLoadingState) testRunnerLoadingState.classList.add('d-none');
+      if (testResultsSummaryHeader) {
+        testResultsSummaryHeader.innerHTML = `
+          <div class="p-3 rounded border border-danger bg-black font-monospace">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-danger fw-bold fs-6">⏰ MISSION TIME LIMIT EXPIRED</span>
+              <span class="badge bg-danger text-black fw-bold">SUBMISSION LOCKED</span>
+            </div>
+            <p class="text-secondary small mb-2">
+              The allowed time window (${formatTimeLimit(timerTotalSeconds)}) for Challenge #${selectedChallenge.id} has closed.
+              Late submissions are disabled to maintain mission urgency pacing. Hit 'RESTART TIMER' to launch a fresh attempt.
+            </p>
+            <button type="button" class="btn btn-sm btn-outline-warning font-monospace" onclick="restartCountdownTimer(true, true)">
+              🔄 RESTART TIMER &amp; RETRY
+            </button>
+          </div>
+        `;
+      }
+      playUrgencyBeep('buzzer');
+      appendConsoleLog(`<span class="text-danger">[MISSION LOCKED] Submission rejected: Time limit expired for Challenge #${selectedChallenge.id}.</span><br>`);
+      addTelemetry(`Submission blocked: Timer expired.`);
+      return;
+    }
+
+    const code = codeEditor ? codeEditor.getValue() : scratchpad.value;
+    if (!code || !code.trim()) {
+      switchConsoleTab('testRunner');
+      if (testRunnerResultsContainer) testRunnerResultsContainer.classList.remove('d-none');
+      if (testRunnerEmptyState) testRunnerEmptyState.classList.add('d-none');
+      if (testRunnerLoadingState) testRunnerLoadingState.classList.add('d-none');
+      if (testResultsSummaryHeader) {
+        testResultsSummaryHeader.innerHTML = `
+          <div class="p-2 rounded border border-danger bg-black text-danger font-monospace small">
+            ⚠️ <strong>BUFFER EMPTY:</strong> Please write or patch solution code before submitting to the test runner.
+          </div>
+        `;
+      }
+      return;
+    }
+
+    isSubmittingChallenge = true;
+    switchConsoleTab('testRunner');
+
+    // UI Loading State
+    if (submitMonacoChallengeBtn) {
+      submitMonacoChallengeBtn.disabled = true;
+      submitMonacoChallengeBtn.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        [ VALIDATING... ]
+      `;
+    }
+    if (testRunnerEmptyState) testRunnerEmptyState.classList.add('d-none');
+    if (testRunnerResultsContainer) testRunnerResultsContainer.classList.add('d-none');
+    if (testRunnerLoadingState) testRunnerLoadingState.classList.remove('d-none');
+    if (testRunnerTabBadge) {
+      testRunnerTabBadge.className = 'badge bg-warning text-black ms-1';
+      testRunnerTabBadge.innerText = 'TESTING...';
+    }
+
+    const timestamp = new Date().toLocaleTimeString();
+    const elapsed = Math.max(0, timerTotalSeconds - timerSecondsRemaining);
+    appendConsoleLog(`<span class="text-info">[${timestamp}] Submitting code buffer for Challenge #${selectedChallenge.id}: "${selectedChallenge.title}" (Elapsed: ${formatTime(elapsed)} / Limit: ${formatTimeLimit(timerTotalSeconds)})...</span><br>`);
+    addTelemetry(`Validating challenge #${selectedChallenge.id} against predefined test suite...`);
+
+    try {
+      const response = await fetch('/api/challenges/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          challengeId: selectedChallenge.id,
+          code: code,
+          language: languageSelect ? languageSelect.value : 'python',
+          roomId: roomId,
+          timeExpired: timerExpired || timerSecondsRemaining <= 0,
+          elapsedSeconds: elapsed
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Server rejected challenge verification.');
+      }
+
+      // Display results
+      if (testRunnerLoadingState) testRunnerLoadingState.classList.add('d-none');
+      if (testRunnerResultsContainer) testRunnerResultsContainer.classList.remove('d-none');
+
+      const allPassed = !!data.allPassed;
+      const passedCount = data.testsPassed || 0;
+      const totalCount = data.testsTotal || 0;
+      const failedCount = data.testsFailed || 0;
+
+      // Update Tab badge & count
+      if (testRunnerTabBadge) {
+        testRunnerTabBadge.className = allPassed ? 'badge bg-success text-black ms-1' : 'badge bg-danger text-white ms-1';
+        testRunnerTabBadge.innerText = allPassed ? `PASS (${passedCount}/${totalCount})` : `FAIL (${passedCount}/${totalCount})`;
+      }
+      if (testSuiteSummaryStatus) {
+        testSuiteSummaryStatus.innerText = `${passedCount}/${totalCount} Tests Passed`;
+        testSuiteSummaryStatus.className = allPassed ? 'text-success fw-bold small' : 'text-danger small';
+      }
+
+      // Render Summary Header Banner
+      if (testResultsSummaryHeader) {
+        if (allPassed) {
+          // Pause timer and mark mission solved on the countdown clock
+          pauseCountdownTimer(false);
+          if (timerUrgencyStatusBadge) {
+            timerUrgencyStatusBadge.innerText = `🏆 SOLVED (${formatTime(timerSecondsRemaining)} REMAINING)`;
+            timerUrgencyStatusBadge.className = 'badge bg-success text-black fw-bold px-2 py-1 small';
+          }
+          if (countdownProgressBar) {
+            countdownProgressBar.className = 'progress-bar bg-success';
+          }
+          playUrgencyBeep('victory');
+
+          testResultsSummaryHeader.innerHTML = `
+            <div class="p-3 mb-3 rounded border border-success font-monospace text-light" style="background: rgba(0, 255, 102, 0.08); box-shadow: 0 0 16px rgba(0, 255, 102, 0.25);">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                  <span style="font-size: 1.5rem;">🏆</span>
+                  <div>
+                    <div class="text-success fw-bold" style="font-size: 0.95rem;">
+                      ALL ${totalCount}/${totalCount} PREDEFINED TEST CASES PASSED!
+                    </div>
+                    <div class="text-muted small">
+                      Vulnerability successfully remediated in ${formatTime(elapsed)} (${formatTime(timerSecondsRemaining)} remaining). Code meets all security, functional & boundary assertions.
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-success text-black fw-bold px-2 py-1" style="font-size: 0.85rem;">
+                    +${data.xpAwarded || selectedChallenge.xp_reward || 100} XP AWARDED
+                  </span>
+                  <span class="badge bg-black border border-info text-info small">
+                    Level ${data.newLevel || 1}
+                  </span>
+                </div>
+              </div>
+
+              ${data.flag ? `
+                <div class="mt-2 p-2 rounded bg-black border border-success d-flex justify-content-between align-items-center flex-wrap gap-2">
+                  <div>
+                    <span class="text-muted small">FLAG CAPTURED:</span>
+                    <code class="text-warning fw-bold ms-2" style="font-size: 0.9rem;" id="capturedFlagCode">${escapeHtml(data.flag)}</code>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline-success font-monospace py-0 px-2" id="copyFlagBtn" style="font-size: 0.72rem;">
+                    📋 Copy Flag
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          `;
+
+          const copyBtn = document.getElementById('copyFlagBtn');
+          if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+              const flagText = document.getElementById('capturedFlagCode')?.innerText;
+              if (flagText && navigator.clipboard) {
+                navigator.clipboard.writeText(flagText);
+                copyBtn.innerText = '✔ COPIED!';
+                setTimeout(() => copyBtn.innerText = '📋 Copy Flag', 2000);
+              }
+            });
+          }
+
+          // Mark challenge as solved locally
+          userSolvedChallengeIds.add(Number(selectedChallenge.id));
+          if (challengeStatusBadge) {
+            challengeStatusBadge.innerText = 'SOLVED';
+            challengeStatusBadge.className = 'badge bg-black border border-success text-success px-2 py-1';
+          }
+          if (sidebarStatusText) {
+            sidebarStatusText.innerText = 'SOLVED (PASS)';
+            sidebarStatusText.className = 'text-success fw-bold';
+          }
+
+          // Visual celebration feedback on Monaco editor card
+          if (editorCard) {
+            editorCard.style.transition = 'box-shadow 0.4s ease, border-color 0.4s ease';
+            editorCard.style.borderColor = '#00ff66';
+            editorCard.style.boxShadow = '0 0 25px rgba(0, 255, 102, 0.6)';
+            setTimeout(() => {
+              editorCard.style.borderColor = '#00e5ff';
+              editorCard.style.boxShadow = '0 0 15px rgba(0, 229, 255, 0.2)';
+            }, 2500);
+          }
+
+          appendConsoleLog(`<span class="text-success fw-bold">[TEST SUITE PASSED] All ${totalCount} test cases validated successfully for #${selectedChallenge.id}: ${selectedChallenge.title}! (+${data.xpAwarded} XP) [Solved in ${formatTime(elapsed)}]</span><br>`);
+          addTelemetry(`MISSION COMPLETE: Challenge #${selectedChallenge.id} passed all ${totalCount} test cases!`);
+
+          // Broadcast victory to peer collaborators across room
+          if (broadcastChannel) {
+            broadcastChannel.postMessage({
+              type: 'challenge_solved',
+              challengeId: selectedChallenge.id,
+              challengeTitle: selectedChallenge.title,
+              solver: currentUser,
+              testsPassed: passedCount,
+              testsTotal: totalCount,
+              xpAwarded: data.xpAwarded || selectedChallenge.xp_reward
+            });
+          }
+
+          if (roomDocRef) {
+            setDoc(roomDocRef, {
+              lastSolvedChallenge: {
+                id: selectedChallenge.id,
+                title: selectedChallenge.title,
+                solver: currentUser,
+                testsPassed: passedCount,
+                testsTotal: totalCount,
+                timestamp: Date.now()
+              }
+            }, { merge: true }).catch(e => console.warn('Room sync notice:', e));
+          }
+
+        } else {
+          // Play warning audio feedback on test failure
+          playUrgencyBeep('critical');
+
+          // Failure banner
+          testResultsSummaryHeader.innerHTML = `
+            <div class="p-2 mb-3 rounded border border-danger font-monospace text-light" style="background: rgba(255, 68, 102, 0.08); box-shadow: 0 0 12px rgba(255, 68, 102, 0.2);">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                  <div class="text-danger fw-bold">
+                    ❌ TEST SUITE FAILED: ${passedCount}/${totalCount} PASSED (${failedCount} FAILED)
+                  </div>
+                  <div class="text-muted small">
+                    One or more predefined security exploits or edge case assertions failed. Inspect details below.
+                  </div>
+                </div>
+                <span class="badge bg-danger text-black fw-bold px-2 py-1">REVISE BUFFER</span>
+              </div>
+            </div>
+          `;
+
+          // Flash editor border with red warning glow
+          if (editorCard) {
+            editorCard.style.transition = 'box-shadow 0.3s ease, border-color 0.3s ease';
+            editorCard.style.borderColor = '#ff4466';
+            editorCard.style.boxShadow = '0 0 20px rgba(255, 68, 102, 0.5)';
+            setTimeout(() => {
+              editorCard.style.borderColor = '#00e5ff';
+              editorCard.style.boxShadow = '0 0 15px rgba(0, 229, 255, 0.2)';
+            }, 1800);
+          }
+
+          appendConsoleLog(`<span class="text-danger">[TEST SUITE] Submission failed: ${passedCount}/${totalCount} tests passed. See Test Runner tab for diagnostics.</span><br>`);
+          addTelemetry(`Validation finished with ${failedCount} failing tests on challenge #${selectedChallenge.id}.`);
+        }
+      }
+
+      // Render Individual Test Cases Results List
+      if (testCasesResultsList) {
+        const results = data.testResults || [];
+        testCasesResultsList.innerHTML = results.map(r => `
+          <div class="p-2 rounded font-monospace" style="background: ${r.passed ? 'rgba(0, 255, 102, 0.04)' : 'rgba(255, 68, 102, 0.06)'}; border: 1px solid ${r.passed ? '#1a4731' : '#5c1d24'};">
+            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge ${r.passed ? 'bg-success text-black' : 'bg-danger text-white'} fw-bold" style="font-size: 0.68rem;">
+                  ${r.passed ? '✔ PASS' : '✖ FAIL'}
+                </span>
+                <span class="text-light fw-bold" style="font-size: 0.8rem;">${escapeHtml(r.name)}</span>
+                <span class="badge bg-black border border-secondary text-info" style="font-size: 0.65rem;">${escapeHtml(r.type || 'Functional')}</span>
+              </div>
+              <span class="text-muted" style="font-size: 0.7rem;">${r.durationMs || 10}ms</span>
+            </div>
+            <div class="row g-1 text-muted" style="font-size: 0.73rem;">
+              <div class="col-md-6 text-truncate">
+                <span class="text-info">Input:</span> <code>${escapeHtml(r.input)}</code>
+              </div>
+              <div class="col-md-6 text-truncate">
+                <span class="text-warning">Expected:</span> <span class="text-light">${escapeHtml(r.expected)}</span>
+              </div>
+            </div>
+            <div class="mt-1" style="font-size: 0.73rem;">
+              <span class="${r.passed ? 'text-success' : 'text-danger'}">Actual:</span> <span class="text-light">${escapeHtml(r.actual)}</span>
+            </div>
+            ${!r.passed && r.hint ? `
+              <div class="mt-2 p-2 rounded bg-black border border-warning text-warning" style="font-size: 0.72rem;">
+                💡 <strong>HINT:</strong> ${escapeHtml(r.hint)}
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      }
+
+    } catch (err) {
+      console.error('Submission error:', err);
+      if (testRunnerLoadingState) testRunnerLoadingState.classList.add('d-none');
+      if (testRunnerResultsContainer) testRunnerResultsContainer.classList.remove('d-none');
+      if (testResultsSummaryHeader) {
+        testResultsSummaryHeader.innerHTML = `
+          <div class="p-2 rounded border border-danger bg-black text-danger font-monospace small">
+            ❌ <strong>EXECUTION ERROR:</strong> ${escapeHtml(err.message || 'Failed to communicate with test validator.')}
+          </div>
+        `;
+      }
+      appendConsoleLog(`<span class="text-danger">[ERROR] Test runner failure: ${escapeHtml(err.message)}</span><br>`);
+      addTelemetry(`Test runner error: ${err.message}`);
+    } finally {
+      isSubmittingChallenge = false;
+      if (submitMonacoChallengeBtn) {
+        if (timerExpired || timerSecondsRemaining <= 0) {
+          submitMonacoChallengeBtn.disabled = true;
+          submitMonacoChallengeBtn.innerHTML = '⏰ [ TIME EXPIRED - RESTART TIMER ]';
+        } else {
+          submitMonacoChallengeBtn.disabled = false;
+          submitMonacoChallengeBtn.innerHTML = `🚀 [ VALIDATE &amp; SUBMIT ]`;
+        }
+      }
+    }
+  }
+
+  // Bind Challenge, Timer, and Test Runner Event Listeners
+  if (challengeSelect) {
+    challengeSelect.addEventListener('change', (e) => {
+      selectChallenge(e.target.value);
+    });
+  }
+
+  if (toggleMissionBriefBtn) {
+    toggleMissionBriefBtn.addEventListener('click', () => {
+      if (missionBriefDrawer) {
+        missionBriefDrawer.classList.toggle('d-none');
+      }
+    });
+  }
+
+  if (loadChallengeStarterBtn) {
+    loadChallengeStarterBtn.addEventListener('click', () => {
+      loadChallengeStarter();
+    });
+  }
+
+  if (timerToggleBtn) {
+    timerToggleBtn.addEventListener('click', () => {
+      toggleCountdownTimer();
+    });
+  }
+
+  if (timerResetBtn) {
+    timerResetBtn.addEventListener('click', () => {
+      restartCountdownTimer(false, true);
+    });
+  }
+
+  if (timerSoundToggleBtn) {
+    timerSoundToggleBtn.addEventListener('click', () => {
+      timerSoundEnabled = !timerSoundEnabled;
+      localStorage.setItem('codequest_timer_sound', timerSoundEnabled ? 'true' : 'false');
+      timerSoundToggleBtn.innerText = timerSoundEnabled ? '🔊 SOUND: ON' : '🔇 SOUND: OFF';
+      timerSoundToggleBtn.classList.toggle('btn-outline-secondary', !timerSoundEnabled);
+      timerSoundToggleBtn.classList.toggle('btn-outline-info', timerSoundEnabled);
+      if (timerSoundEnabled) {
+        playUrgencyBeep('tick');
+      }
+    });
+    // Set initial sound button style
+    timerSoundToggleBtn.innerText = timerSoundEnabled ? '🔊 SOUND: ON' : '🔇 SOUND: OFF';
+    timerSoundToggleBtn.classList.toggle('btn-outline-secondary', !timerSoundEnabled);
+    timerSoundToggleBtn.classList.toggle('btn-outline-info', timerSoundEnabled);
+  }
+
+  if (tabContainerLogsBtn) {
+    tabContainerLogsBtn.addEventListener('click', () => {
+      switchConsoleTab('logs');
+    });
+  }
+
+  if (tabTestRunnerBtn) {
+    tabTestRunnerBtn.addEventListener('click', () => {
+      switchConsoleTab('testRunner');
+    });
+  }
+
+  if (submitMonacoChallengeBtn) {
+    submitMonacoChallengeBtn.addEventListener('click', () => {
+      submitMonacoChallenge();
+    });
+  }
+
+  // Initialize first challenge if available
+  if (selectedChallenge) {
+    renderMissionBrief(selectedChallenge);
+  }
+
+  // Initialize countdown timer visuals for initial challenge
+  updateTimerVisuals();
+
+  // Bootstrap Monaco Editor
+  initMonacoEditor();
+</script>
+
+<%- include('../partials/footer') %>

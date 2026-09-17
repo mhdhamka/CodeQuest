@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "rooms": {
+      "title": "Room",
+      "description": "Collaborative code room session with synchronized code buffer and presence",
+      "properties": {
+        "name": { "type": "string", "description": "The title of the code room" },
+        "description": { "type": "string", "description": "Description and objectives" },
+        "focus": { "type": "string", "description": "Primary tech stack or focus" },
+        "code": { "type": "string", "description": "Real-time synchronized code content" },
+        "updatedAt": { "type": "string", "description": "Timestamp of last edit" },
+        "lastUpdatedBy": { "type": "string", "description": "Username of the last editor" }
+      },
+      "required": ["name"]
+    },
+    "users": {
+      "title": "UserProfile",
+      "description": "Authenticated player profile linked to Google or GitHub and game progression",
+      "properties": {
+        "uid": { "type": "string", "description": "Auth user ID from Firebase or Google" },
+        "username": { "type": "string", "description": "Username or operative alias" },
+        "displayName": { "type": "string", "description": "User display name" },
+        "email": { "type": "string", "description": "User email address" },
+        "avatar": { "type": "string", "description": "Profile avatar photo URL" },
+        "authProvider": { "type": "string", "description": "Authentication provider: google or github" },
+        "googleLinked": { "type": "boolean", "description": "Whether the profile is linked to Google OAuth" },
+        "githubLinked": { "type": "boolean", "description": "Whether the profile is linked to GitHub" },
+        "level": { "type": "number", "description": "Player clearance level" },
+        "xp": { "type": "number", "description": "Player accumulated XP" },
+        "role_class": { "type": "string", "description": "RPG role class code" },
+        "role_class_display": { "type": "string", "description": "RPG role class title" },
+        "completedChallenges": { "type": "array", "description": "IDs of captured CTF challenges" },
+        "updatedAt": { "type": "string", "description": "Last profile update timestamp" }
+      },
+      "required": ["uid", "username"]
+    }
+  }
+}

@@ -1,0 +1,122 @@
+<!-- CodeQuest Cyberpunk Main Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark mb-4 rounded border border-info shadow-lg px-3 py-2" id="cyberQuestNavbar" style="background: linear-gradient(180deg, #101722 0%, #080c10 100%) !important; box-shadow: 0 0 20px rgba(13, 202, 240, 0.15) !important;">
+  <div class="container-fluid px-0">
+    <!-- Brand / Terminal Link -->
+    <a class="navbar-brand font-monospace fw-bold text-info d-flex align-items-center gap-2 py-1 me-4" href="/" id="navBrandLink">
+      <span class="text-warning">⚡</span>
+      <span>CODEQUEST_ARENA</span>
+      <span class="badge bg-black border border-info text-info small py-1 px-2" style="font-size: 0.65rem;">v4.2</span>
+    </a>
+
+    <!-- Mobile Toggler -->
+    <button class="navbar-toggler border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#cqNavCollapse" aria-controls="cqNavCollapse" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="cqNavCollapse">
+      <!-- Main Navigation Hub -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 font-monospace small gap-1">
+        <li class="nav-item">
+          <a class="nav-link text-light px-2 <%= typeof activeNav !== 'undefined' && activeNav === 'terminal' ? 'text-info fw-bold' : '' %>" href="/" id="navTerminalLink">
+            // TERMINAL
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-light px-2 <%= typeof activeNav !== 'undefined' && activeNav === 'ctf' ? 'text-info fw-bold' : '' %>" href="/projects/" id="navCtfLink">
+            // CTF_RAIDS
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-light px-2 <%= typeof activeNav !== 'undefined' && activeNav === 'workspace' ? 'text-info fw-bold' : '' %>" href="/workspace/" id="navWorkspacesLink">
+            // CODE_ROOMS
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link text-warning px-2 <%= typeof activeNav !== 'undefined' && activeNav === 'dossier' ? 'fw-bold' : '' %>" href="/projects/profile/" id="navDossierLink">
+            // PLAYER_DOSSIER
+          </a>
+        </li>
+      </ul>
+
+      <!-- Right Action / Operative HUD & GitHub Auth Widget -->
+      <div class="d-flex align-items-center gap-2 font-monospace small flex-wrap justify-content-end">
+        <!-- Clearance & XP Badges -->
+        <span class="badge bg-black border border-warning text-warning px-2 py-1 shadow-sm d-none d-sm-inline-block" id="hudLevelBadge">
+          LVL: <strong class="text-light"><%= userProfile ? userProfile.level : 2 %></strong>
+        </span>
+        <span class="badge bg-black border border-info text-info px-2 py-1 shadow-sm d-none d-md-inline-block" id="hudXpBadge">
+          XP: <strong class="text-light"><%= userProfile ? userProfile.xp : 750 %></strong>
+        </span>
+
+        <!-- Authentication Status Widget (Google & GitHub) -->
+        <% if (userProfile && (userProfile.googleLinked || userProfile.githubLinked)) { %>
+          <!-- State: Authenticated with Google or GitHub -->
+          <div class="dropdown d-inline-block" id="userAccountDropdown">
+            <button class="btn btn-sm <%= userProfile.googleLinked ? 'btn-outline-info' : 'btn-outline-warning' %> font-monospace d-flex align-items-center gap-2 py-1 px-2 dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="userMenuBtn" style="background: rgba(0, 0, 0, 0.4);">
+              <% if (userProfile.avatar) { %>
+                <img src="<%= userProfile.avatar %>" alt="Operative Avatar" class="rounded-circle border <%= userProfile.googleLinked ? 'border-info' : 'border-warning' %>" style="width: 22px; height: 22px; object-fit: cover;">
+              <% } else if (userProfile.googleLinked) { %>
+                <span>🌐</span>
+              <% } else { %>
+                <span>🐙</span>
+              <% } %>
+              <span class="text-light fw-bold">@<%= userProfile.username %></span>
+              <span class="badge <%= userProfile.googleLinked ? 'bg-info text-dark' : 'bg-warning text-dark' %> fw-bold" style="font-size: 0.6rem; padding: 2px 5px;">
+                <%= userProfile.googleLinked ? 'GOOGLE' : 'GITHUB' %>
+              </span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end font-monospace shadow-lg py-1" style="background-color: #0b0f17; border: 1px solid <%= userProfile.googleLinked ? '#00f0ff' : '#ffe600' %>; min-width: 230px;">
+              <li class="px-3 py-2 border-bottom border-secondary">
+                <div class="d-flex align-items-center gap-1 <%= userProfile.googleLinked ? 'text-info' : 'text-warning' %> mb-1" style="font-size: 0.65rem;">
+                  <span>●</span> <span><%= userProfile.googleLinked ? 'GOOGLE_OAUTH_AUTHENTICATED' : 'GITHUB_AUTHENTICATED' %></span>
+                </div>
+                <strong class="text-light d-block">@<%= userProfile.username %></strong>
+                <% if (userProfile.email) { %>
+                  <small class="text-muted d-block text-truncate" style="max-width: 200px;"><%= userProfile.email %></small>
+                <% } %>
+              </li>
+              <li>
+                <a class="dropdown-item small text-light py-2 d-flex align-items-center gap-2" href="/projects/profile/" id="dropdownDossierLink">
+                  <span>👤</span> <span>View Operative Dossier</span>
+                </a>
+              </li>
+              <li>
+                <button class="dropdown-item small text-warning py-2 d-flex align-items-center gap-2" onclick="syncFirebaseCloudProgress()" id="dropdownSyncBtn">
+                  <span>⚡</span> <span>Sync Cloud Progress</span>
+                </button>
+              </li>
+              <li><hr class="dropdown-divider border-secondary my-1"></li>
+              <li>
+                <button class="dropdown-item small text-danger py-2 d-flex align-items-center gap-2" type="button" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal" id="dropdownSignoutBtn">
+                  <span>🚪</span> <span>Disconnect Session</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        <% } else { %>
+          <!-- State: Guest Operative / Dual-Provider Sign In Cluster -->
+          <div class="d-flex align-items-center gap-2" id="navAuthBtnCluster">
+            <!-- Google Auth Button (OAuth Client ID) -->
+            <button class="btn btn-sm btn-outline-info font-monospace fw-bold py-1 px-2 d-flex align-items-center gap-1 shadow-sm" id="btnSignInGoogleNav" onclick="openAuthModal()" style="border-color: #4285F4; background: rgba(66, 133, 244, 0.15); color: #fff;">
+              <svg width="14" height="14" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24Z"/>
+                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15Z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98Z"/>
+              </svg>
+              <span>GOOGLE</span>
+            </button>
+
+            <!-- GitHub Auth Button -->
+            <button class="btn btn-sm btn-warning font-monospace fw-bold py-1 px-2 d-flex align-items-center gap-1 shadow-sm" id="btnSignInGithubNav" onclick="openAuthModal()" style="background-color: #ffe600; color: #000; border: none; box-shadow: 0 0 10px rgba(255, 230, 0, 0.35);">
+              <svg height="14" width="14" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+              </svg>
+              <span>GITHUB</span>
+            </button>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</nav>
